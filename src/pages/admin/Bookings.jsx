@@ -36,11 +36,11 @@ const BookingsManagement = () => {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'active': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'completed': return { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e', border: 'rgba(34, 197, 94, 0.3)' };
+      case 'active': return { bg: 'rgba(59, 130, 246, 0.15)', text: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)' };
+      case 'pending': return { bg: 'rgba(250, 204, 21, 0.15)', text: '#facc15', border: 'rgba(250, 204, 21, 0.3)' };
+      case 'cancelled': return { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' };
+      default: return { bg: 'rgba(255, 255, 255, 0.05)', text: '#a1a1a1', border: 'rgba(255, 255, 255, 0.1)' };
     }
   };
 
@@ -142,8 +142,11 @@ const BookingsManagement = () => {
           <div className="relative">
             <FiFilter className="absolute left-3 top-3" style={{ color: '#666666' }} />
             <select
+              id="status-filter"
+              name="status-filter"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
+              autoComplete="off"
               className="pl-10 pr-4 py-3 rounded-lg appearance-none"
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -246,7 +249,11 @@ const BookingsManagement = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full border ${getStatusColor(booking.status)}`}>
+                      <span className="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full border" style={{
+                        backgroundColor: getStatusColor(booking.status).bg,
+                        color: getStatusColor(booking.status).text,
+                        borderColor: getStatusColor(booking.status).border
+                      }}>
                         {getStatusIcon(booking.status)}
                         <span className="ml-1">{booking.status || 'Unknown'}</span>
                       </span>
@@ -340,7 +347,11 @@ const BookingsManagement = () => {
               </div>
               <div>
                 <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Status</p>
-                <span className={`px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full border ${getStatusColor(selectedBooking.status)}`}>
+                <span className="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full border" style={{
+                  backgroundColor: getStatusColor(selectedBooking.status).bg,
+                  color: getStatusColor(selectedBooking.status).text,
+                  borderColor: getStatusColor(selectedBooking.status).border
+                }}>
                   {getStatusIcon(selectedBooking.status)}
                   <span className="ml-1">{selectedBooking.status || 'Unknown'}</span>
                 </span>

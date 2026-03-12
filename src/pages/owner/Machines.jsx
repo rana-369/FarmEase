@@ -105,6 +105,7 @@ const OwnerMachines = () => {
               name="status-filter"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
+              autoComplete="off"
               className="w-full pl-12 pr-4 py-4 rounded-2xl text-white outline-none appearance-none cursor-pointer"
               style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
             >
@@ -138,7 +139,7 @@ const OwnerMachines = () => {
                     alt={machine.name}
                     className="w-full h-full object-cover transition-transform group-hover:scale-110"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/400x200?text=Image+Not+Found';
+                      e.target.style.display = 'none';
                     }}
                   />
                   <div className="absolute top-4 right-4">

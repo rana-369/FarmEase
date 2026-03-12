@@ -111,13 +111,13 @@ const AdminDashboard = () => {
       breakdown: `${stats.activeRentals || 0} currently active`
     },
     {
-      title: 'Total Revenue',
-      value: `₹${((stats.totalRevenue || 0) / 1000).toFixed(0)}K`,
+      title: 'Platform Profit',
+      value: `₹${((stats.totalRevenue || 0) / 1000).toFixed(1)}K`,
       icon: FiDollarSign,
       color: 'bg-orange-500',
       change: '+28%',
       changeType: 'positive',
-      breakdown: 'Platform commission'
+      breakdown: '10% commission from bookings'
     }
   ];
 

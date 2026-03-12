@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiCalendar, FiUser, FiTruck, FiClock, FiCheck, FiX, FiInfo, FiMapPin } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiCalendar, FiUser, FiTruck, FiClock, FiCheck, FiX, FiInfo, FiMapPin, FiCheckCircle } from 'react-icons/fi';
 import api from '../../services/api';
 
 const OwnerRequests = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState(null);
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   useEffect(() => {
     fetchRequests();
@@ -33,16 +35,51 @@ const OwnerRequests = () => {
       }
     };
 
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
+
   const handleAction = async (id, action) => {
     try {
-      await api.put(`/bookings/${id}/${action}`);
-      setRequests(requests.map(req => 
-        req.id === id ? { ...req, status: action === 'accept' ? 'Accepted' : 'Rejected' } : req
-      ));
+      const response = await api.put(`/bookings/${id}/${action}`);
+      
+      // Find the request being updated
+      const updatedRequest = requests.find(req => req.id === id);
+      
+      setRequests(requests.map(req => {
+        if (req.id !== id) return req;
+        switch (action) {
+          case 'accept': return { ...req, status: 'Accepted' };
+          case 'reject': return { ...req, status: 'Rejected' };
+          case 'complete': return { ...req, status: 'Completed' };
+          default: return req;
+        }
+      }));
+      
+      // Show success notification with earnings info
+      if (action === 'complete' && updatedRequest) {
+        const earnings = updatedRequest.totalAmount * 0.9; // 90% after platform fee
+        showNotification(`Booking completed! You earned ₹${earnings.toLocaleString()}`, 'success');
+      } else if (action === 'accept') {
+        showNotification('Booking accepted! Waiting for farmer payment.', 'success');
+      } else if (action === 'reject') {
+        showNotification('Booking rejected.', 'info');
+      }
     } catch (error) {
       console.error(`Error ${action}ing request:`, error);
-      alert(`Failed to ${action} request`);
+      showNotification(`Failed to ${action} request`, 'error');
     }
+  };
+
+  const getStatusStyle = (status) => {
+    const s = status?.toLowerCase() || '';
+    if (s === 'pending') return { color: '#facc15', bg: 'rgba(250, 204, 21, 0.1)', border: 'rgba(250, 204, 21, 0.2)' };
+    if (s === 'accepted') return { color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', border: 'rgba(59, 130, 246, 0.2)' };
+    if (s === 'active') return { color: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.2)' };
+    if (s === 'completed') return { color: '#22c55e', bg: 'rgba(34, 197, 94, 0.15)', border: 'rgba(34, 197, 94, 0.3)' };
+    if (s === 'rejected') return { color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.2)' };
+    return { color: '#a1a1a1', bg: 'rgba(255, 255, 255, 0.05)', border: 'rgba(255, 255, 255, 0.1)' };
   };
 
   if (loading) {
@@ -55,6 +92,26 @@ const OwnerRequests = () => {
 
   return (
     <div className="min-h-screen p-8" style={{ backgroundColor: '#0a0a0a' }}>
+      {/* Success Notification */}
+      <AnimatePresence>
+        {notification && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: -50, x: '-50%' }}
+            className="fixed top-6 left-1/2 z-50 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3"
+            style={{
+              backgroundColor: notification.type === 'success' ? 'rgba(34, 197, 94, 0.95)' : notification.type === 'error' ? 'rgba(239, 68, 68, 0.95)' : 'rgba(59, 130, 246, 0.95)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)'
+            }}
+          >
+            <FiCheckCircle className="text-white text-xl" />
+            <span className="text-white font-bold">{notification.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       <div className="max-w-7xl mx-auto space-y-10">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-4xl font-bold text-white mb-2">Rental Requests</h1>
@@ -91,9 +148,9 @@ const OwnerRequests = () => {
                       </div>
                       <span className="ml-auto lg:ml-4 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border" 
                         style={{ 
-                          backgroundColor: request.status === 'Pending' ? 'rgba(250, 204, 21, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                          color: request.status === 'Pending' ? '#facc15' : '#a1a1a1',
-                          borderColor: request.status === 'Pending' ? 'rgba(250, 204, 21, 0.2)' : 'rgba(255, 255, 255, 0.1)'
+                          backgroundColor: getStatusStyle(request.status).bg,
+                          color: getStatusStyle(request.status).color,
+                          borderColor: getStatusStyle(request.status).border
                         }}>
                         {request.status}
                       </span>
@@ -129,7 +186,7 @@ const OwnerRequests = () => {
                           onClick={() => handleAction(request.id, 'accept')}
                           className="flex-1 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all bg-green-500 text-black hover:bg-green-400 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-green-500/20"
                         >
-                          <FiCheck className="text-xl" /> Accept Request
+                          <FiCheck className="text-xl" /> Accept
                         </button>
                         <button 
                           onClick={() => handleAction(request.id, 'reject')}
@@ -138,14 +195,47 @@ const OwnerRequests = () => {
                           <FiX className="text-xl" /> Reject
                         </button>
                       </div>
+                    ) : request.status === 'Active' ? (
+                      <div className="w-full flex flex-col gap-3">
+                        <div className="p-4 rounded-xl text-center border border-green-500/20 bg-green-500/5">
+                           <p className="text-sm font-medium text-green-500">
+                             Rental in Progress
+                           </p>
+                        </div>
+                        <button 
+                          onClick={() => handleAction(request.id, 'complete')}
+                          className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all bg-green-500 text-black hover:bg-green-400 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-green-500/20"
+                        >
+                          <FiCheck className="text-xl" /> Mark as Completed
+                        </button>
+                      </div>
+                    ) : request.status === 'Completed' ? (
+                      <div className="w-full flex flex-col gap-3">
+                        <div className="p-4 rounded-xl text-center border border-green-500/30 bg-green-500/10">
+                           <p className="text-sm font-bold text-green-500">
+                             ✓ Completed
+                           </p>
+                        </div>
+                        <button 
+                          onClick={() => setSelectedRequest(request)}
+                          className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border border-white/10 hover:bg-white/5"
+                          style={{ color: '#22c55e' }}
+                        >
+                          <FiInfo /> View Details
+                        </button>
+                      </div>
                     ) : (
                       <div className="w-full flex flex-col gap-3">
-                        <div className="p-4 rounded-xl text-center border border-white/10 bg-white/5">
-                           <p className="text-sm font-medium" style={{ color: request.status === 'Accepted' || request.status === 'Active' ? '#22c55e' : '#ef4444' }}>
+                        <div className="p-4 rounded-xl text-center border border-red-500/20 bg-red-500/5">
+                           <p className="text-sm font-medium text-red-500">
                              Request {request.status.toUpperCase()}
                            </p>
                         </div>
-                        <button className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border border-white/10 text-white hover:bg-white/5">
+                        <button 
+                          onClick={() => setSelectedRequest(request)}
+                          className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border border-white/10 hover:bg-white/5"
+                          style={{ color: '#22c55e' }}
+                        >
                           <FiInfo /> View Details
                         </button>
                       </div>
@@ -162,6 +252,114 @@ const OwnerRequests = () => {
             </div>
           )}
         </div>
+
+        {/* Request Details Modal */}
+        {selectedRequest && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedRequest(null)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 50,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px',
+              backgroundColor: 'rgba(0, 0, 0, 0.8)'
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                maxWidth: '512px',
+                borderRadius: '24px',
+                padding: '32px',
+                backgroundColor: '#1a1a1a',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff' }}>Request Details</h2>
+                <button 
+                  onClick={() => setSelectedRequest(null)}
+                  style={{ padding: '8px', borderRadius: '8px', cursor: 'pointer', background: 'transparent', border: 'none' }}
+                >
+                  <FiX style={{ fontSize: '20px', color: '#a1a1a1' }} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Farmer</p>
+                  <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff' }}>{selectedRequest.farmerName}</p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Equipment</p>
+                  <p style={{ fontSize: '18px', fontWeight: '500', color: '#ffffff' }}>{selectedRequest.machineName}</p>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Duration</p>
+                    <p style={{ fontWeight: '500', color: '#ffffff' }}>{selectedRequest.hours} Hours</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Requested</p>
+                    <p style={{ fontWeight: '500', color: '#ffffff' }}>{new Date(selectedRequest.createdAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+                <div>
+                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Status</p>
+                  <span style={{ 
+                    display: 'inline-block',
+                    padding: '4px 12px',
+                    borderRadius: '9999px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    backgroundColor: getStatusStyle(selectedRequest.status).bg, 
+                    color: getStatusStyle(selectedRequest.status).color,
+                    border: `1px solid ${getStatusStyle(selectedRequest.status).border}`
+                  }}>
+                    {selectedRequest.status}
+                  </span>
+                </div>
+                <div>
+                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Total Amount</p>
+                  <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#22c55e' }}>₹{selectedRequest.totalAmount?.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Request ID</p>
+                  <p style={{ fontFamily: 'monospace', color: '#ffffff' }}>#{selectedRequest.id}</p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setSelectedRequest(null)}
+                style={{
+                  width: '100%',
+                  marginTop: '24px',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  fontWeight: 'bold',
+                  color: '#ffffff',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: 'transparent',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
       </div>
     </div>
   );

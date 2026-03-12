@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiPackage, FiTruck, FiCalendar, FiClock, FiCheckCircle, FiAlertCircle, FiXCircle, FiFilter, FiSearch, FiArrowUpRight, FiMapPin, FiCreditCard } from 'react-icons/fi';
 import { getFarmerBookings } from '../../services/dashboardService';
+import { processPayment } from '../../services/paymentService';
 import { useNavigate } from 'react-router-dom';
-import API from '../../api/axios';
 
 const FarmerBookings = () => {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ const FarmerBookings = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterRole] = useState('all');
   const [paymentLoading, setPaymentLoading] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -46,56 +47,20 @@ const FarmerBookings = () => {
     try {
       setPaymentLoading(booking.id);
       
-      // 1. Create order on backend
-      const { data: orderData } = await API.post('/payments/create-order', {
-        bookingId: booking.id
-      });
-
-      const options = {
-        key: orderData.keyId,
-        amount: orderData.amount * 100,
-        currency: orderData.currency,
-        name: "AgriConnect",
-        description: `Payment for ${booking.machineName}`,
-        order_id: orderData.orderId,
-        handler: async (response) => {
-          try {
-            // 2. Verify payment on backend
-            const verifyData = {
-              bookingId: booking.id,
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature
-            };
-            
-            const { data: verifyResult } = await API.post('/payments/verify-payment', verifyData);
-            
-            if (verifyResult) {
-              // Update local state
-              setBookings(prev => prev.map(b => 
-                b.id === booking.id ? { ...b, status: 'Active', isPaid: true } : b
-              ));
-              alert("Payment successful! Your booking is now Active.");
-            }
-          } catch (err) {
-            console.error("Verification failed", err);
-            alert("Payment verification failed. Please contact support.");
-          }
-        },
-        prefill: {
-          name: localStorage.getItem('userName') || '',
-          email: localStorage.getItem('userEmail') || '',
-        },
-        theme: {
-          color: "#22c55e",
-        },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      const result = await processPayment(booking.id, booking.machineName);
+      
+      if (result.success) {
+        // Update local state
+        setBookings(prev => prev.map(b => 
+          b.id === booking.id ? { ...b, status: 'Active', isPaid: true } : b
+        ));
+        alert("Payment successful! Your booking is now Active.");
+      } else {
+        alert(result.message || "Payment failed. Please try again.");
+      }
     } catch (error) {
-      console.error("Payment initiation failed", error);
-      alert(error.response?.data?.message || "Failed to initiate payment. Please try again.");
+      console.error("Payment error:", error);
+      alert("Failed to process payment. Please try again.");
     } finally {
       setPaymentLoading(null);
     }
@@ -150,10 +115,9 @@ const FarmerBookings = () => {
         </motion.div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 relative">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-xl" />
-            <label htmlFor="booking-search" className="sr-only">Search bookings</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ flex: '1 1 300px', display: 'flex', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', paddingLeft: '16px' }}>
+            <FiSearch style={{ color: '#a1a1a1', fontSize: '20px', flexShrink: 0 }} />
             <input 
               id="booking-search"
               name="booking-search"
@@ -162,20 +126,38 @@ const FarmerBookings = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               autoComplete="off"
-              className="w-full pl-12 pr-4 py-4 rounded-2xl text-white outline-none transition-all"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
+              style={{ 
+                flex: 1,
+                padding: '16px 16px 16px 12px',
+                borderRadius: '16px',
+                color: '#ffffff',
+                outline: 'none',
+                border: 'none',
+                backgroundColor: 'transparent',
+                fontSize: '16px'
+              }}
             />
           </div>
-          <div className="relative">
-            <FiFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-xl" />
-            <label htmlFor="status-filter" className="sr-only">Filter by status</label>
+          <div style={{ flex: '0 1 200px', display: 'flex', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', paddingLeft: '16px' }}>
+            <FiFilter style={{ color: '#a1a1a1', fontSize: '20px', flexShrink: 0 }} />
             <select 
               id="status-filter"
               name="status-filter"
               value={filterStatus}
               onChange={(e) => setFilterRole(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl text-white outline-none appearance-none cursor-pointer"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
+              autoComplete="off"
+              style={{ 
+                flex: 1,
+                padding: '16px 16px 16px 12px',
+                borderRadius: '16px',
+                color: '#ffffff',
+                outline: 'none',
+                cursor: 'pointer',
+                appearance: 'none',
+                backgroundColor: 'transparent',
+                border: 'none',
+                fontSize: '16px'
+              }}
             >
               <option value="all">All Statuses</option>
               <option value="pending">Pending</option>
@@ -268,7 +250,9 @@ const FarmerBookings = () => {
                       )}
 
                       <button 
-                        className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border border-white/10 text-white hover:bg-white/5"
+                        onClick={() => setSelectedBooking(booking)}
+                        className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border border-white/10 hover:bg-white/5"
+                        style={{ color: '#22c55e' }}
                       >
                         View Details <FiArrowUpRight />
                       </button>
@@ -285,6 +269,114 @@ const FarmerBookings = () => {
             </div>
           )}
         </div>
+
+        {/* Booking Details Modal */}
+        {selectedBooking && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedBooking(null)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 50,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px',
+              backgroundColor: 'rgba(0, 0, 0, 0.8)'
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                maxWidth: '512px',
+                borderRadius: '24px',
+                padding: '32px',
+                backgroundColor: '#1a1a1a',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff' }}>Booking Details</h2>
+                <button 
+                  onClick={() => setSelectedBooking(null)}
+                  style={{ padding: '8px', borderRadius: '8px', cursor: 'pointer', background: 'transparent', border: 'none' }}
+                >
+                  <FiXCircle style={{ fontSize: '20px', color: '#a1a1a1' }} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Equipment</p>
+                  <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff' }}>{selectedBooking.machineName}</p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Owner</p>
+                  <p style={{ fontSize: '18px', fontWeight: '500', color: '#ffffff' }}>{selectedBooking.ownerName}</p>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Start Date</p>
+                    <p style={{ fontWeight: '500', color: '#ffffff' }}>{selectedBooking.startDate}</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '14px', color: '#a1a1a1' }}>End Date</p>
+                    <p style={{ fontWeight: '500', color: '#ffffff' }}>{selectedBooking.endDate}</p>
+                  </div>
+                </div>
+                <div>
+                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Status</p>
+                  <span style={{ 
+                    display: 'inline-block',
+                    padding: '4px 12px',
+                    borderRadius: '9999px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    backgroundColor: getStatusColor(selectedBooking.status).bg, 
+                    color: getStatusColor(selectedBooking.status).color,
+                    border: `1px solid ${getStatusColor(selectedBooking.status).border}`
+                  }}>
+                    {selectedBooking.status}
+                  </span>
+                </div>
+                <div>
+                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Total Amount</p>
+                  <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#22c55e' }}>₹{selectedBooking.totalCost?.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Booking ID</p>
+                  <p style={{ fontFamily: 'monospace', color: '#ffffff' }}>#{selectedBooking.id}</p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setSelectedBooking(null)}
+                style={{
+                  width: '100%',
+                  marginTop: '24px',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  fontWeight: 'bold',
+                  color: '#ffffff',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: 'transparent',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
       </div>
     </div>
   );

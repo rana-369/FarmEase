@@ -42,10 +42,10 @@ const UsersManagement = () => {
 
   const getRoleColor = (role) => {
     switch (role?.toLowerCase()) {
-      case 'admin': return 'bg-red-100 text-red-800 border-red-200';
-      case 'farmer': return 'bg-green-100 text-green-800 border-green-200';
-      case 'owner': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'admin': return { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' };
+      case 'farmer': return { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e', border: 'rgba(34, 197, 94, 0.3)' };
+      case 'owner': return { bg: 'rgba(59, 130, 246, 0.15)', text: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)' };
+      default: return { bg: 'rgba(255, 255, 255, 0.05)', text: '#a1a1a1', border: 'rgba(255, 255, 255, 0.1)' };
     }
   };
 
@@ -108,8 +108,11 @@ const UsersManagement = () => {
           <div className="relative">
             <FiFilter className="absolute left-3 top-3" style={{ color: '#666666' }} />
             <select
+              id="role-filter"
+              name="role-filter"
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
+              autoComplete="off"
               className="pl-10 pr-4 py-3 rounded-lg appearance-none"
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -182,12 +185,20 @@ const UsersManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getRoleColor(user.role)}`}>
+                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border" style={{
+                        backgroundColor: getRoleColor(user.role).bg,
+                        color: getRoleColor(user.role).text,
+                        borderColor: getRoleColor(user.role).border
+                      }}>
                         {user.role || 'Unknown'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 border border-green-200">
+                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border" style={{
+                        backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                        color: '#22c55e',
+                        borderColor: 'rgba(34, 197, 94, 0.3)'
+                      }}>
                         Active
                       </span>
                     </td>
@@ -287,7 +298,11 @@ const UsersManagement = () => {
               </div>
               <div>
                 <p className="text-sm" style={{ color: '#a1a1a1' }}>Role</p>
-                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getRoleColor(selectedUser.role)}`}>
+                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border" style={{
+                  backgroundColor: getRoleColor(selectedUser.role).bg,
+                  color: getRoleColor(selectedUser.role).text,
+                  borderColor: getRoleColor(selectedUser.role).border
+                }}>
                   {selectedUser.role || 'Unknown'}
                 </span>
               </div>

@@ -79,10 +79,14 @@ const FarmerProfile = () => {
             <div className="relative group">
               <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-green-500/30 flex items-center justify-center bg-gray-800">
                 {profile.profileImageUrl ? (
-                  <img src={profile.profileImageUrl} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <FiUser className="text-6xl text-gray-600" />
-                )}
+                  <img 
+                    src={profile.profileImageUrl} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                ) : null}
+                <FiUser className="text-6xl text-gray-600" style={{ display: profile.profileImageUrl ? 'none' : 'block' }} />
               </div>
               <button className="absolute bottom-2 right-2 p-3 rounded-full bg-green-500 text-black hover:scale-110 transition-all shadow-lg">
                 <FiCamera className="text-xl" />
@@ -131,6 +135,7 @@ const FarmerProfile = () => {
                       name="email"
                       disabled 
                       value={profile.email} 
+                      autoComplete="email"
                       className="w-full pl-12 pr-4 py-4 rounded-xl outline-none cursor-not-allowed" 
                       style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', color: '#666666' }}
                     />
@@ -175,7 +180,8 @@ const FarmerProfile = () => {
                       name="farmSize" 
                       value={profile.farmSize} 
                       onChange={handleChange} 
-                      placeholder="e.g. 50" 
+                      placeholder="e.g. 50"
+                      autoComplete="off"
                       className="w-full pl-12 pr-4 py-4 rounded-xl text-white outline-none focus:border-green-500 transition-all" 
                       style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
                     />

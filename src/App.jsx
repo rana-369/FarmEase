@@ -141,7 +141,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="App">
+        <div className="App" style={{ backgroundColor: '#0a0a0a', minHeight: '100vh' }}>
           <AppRoutes />
         </div>
       </BrowserRouter>

@@ -185,6 +185,7 @@ const AddMachine = () => {
                     value={formData.name}
                     onChange={handleChange}
                     required
+                    autoComplete="off"
                     className="w-full pl-12 pr-4 py-4 rounded-xl text-white outline-none focus:border-green-500 transition-all"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
                     placeholder="e.g., Mahindra Arjun Nova 605"
@@ -201,6 +202,7 @@ const AddMachine = () => {
                   value={formData.category}
                   onChange={handleChange}
                   required
+                  autoComplete="off"
                   className="w-full px-5 py-4 rounded-xl text-white outline-none cursor-pointer"
                   style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
                 >
@@ -223,6 +225,7 @@ const AddMachine = () => {
                     onChange={handleChange}
                     required
                     min="0"
+                    autoComplete="off"
                     className="w-full pl-12 pr-4 py-4 rounded-xl text-white outline-none focus:border-green-500 transition-all"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
                     placeholder="800"
@@ -242,6 +245,7 @@ const AddMachine = () => {
                     value={formData.location}
                     onChange={handleChange}
                     required
+                    autoComplete="address-level2"
                     className="w-full pl-12 pr-4 py-4 rounded-xl text-white outline-none focus:border-green-500 transition-all"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
                     placeholder="City, State"
@@ -261,6 +265,7 @@ const AddMachine = () => {
                     onChange={handleChange}
                     required
                     rows="4"
+                    autoComplete="off"
                     className="w-full pl-12 pr-4 py-4 rounded-xl text-white outline-none focus:border-green-500 transition-all"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
                     placeholder="Describe technical details, condition, and any accessories included..."
@@ -284,6 +289,7 @@ const AddMachine = () => {
                     onChange={handleImageUpload}
                     className="hidden"
                     id="image-upload"
+                    name="image-upload"
                   />
                   <label
                     htmlFor="image-upload"

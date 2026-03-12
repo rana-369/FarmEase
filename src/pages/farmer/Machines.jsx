@@ -39,7 +39,9 @@ const FarmerMachines = () => {
         location: machine.location || 'Location not specified',
         rate: machine.rate,
         rating: machine.rating || 4.5,
-        image: machine.imageUrl || 'https://via.placeholder.com/300x200?text=Equipment',
+        image: machine.imageUrl 
+          ? `https://localhost:7103${machine.imageUrl}`
+          : 'https://via.placeholder.com/300x200?text=Equipment',
         available: machine.status === 'Verified' || machine.status === 'Active',
         description: machine.description || 'Professional agricultural equipment'
       }));
@@ -141,8 +143,11 @@ const FarmerMachines = () => {
           <div className="flex items-center gap-2">
             <FiFilter style={{ color: '#a1a1a1' }} />
             <select
+              id="category-filter"
+              name="category-filter"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
+              autoComplete="off"
               className="px-4 py-3 rounded-lg"
               style={{ 
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -185,6 +190,7 @@ const FarmerMachines = () => {
                 src={machine.image}
                 alt={machine.name}
                 className="w-full h-full object-cover"
+                onError={(e) => { e.target.style.display = 'none'; }}
               />
               {!machine.available && (
                 <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}>
@@ -247,18 +253,17 @@ const FarmerMachines = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-12"
+          style={{ textAlign: 'center', padding: '3rem 0' }}
         >
-          <FiTruck className="text-5xl mx-auto mb-4" style={{ color: '#333333' }} />
-          <h3 className="text-lg font-medium mb-2" style={{ color: '#ffffff' }}>No equipment found</h3>
-          <p className="mb-4" style={{ color: '#a1a1a1' }}>Try adjusting your search or filters</p>
+          <FiTruck style={{ fontSize: '3rem', margin: '0 auto 1rem', color: '#333333' }} />
+          <h3 style={{ fontSize: '1.125rem', fontWeight: '500', marginBottom: '0.5rem', color: '#ffffff' }}>No equipment found</h3>
+          <p style={{ marginBottom: '1rem', color: '#a1a1a1' }}>Try adjusting your search or filters</p>
           <button
             onClick={() => {
               setSearchTerm('');
               setSelectedCategory('All');
             }}
-            className="px-6 py-2 rounded-lg font-semibold"
-            style={{ backgroundColor: '#22c55e', color: '#ffffff' }}
+            style={{ padding: '0.5rem 1.5rem', borderRadius: '0.5rem', fontWeight: '600', backgroundColor: '#22c55e', color: '#ffffff', border: 'none', cursor: 'pointer' }}
           >
             Clear Filters
           </button>

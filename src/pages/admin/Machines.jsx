@@ -62,11 +62,11 @@ const MachineApproval = () => {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'verified': return 'bg-green-100 text-green-800 border-green-200';
-      case 'pending verification': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
-      case 'active': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'verified': return { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e', border: 'rgba(34, 197, 94, 0.3)' };
+      case 'pending verification': return { bg: 'rgba(250, 204, 21, 0.15)', text: '#facc15', border: 'rgba(250, 204, 21, 0.3)' };
+      case 'rejected': return { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' };
+      case 'active': return { bg: 'rgba(59, 130, 246, 0.15)', text: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)' };
+      default: return { bg: 'rgba(255, 255, 255, 0.05)', text: '#a1a1a1', border: 'rgba(255, 255, 255, 0.1)' };
     }
   };
 
@@ -148,8 +148,11 @@ const MachineApproval = () => {
           <div className="relative">
             <FiFilter className="absolute left-3 top-3" style={{ color: '#666666' }} />
             <select
+              id="status-filter"
+              name="status-filter"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
+              autoComplete="off"
               className="pl-10 pr-4 py-3 rounded-lg appearance-none"
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -300,61 +303,85 @@ const MachineApproval = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="fixed inset-0 flex items-center justify-center p-4 z-50"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
           onClick={() => setSelectedMachine(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+            zIndex: 50,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)'
+          }}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
             style={{
+              borderRadius: '16px',
+              padding: '24px',
+              maxWidth: '672px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
               backgroundColor: '#1a1a1a',
               border: '1px solid rgba(255, 255, 255, 0.1)'
             }}
-            onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold" style={{ color: '#ffffff' }}>Machine Details</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#ffffff' }}>Machine Details</h3>
               <button
                 onClick={() => setSelectedMachine(null)}
-                className="p-2 rounded-lg"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(255, 255, 255, 0.1)', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#ffffff' }}
               >
                 ×
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
               <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Name</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>{selectedMachine.name || 'N/A'}</p>
+                <p style={{ fontSize: '14px', marginBottom: '4px', color: '#a1a1a1' }}>Name</p>
+                <p style={{ fontWeight: '500', color: '#ffffff' }}>{selectedMachine.name || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Type</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>{selectedMachine.type || 'N/A'}</p>
+                <p style={{ fontSize: '14px', marginBottom: '4px', color: '#a1a1a1' }}>Type</p>
+                <p style={{ fontWeight: '500', color: '#ffffff' }}>{selectedMachine.type || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Owner</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>{selectedMachine.ownerName || 'N/A'}</p>
+                <p style={{ fontSize: '14px', marginBottom: '4px', color: '#a1a1a1' }}>Owner</p>
+                <p style={{ fontWeight: '500', color: '#ffffff' }}>{selectedMachine.ownerName || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Owner Location</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>{selectedMachine.ownerLocation || 'N/A'}</p>
+                <p style={{ fontSize: '14px', marginBottom: '4px', color: '#a1a1a1' }}>Owner Location</p>
+                <p style={{ fontWeight: '500', color: '#ffffff' }}>{selectedMachine.ownerLocation || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Rate</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>₹{selectedMachine.rate || 0}/hour</p>
+                <p style={{ fontSize: '14px', marginBottom: '4px', color: '#a1a1a1' }}>Rate</p>
+                <p style={{ fontWeight: '500', color: '#ffffff' }}>₹{selectedMachine.rate || 0}/hour</p>
               </div>
               <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Status</p>
-                <span className={`px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full border ${getStatusColor(selectedMachine.status)}`}>
-                  {getStatusIcon(selectedMachine.status)}
-                  <span className="ml-1">{selectedMachine.status || 'Unknown'}</span>
+                <p style={{ fontSize: '14px', marginBottom: '4px', color: '#a1a1a1' }}>Status</p>
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '4px 8px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  borderRadius: '9999px',
+                  border: `1px solid ${getStatusColor(selectedMachine.status).border}`,
+                  backgroundColor: getStatusColor(selectedMachine.status).bg,
+                  color: getStatusColor(selectedMachine.status).text
+                }}>
+                  {selectedMachine.status || 'Unknown'}
                 </span>
               </div>
               <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Added</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>
+                <p style={{ fontSize: '14px', marginBottom: '4px', color: '#a1a1a1' }}>Added</p>
+                <p style={{ fontWeight: '500', color: '#ffffff' }}>
                   {formatDate(selectedMachine.createdAt || selectedMachine.created_at)}
                 </p>
               </div>

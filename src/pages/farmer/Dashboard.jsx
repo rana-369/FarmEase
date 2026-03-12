@@ -86,10 +86,10 @@ const FarmerDashboard = () => {
     },
     {
       title: 'Total Spent',
-      value: `₹${(stats.totalSpent / 1000).toFixed(1)}K`,
+      value: `₹${(stats.totalSpent || 0).toLocaleString()}`,
       icon: FiDollarSign,
       color: '#f59e0b',
-      change: '+15%',
+      change: stats.totalSpent > 0 ? 'Live' : '0%',
       changeType: 'positive'
     }
   ];

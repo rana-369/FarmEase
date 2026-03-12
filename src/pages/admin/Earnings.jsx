@@ -25,8 +25,8 @@ const EarningsPage = () => {
         if (dash) {
           const statsObj = dash.stats || dash.Stats || {};
           setStats({
-            totalRevenue: statsObj.revenue || statsObj.Revenue || 0,
-            profit: statsObj.profit || statsObj.Profit || 0,
+            totalTransactionValue: statsObj.totalTransactionValue || statsObj.TotalTransactionValue || 0,
+            platformProfit: statsObj.revenue || statsObj.Revenue || 0,
             totalBookings: statsObj.totalBookings || statsObj.TotalBookings || 0
           });
         }
@@ -73,9 +73,9 @@ const EarningsPage = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { label: 'Total Volume', value: `₹${(stats.totalRevenue / 1000).toFixed(1)}K`, icon: FiDollarSign, color: '#22c55e' },
-            { label: 'Platform Profit', value: `₹${(stats.profit / 1000).toFixed(1)}K`, icon: FiTrendingUp, color: '#22c55e' },
-            { label: 'Total Transactions', value: stats.totalBookings, icon: FiCalendar, color: '#22c55e' },
+            { label: 'Total Transaction Volume', value: `₹${((stats.totalTransactionValue || 0) / 1000).toFixed(1)}K`, icon: FiDollarSign, color: '#22c55e' },
+            { label: 'Platform Profit (10%)', value: `₹${((stats.platformProfit || 0) / 1000).toFixed(1)}K`, icon: FiTrendingUp, color: '#3b82f6' },
+            { label: 'Total Transactions', value: stats.totalBookings, icon: FiCalendar, color: '#a855f7' },
           ].map((item, i) => (
             <motion.div
               key={i}
