@@ -125,6 +125,7 @@ const FarmerMachines = () => {
             <label htmlFor="marketplace-search" className="sr-only">Search equipment</label>
             <input
               id="marketplace-search"
+              name="marketplace-search"
               type="text"
               placeholder="Search equipment, locations, or owners..."
               value={searchTerm}

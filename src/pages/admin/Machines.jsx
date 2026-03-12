@@ -129,9 +129,11 @@ const MachineApproval = () => {
       <div className="p-8 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
+            <label htmlFor="machine-search" className="sr-only">Search machines</label>
             <FiSearch className="absolute left-3 top-3" style={{ color: '#666666' }} />
             <input
               id="machine-search"
+              name="machine-search"
               type="text"
               placeholder="Search machines by name, owner, location, or type..."
               value={searchTerm}
