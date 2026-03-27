@@ -1,0 +1,67 @@
+# ==============================
+# .NET
+# ==============================
+.vs/
+bin/
+obj/
+*.user
+*.suo
+
+# ==============================
+# Node / React
+# ==============================
+node_modules/
+dist/
+build/
+
+# ==============================
+# Logs
+# ==============================
+logs/
+*.log
+
+# ==============================
+# Environment / Secrets
+# ==============================
+.env
+.env.*
+secrets.json
+
+# Ignore real config
+appsettings.json
+appsettings.Development.json
+appsettings.Production.json
+
+# Allow template
+!appsettings.Example.json
+
+# ==============================
+# OS / Editor
+# ==============================
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+
+# ==============================
+# Database / Certificates
+# ==============================
+*.mdf
+*.ldf
+*.pfx
+*.pem
+
+# ==============================
+# Uploads (VERY IMPORTANT)
+# ==============================
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
+
+# ==============================
+# Keep source code
+# ==============================
+!*.cs
+!*.csproj
+!*.sln
+!*.slnx

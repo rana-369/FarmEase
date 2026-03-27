@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="../FECommon/FECommon.csproj" />
+  <Project Path="../FEDomain/FEDomain.csproj" />
+  <Project Path="../FERepositories/FERepositories.csproj" />
+  <Project Path="../FEServices/FEServices.csproj" />
+  <Project Path="FarmEase.csproj" />
+</Solution>

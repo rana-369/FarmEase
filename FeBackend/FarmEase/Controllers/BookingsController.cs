@@ -1,0 +1,181 @@
+using System.Security.Claims;
+using FEDTO.DTOs;
+using FEServices.Interface;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace FarmEase.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class BookingsController : ControllerBase
+    {
+        private readonly IBookingService _bookingService;
+
+        public BookingsController(IBookingService bookingService)
+        {
+            _bookingService = bookingService;
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Farmer,farmer")]
+        public async Task<IActionResult> CreateBooking([FromBody] CreateBookingDto request)
+        {
+            var farmerId = GetUserId();
+            if (farmerId == null) return Unauthorized(new { Message = "Could not identify user from token." });
+
+            var farmerName = User.FindFirstValue("FullName") ?? "Farmer";
+
+            var (success, message, booking) = await _bookingService.CreateAsync(request, farmerId, farmerName);
+            if (!success)
+                return BadRequest(new { Message = message });
+
+            return Ok(new { Message = message, Booking = booking });
+        }
+
+        [HttpGet("owner")]
+        [Authorize(Roles = "Owner,owner")]
+        public async Task<IActionResult> GetOwnerBookings()
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { Message = "Could not identify user from token." });
+
+            var bookings = await _bookingService.GetOwnerBookingsAsync(userId);
+            return Ok(bookings);
+        }
+
+        [HttpGet("farmer")]
+        [Authorize(Roles = "farmer")]
+        public async Task<IActionResult> GetFarmerBookings()
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { Message = "Could not identify user from token." });
+
+            var bookings = await _bookingService.GetFarmerBookingsAsync(userId);
+            return Ok(bookings);
+        }
+
+        [HttpPut("{id}/accept")]
+        [Authorize(Roles = "Owner,owner")]
+        public async Task<IActionResult> AcceptBooking(int id)
+        {
+            var userId = GetUserId();
+            var (success, message) = await _bookingService.AcceptAsync(id, userId ?? "");
+            if (!success)
+                return Unauthorized(new { Message = message });
+
+            return Ok(new { Message = message });
+        }
+
+        [HttpPut("{id}/reject")]
+        [Authorize(Roles = "Owner,owner")]
+        public async Task<IActionResult> RejectBooking(int id)
+        {
+            var userId = GetUserId();
+            var (success, message) = await _bookingService.RejectAsync(id, userId ?? "");
+            if (!success)
+                return Unauthorized(new { Message = message });
+
+            return Ok(new { Message = message });
+        }
+
+        [HttpPut("{id}/complete")]
+        [Authorize(Roles = "Owner,owner")]
+        public async Task<IActionResult> CompleteBooking(int id)
+        {
+            var userId = GetUserId();
+            var (success, message) = await _bookingService.CompleteAsync(id, userId ?? "");
+            if (!success)
+                return Unauthorized(new { Message = message });
+
+            return Ok(new { Message = message });
+        }
+
+        [HttpPut("{id}/status")]
+        [Authorize(Roles = "Owner,owner,Admin,admin")]
+        public async Task<IActionResult> UpdateBookingStatus(int id, [FromBody] UpdateBookingStatusDto model)
+        {
+            var userId = GetUserId();
+            
+            var status = model.Status?.ToLower();
+            var (success, message) = status switch
+            {
+                "accepted" or "accept" => await _bookingService.AcceptAsync(id, userId ?? ""),
+                "rejected" or "reject" => await _bookingService.RejectAsync(id, userId ?? ""),
+                "completed" or "complete" => await _bookingService.CompleteAsync(id, userId ?? ""),
+                "active" or "paid" => await _bookingService.PayAsync(id, userId ?? ""),
+                _ => (false, "Invalid status. Use: accepted, rejected, completed, or active.")
+            };
+
+            if (!success)
+                return BadRequest(new { Message = message });
+
+            return Ok(new { Message = message });
+        }
+
+        [HttpDelete("{id}/cancel")]
+        [Authorize(Roles = "Farmer,farmer")]
+        public async Task<IActionResult> CancelBooking(int id)
+        {
+            var userId = GetUserId();
+            var (success, message) = await _bookingService.CancelAsync(id, userId ?? "");
+            if (!success)
+                return BadRequest(new { Message = message });
+
+            return Ok(new { Message = message });
+        }
+
+        [HttpPut("{id}/pay")]
+        [Authorize(Roles = "Farmer,farmer")]
+        public async Task<IActionResult> PayBooking(int id)
+        {
+            var userId = GetUserId();
+            var (success, message) = await _bookingService.PayAsync(id, userId ?? "");
+            if (!success)
+                return BadRequest(new { Message = message });
+
+            return Ok(new { Message = message });
+        }
+
+        [HttpGet("owner/sync-stats")]
+        [Authorize(Roles = "Owner,owner")]
+        public async Task<IActionResult> GetOwnerDashboardStatsSynced()
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { Message = "Could not identify user from token." });
+
+            var stats = await _bookingService.GetOwnerDashboardStatsAsync(userId);
+            return Ok(stats);
+        }
+
+        [HttpGet("farmer/stats")]
+        [Authorize(Roles = "Farmer,farmer")]
+        public async Task<IActionResult> GetFarmerStats()
+        {
+            var userId = GetUserId();
+            if (userId == null)
+                return Unauthorized(new { Message = "Could not identify user from token." });
+
+            var stats = await _bookingService.GetFarmerStatsAsync(userId);
+            return Ok(stats);
+        }
+
+        [HttpGet("admin/all")]
+        [Authorize(Roles = "Admin,admin")]
+        public async Task<IActionResult> GetAllAdminBookings()
+        {
+            var bookings = await _bookingService.GetAllBookingsAsync();
+            return Ok(bookings);
+        }
+
+        private string? GetUserId()
+        {
+            return User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue(ClaimTypes.Name)
+                ?? User.FindFirstValue("uid");
+        }
+    }
+}

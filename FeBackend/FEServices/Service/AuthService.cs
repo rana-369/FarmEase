@@ -1,0 +1,425 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
+using FEDomain;
+using FEDomain.Interfaces;
+using FEDTO.DTOs;
+using FEServices.Interface;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using OtpNet;
+
+namespace FEServices.Service
+{
+    public class AuthService : IAuthService
+    {
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
+
+        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration, IEmailService emailService)
+        {
+            _userManager = userManager;
+            _configuration = configuration;
+            _emailService = emailService;
+        }
+
+        public async Task<(bool Success, string Message, string? Token, string? Role, string? UserId)> RegisterAsync(RegisterDto model)
+        {
+            var userExists = await _userManager.FindByEmailAsync(model.Email);
+            if (userExists != null)
+                return (false, "User already exists!", null, null, null);
+
+            var user = new ApplicationUser
+            {
+                Email = model.Email,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                UserName = model.Email,
+                FullName = model.Name,
+                Role = model.Role?.ToLower() ?? "farmer"
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                return (false, $"User creation failed! {errors}", null, null, null);
+            }
+
+            return (true, "User created successfully!", null, null, null);
+        }
+
+        public async Task<(bool Success, string Message, string? Token, string? Role, string? UserId, bool Requires2FA, string? TwoFAMethod)> LoginAsync(LoginDto model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
+                return (false, "Invalid email or password.", null, null, null, false, null);
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var actualRole = !string.IsNullOrEmpty(user.Role) ? user.Role.ToLower() : (userRoles.FirstOrDefault()?.ToLower() ?? "farmer");
+
+            // Validate selected role matches actual role
+            if (!string.IsNullOrEmpty(model.SelectedRole))
+            {
+                var selectedRoleLower = model.SelectedRole.ToLower();
+                if (actualRole != selectedRoleLower)
+                {
+                    return (false, $"This account is registered as '{actualRole}'. Please select '{actualRole}' to login.", null, null, null, false, null);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(user.Role) && user.Role != user.Role.ToLower())
+            {
+                user.Role = user.Role.ToLower();
+                await _userManager.UpdateAsync(user);
+            }
+
+            // Check if 2FA is enabled for this user
+            if (user.TwoFactorEnabled)
+            {
+                // Generate and store 2FA OTP for email method
+                if (user.TwoFactorMethod == "email")
+                {
+                    var otp = new Random().Next(100000, 999999).ToString();
+                    user.TwoFactorOtp = otp;
+                    user.TwoFactorOtpExpiry = DateTime.UtcNow.AddMinutes(5);
+                    await _userManager.UpdateAsync(user);
+
+                    // Send OTP email
+                    await _emailService.Send2FAOtpEmailAsync(user.Email, otp);
+                    Console.WriteLine($"\n=== 2FA OTP FOR {user.Email}: {otp} ===\n");
+                }
+                
+                var displayRole = char.ToUpper(actualRole[0]) + actualRole.Substring(1);
+                return (true, "Two-factor authentication required.", null, displayRole, user.Id, true, user.TwoFactorMethod);
+            }
+
+            // No 2FA - proceed with normal login
+            var token = GenerateJwtToken(user, actualRole);
+            var displayRoleFinal = char.ToUpper(actualRole[0]) + actualRole.Substring(1);
+            return (true, "Login successful", token, displayRoleFinal, user.Id, false, null);
+        }
+
+        public async Task<(bool Success, string Message, string? Token, string? Role, string? UserId)> Verify2FAAsync(TwoFactorVerifyDto model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null || !user.TwoFactorEnabled)
+                return (false, "Invalid request.", null, null, null);
+
+            bool isValidCode = false;
+
+            if (user.TwoFactorMethod == "email")
+            {
+                // Verify email OTP
+                if (user.TwoFactorOtp == model.Code && user.TwoFactorOtpExpiry > DateTime.UtcNow)
+                {
+                    isValidCode = true;
+                    user.TwoFactorOtp = null;
+                    user.TwoFactorOtpExpiry = null;
+                    await _userManager.UpdateAsync(user);
+                }
+            }
+            else if (user.TwoFactorMethod == "authenticator" && !string.IsNullOrEmpty(user.TwoFactorSecret))
+            {
+                // Verify TOTP from authenticator app
+                var secretKey = Base32Encoding.ToBytes(user.TwoFactorSecret);
+                var totp = new Totp(secretKey);
+                isValidCode = totp.VerifyTotp(model.Code, out _, new VerificationWindow(2, 2));
+            }
+
+            if (!isValidCode)
+                return (false, "Invalid or expired verification code.", null, null, null);
+
+            var actualRole = !string.IsNullOrEmpty(user.Role) ? user.Role.ToLower() : "farmer";
+            var token = GenerateJwtToken(user, actualRole);
+            var displayRole = char.ToUpper(actualRole[0]) + actualRole.Substring(1);
+            return (true, "Verification successful.", token, displayRole, user.Id);
+        }
+
+        public async Task<(bool Success, string Message)> Resend2FAAsync(TwoFactorResendDto model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null || !user.TwoFactorEnabled || user.TwoFactorMethod != "email")
+                return (false, "Invalid request.");
+
+            // Rate limiting check - prevent resend within 60 seconds
+            if (user.TwoFactorOtpExpiry.HasValue && user.TwoFactorOtpExpiry.Value.AddMinutes(-4) > DateTime.UtcNow)
+            {
+                return (false, "Please wait before requesting a new code.");
+            }
+
+            var otp = new Random().Next(100000, 999999).ToString();
+            user.TwoFactorOtp = otp;
+            user.TwoFactorOtpExpiry = DateTime.UtcNow.AddMinutes(5);
+            await _userManager.UpdateAsync(user);
+
+            await _emailService.Send2FAOtpEmailAsync(user.Email, otp);
+            Console.WriteLine($"\n=== RESENT 2FA OTP FOR {user.Email}: {otp} ===\n");
+
+            return (true, "Verification code sent successfully.");
+        }
+
+        public async Task<(bool Success, string Message, string? QrCodeUrl, List<string>? BackupCodes)> Enable2FAAsync(string userId, TwoFactorEnableDto model)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return (false, "User not found.", null, null);
+
+            if (model.Method == "authenticator")
+            {
+                // Setup authenticator - generate secret and QR code
+                var secretKey = KeyGeneration.GenerateRandomKey(20);
+                var base32Secret = Base32Encoding.ToString(secretKey);
+                user.TwoFactorSecret = base32Secret;
+                
+                var backupCodes = GenerateBackupCodes();
+                user.TwoFactorBackupCodes = JsonSerializer.Serialize(backupCodes.Select(HashCode).ToList());
+                user.TwoFactorMethod = "authenticator";
+                user.TwoFactorEnabled = true;
+                await _userManager.UpdateAsync(user);
+
+                var issuer = Uri.EscapeDataString("AgriConnect");
+                var account = Uri.EscapeDataString(user.Email);
+                var qrCodeUrl = $"otpauth://totp/{issuer}:{account}?secret={base32Secret}&issuer={issuer}&digits=6&period=30";
+
+                return (true, "Authenticator setup initiated.", qrCodeUrl, backupCodes);
+            }
+            else
+            {
+                // Email method - just enable
+                user.TwoFactorMethod = "email";
+                user.TwoFactorEnabled = true;
+                
+                var backupCodes = GenerateBackupCodes();
+                user.TwoFactorBackupCodes = JsonSerializer.Serialize(backupCodes.Select(HashCode).ToList());
+                await _userManager.UpdateAsync(user);
+
+                return (true, "Two-factor authentication enabled.", null, backupCodes);
+            }
+        }
+
+        public async Task<(bool Success, string Message)> Disable2FAAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return (false, "User not found.");
+
+            user.TwoFactorEnabled = false;
+            user.TwoFactorMethod = null;
+            user.TwoFactorSecret = null;
+            user.TwoFactorBackupCodes = null;
+            user.TwoFactorOtp = null;
+            user.TwoFactorOtpExpiry = null;
+            await _userManager.UpdateAsync(user);
+
+            return (true, "Two-factor authentication disabled.");
+        }
+
+        public async Task<(TwoFactorSettingsDto? Settings, bool Success, string Message)> Get2FASettingsAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return (null, false, "User not found.");
+
+            Console.WriteLine($"\n=== 2FA SETTINGS DEBUG ===");
+            Console.WriteLine($"UserId: {userId}");
+            Console.WriteLine($"TwoFactorEnabled: {user.TwoFactorEnabled}");
+            Console.WriteLine($"TwoFactorMethod: {user.TwoFactorMethod}");
+            Console.WriteLine($"===========================\n");
+
+            var settings = new TwoFactorSettingsDto
+            {
+                Enabled = user.TwoFactorEnabled,
+                Method = user.TwoFactorMethod
+            };
+
+            return (settings, true, "Settings retrieved.");
+        }
+
+        public async Task<(bool Success, string Message, string? QrCodeUrl, List<string>? BackupCodes)> SetupAuthenticatorAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return (false, "User not found.", null, null);
+
+            var secretKey = KeyGeneration.GenerateRandomKey(20);
+            var base32Secret = Base32Encoding.ToString(secretKey);
+            user.TwoFactorSecret = base32Secret;
+            
+            var backupCodes = GenerateBackupCodes();
+            user.TwoFactorBackupCodes = JsonSerializer.Serialize(backupCodes.Select(HashCode).ToList());
+            await _userManager.UpdateAsync(user);
+
+            var issuer = Uri.EscapeDataString("AgriConnect");
+            var account = Uri.EscapeDataString(user.Email);
+            var qrCodeUrl = $"otpauth://totp/{issuer}:{account}?secret={base32Secret}&issuer={issuer}&digits=6&period=30";
+
+            return (true, "Authenticator setup initiated.", qrCodeUrl, backupCodes);
+        }
+
+        public async Task<(bool Success, string Message)> VerifyAuthenticatorSetupAsync(string userId, TwoFactorVerifySetupDto model)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || string.IsNullOrEmpty(user.TwoFactorSecret))
+                return (false, "Invalid request.");
+
+            var secretKey = Base32Encoding.ToBytes(user.TwoFactorSecret);
+            var totp = new Totp(secretKey);
+            var isValid = totp.VerifyTotp(model.Code, out _, new VerificationWindow(2, 2));
+
+            if (!isValid)
+                return (false, "Invalid verification code.");
+
+            user.TwoFactorMethod = "authenticator";
+            user.TwoFactorEnabled = true;
+            await _userManager.UpdateAsync(user);
+
+            return (true, "Authenticator app configured successfully.");
+        }
+
+        public async Task<(bool Success, string Message, string? Token, string? Role, string? UserId)> VerifyBackupCodeAsync(TwoFactorBackupVerifyDto model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null || string.IsNullOrEmpty(user.TwoFactorBackupCodes))
+                return (false, "Invalid request.", null, null, null);
+
+            var hashedCodes = JsonSerializer.Deserialize<List<string>>(user.TwoFactorBackupCodes) ?? new List<string>();
+            var inputHash = HashCode(model.Code);
+
+            var codeIndex = hashedCodes.FindIndex(c => c == inputHash);
+            if (codeIndex == -1)
+                return (false, "Invalid backup code.", null, null, null);
+
+            // Remove used backup code
+            hashedCodes.RemoveAt(codeIndex);
+            user.TwoFactorBackupCodes = JsonSerializer.Serialize(hashedCodes);
+            await _userManager.UpdateAsync(user);
+
+            var actualRole = !string.IsNullOrEmpty(user.Role) ? user.Role.ToLower() : "farmer";
+            var token = GenerateJwtToken(user, actualRole);
+            var displayRole = char.ToUpper(actualRole[0]) + actualRole.Substring(1);
+            return (true, "Backup code verified.", token, displayRole, user.Id);
+        }
+
+        public async Task<(bool Success, string Message, List<string>? BackupCodes)> RegenerateBackupCodesAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return (false, "User not found.", null);
+
+            var backupCodes = GenerateBackupCodes();
+            user.TwoFactorBackupCodes = JsonSerializer.Serialize(backupCodes.Select(HashCode).ToList());
+            await _userManager.UpdateAsync(user);
+
+            return (true, "Backup codes regenerated.", backupCodes);
+        }
+
+        public async Task<(bool Success, string Message)> ForgotPasswordAsync(ForgotPasswordDto model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return (true, "If that email exists, an OTP has been sent.");
+
+            var otp = new Random().Next(100000, 999999).ToString();
+            user.ResetOtp = otp;
+            user.ResetOtpExpiry = DateTime.UtcNow.AddMinutes(15);
+            await _userManager.UpdateAsync(user);
+
+            Console.WriteLine($"\n=== PASSWORD RESET OTP FOR {user.Email}: {otp} ===\n");
+
+            var emailSent = await _emailService.SendOtpEmailAsync(user.Email, otp);
+            
+            if (emailSent)
+            {
+                return (true, "OTP has been sent to your email address. Please check your inbox.");
+            }
+            else
+            {
+                return (true, $"Email sending failed. For testing, use OTP: {otp}");
+            }
+        }
+
+        public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordDto model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+
+            if (user == null || user.ResetOtp != model.Otp || user.ResetOtpExpiry < DateTime.UtcNow)
+                return (false, "Invalid or expired OTP.");
+
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, resetToken, model.NewPassword);
+
+            if (result.Succeeded)
+            {
+                user.ResetOtp = null;
+                user.ResetOtpExpiry = null;
+                await _userManager.UpdateAsync(user);
+                return (true, "Password reset successfully.");
+            }
+
+            return (false, "Failed to reset password. Ensure it has uppercase, lowercase, numbers, and symbols.");
+        }
+
+        // Helper methods
+        private string GenerateJwtToken(ApplicationUser user, string role)
+        {
+            var safeUserName = user.UserName ?? user.Email ?? "UnknownUser";
+
+            var authClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, safeUserName),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.Role, role),
+                new Claim("FullName", user.FullName ?? "User")
+            };
+
+            string jwtSecret = _configuration["JWT:Secret"]
+                ?? throw new InvalidOperationException("JWT Secret is missing from appsettings.json!");
+
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["JWT:ValidIssuer"],
+                audience: _configuration["JWT:ValidAudience"],
+                expires: DateTime.Now.AddHours(3),
+                claims: authClaims,
+                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private List<string> GenerateBackupCodes(int count = 8)
+        {
+            var codes = new List<string>();
+            var random = new Random();
+            
+            for (int i = 0; i < count; i++)
+            {
+                // Use 9 bytes to ensure at least 8 chars after removing special chars
+                var bytes = new byte[9];
+                random.NextBytes(bytes);
+                var base64 = Convert.ToBase64String(bytes)
+                    .Replace("+", "")
+                    .Replace("/", "")
+                    .Replace("=", "");
+                // Take first 8 chars, pad with 'X' if needed
+                var code = (base64.Length >= 8 ? base64.Substring(0, 8) : base64.PadRight(8, 'X'))
+                    .ToUpper();
+                codes.Add(code);
+            }
+            
+            return codes;
+        }
+
+        private string HashCode(string code)
+        {
+            using var sha256 = System.Security.Cryptography.SHA256.Create();
+            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(code));
+            return Convert.ToBase64String(bytes);
+        }
+    }
+}

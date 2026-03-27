@@ -1,0 +1,6 @@
+@FarmEase_HostAddress = http://localhost:5208
+
+GET {{FarmEase_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
