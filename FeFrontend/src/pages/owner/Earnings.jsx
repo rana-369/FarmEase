@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiTrendingUp, FiArrowUpRight, FiCalendar, FiFilter, FiDownload } from 'react-icons/fi';
+import { FiTrendingUp, FiArrowUpRight, FiCalendar, FiFilter, FiDownload, FiTruck, FiClock } from 'react-icons/fi';
 import { RupeeIcon } from '../../components/RupeeIcon';
 import { getOwnerStats, getOwnerActivity } from '../../services/dashboardService';
 
@@ -34,7 +34,6 @@ const OwnerEarnings = () => {
         
         if (activityData) {
           const transformedActivity = (activityData || []).map(activity => {
-            // Calculate owner's net earnings (totalAmount - platformFee)
             const totalAmount = activity.totalAmount || activity.TotalAmount || activity.amount || 0;
             const platformFee = activity.platformFee || activity.PlatformFee || 0;
             const baseAmount = activity.baseAmount || activity.BaseAmount || (totalAmount - platformFee);
@@ -47,7 +46,7 @@ const OwnerEarnings = () => {
               action: activity.action || activity.Action || 'made a booking',
               time: activity.createdAt || activity.CreatedAt || new Date().toISOString(),
               status: (activity.status || activity.Status || 'pending').toLowerCase(),
-              amount: baseAmount, // Owner's net earnings (after platform fee deduction)
+              amount: baseAmount,
               platformFee: platformFee,
               totalAmount: totalAmount
             };
@@ -71,118 +70,140 @@ const OwnerEarnings = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen p-8" style={{ backgroundColor: '#0a0a0a' }}>
-      <div className="max-w-7xl mx-auto space-y-12">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="mb-4">
-            <span className="px-4 py-2 rounded-full text-sm font-semibold" style={{ 
-              backgroundColor: 'rgba(22, 163, 74, 0.1)', 
-              color: '#22c55e',
-              border: '1px solid rgba(22, 163, 74, 0.2)'
-            }}>
-              Revenue Analytics
-            </span>
-          </div>
-          <h1 className="text-4xl font-bold mb-2" style={{ color: '#ffffff' }}>Fleet Earnings</h1>
-          <p className="text-lg" style={{ color: '#a1a1a1' }}>Monitor your machinery rental income and financial performance.</p>
-        </motion.div>
+  const completedEarnings = activity
+    .filter(a => a.status === 'completed' || a.status === 'active')
+    .reduce((sum, a) => sum + (a.amount || 0), 0);
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { label: 'Total Earnings', value: `₹${(stats.totalEarnings || 0).toLocaleString()}`, icon: RupeeIcon, color: '#22c55e' },
-            { label: 'Active Rentals', value: stats.activeRentals || 0, icon: FiTrendingUp, color: '#3b82f6' },
-            { label: 'Fleet Size', value: stats.totalMachines || 0, icon: FiCalendar, color: '#a855f7' },
-          ].map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="p-8 rounded-2xl"
+  return (
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#0a0a0a' }}>
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }} 
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mb-8"
+        >
+          <div className="flex items-center gap-4">
+            <div 
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
               style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(10px)'
+                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
               }}
             >
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
-              }}>
-                <item.icon className="text-xl" style={{ color: item.color }} />
+              <FiTrendingUp className="text-xl text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold" style={{ color: '#ffffff' }}>Earnings</h1>
+              <p className="text-sm" style={{ color: '#666666' }}>Track your rental income</p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {[
+            { label: 'Total Earnings', value: `₹${(stats.totalEarnings || 0).toLocaleString()}`, color: '#22c55e', icon: FiTrendingUp },
+            { label: 'Active Rentals', value: stats.activeRentals || 0, color: '#3b82f6', icon: FiTruck },
+            { label: 'Fleet Size', value: stats.totalMachines || 0, color: '#a855f7', icon: FiTrendingUp }
+          ].map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div 
+                key={stat.label}
+                className="p-4 rounded-xl"
+                style={{ backgroundColor: `${stat.color}10`, border: `1px solid ${stat.color}20` }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <Icon className="text-lg" style={{ color: stat.color }} />
+                </div>
+                <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-xs" style={{ color: '#888888' }}>{stat.label}</p>
               </div>
-              <p className="text-sm mb-2" style={{ color: '#a1a1a1' }}>{item.label}</p>
-              <h3 className="text-3xl font-bold" style={{ color: '#ffffff' }}>{item.value}</h3>
-            </motion.div>
-          ))}
+            );
+          })}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="p-8 rounded-3xl"
-          style={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)'
-          }}
-        >
-          <div className="flex items-center justify-between mb-10">
-            <h2 className="text-2xl font-bold" style={{ color: '#ffffff' }}>Recent Transactions</h2>
-            <div className="flex gap-3">
-              <label htmlFor="earnings-filter" className="sr-only">Filter earnings</label>
-              <button id="earnings-filter" className="p-3 rounded-xl transition-all" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#a1a1a1' }}><FiFilter /></button>
-              <label htmlFor="earnings-download" className="sr-only">Download earnings</label>
-              <button id="earnings-download" className="p-3 rounded-xl transition-all" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#a1a1a1' }}><FiDownload /></button>
+        {/* Transactions */}
+        <div className="rounded-2xl p-6" style={{ 
+          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.06)'
+        }}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Recent Transactions</h2>
+            <div className="flex gap-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 rounded-lg"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#888888' }}
+              >
+                <FiFilter className="w-4 h-4" />
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 rounded-lg"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#888888' }}
+              >
+                <FiDownload className="w-4 h-4" />
+              </motion.button>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {activity.filter(a => a.status === 'completed' || a.status === 'active').map((item, index) => (
               <motion.div 
                 key={item.id} 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="p-6 rounded-2xl flex items-center justify-between transition-all hover:bg-white/10" 
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)' }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.03 }}
+                className="p-4 rounded-xl flex items-center justify-between"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.04)' }}
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center border border-green-500/20">
-                    <RupeeIcon className="text-xl text-green-500" />
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
+                  >
+                    <FiTrendingUp className="text-lg" style={{ color: '#22c55e' }} />
                   </div>
                   <div>
-                    <p className="font-bold text-white text-lg">{item.machineName}</p>
-                    <div className="flex items-center gap-2 text-sm" style={{ color: '#666666' }}>
-                      <FiCalendar className="text-xs" />
+                    <p className="font-medium text-sm" style={{ color: '#ffffff' }}>{item.machineName}</p>
+                    <div className="flex items-center gap-2 text-xs" style={{ color: '#666666' }}>
+                      <FiCalendar className="w-3 h-3" />
                       <span>{new Date(item.time).toLocaleDateString()}</span>
-                      <span className="w-1 h-1 rounded-full bg-gray-600"></span>
-                      <span className="text-gray-400 font-medium">Farmer: {item.farmerName}</span>
+                      <span>•</span>
+                      <span>{item.farmerName}</span>
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-bold text-green-500">+₹{(item.amount || 0).toLocaleString()}</p>
-                  <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded bg-green-500/10 text-green-500 border border-green-500/20">
+                  <p className="text-lg font-bold" style={{ color: '#22c55e' }}>+₹{(item.amount || 0).toLocaleString()}</p>
+                  <span 
+                    className="text-xs px-2 py-0.5 rounded"
+                    style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}
+                  >
                     {item.status}
                   </span>
                 </div>
               </motion.div>
             ))}
+            
             {activity.filter(a => a.status === 'completed' || a.status === 'active').length === 0 && (
-              <div className="text-center py-24 rounded-3xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
-                <RupeeIcon className="text-6xl mx-auto mb-6 text-gray-800" />
-                <p className="text-xl font-medium" style={{ color: '#666666' }}>No transactions recorded yet.</p>
-                <p className="text-sm mt-2" style={{ color: '#444444' }}>Earnings will appear here once rentals are active or completed.</p>
+              <div className="text-center py-12">
+                <div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                >
+                  <FiTrendingUp className="text-3xl" style={{ color: '#333333' }} />
+                </div>
+                <p className="text-sm mb-1" style={{ color: '#ffffff' }}>No transactions yet</p>
+                <p className="text-xs" style={{ color: '#666666' }}>Earnings will appear here after rentals</p>
               </div>
             )}
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

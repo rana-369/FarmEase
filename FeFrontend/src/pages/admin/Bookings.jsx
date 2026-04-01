@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { FiPackage, FiEye, FiCalendar, FiMapPin, FiUser, FiCheckCircle, FiXCircle, FiClock } from 'react-icons/fi';
+import { FiPackage, FiEye, FiCalendar, FiMapPin, FiUser, FiCheckCircle, FiXCircle, FiClock, FiSearch, FiFilter, FiX, FiTrendingUp } from 'react-icons/fi';
 import { RupeeIcon } from '../../components/RupeeIcon';
 import { getAllBookings } from '../../services/dashboardService';
 import Pagination from '../../components/Pagination';
@@ -13,7 +13,6 @@ const BookingsManagement = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [summary, setSummary] = useState({ activeCount: 0, completedCount: 0, totalRevenue: 0 });
   
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
@@ -26,7 +25,6 @@ const BookingsManagement = () => {
       setBookings(response.bookings || response.items || []);
       setTotalItems(response.totalItems || 0);
       setTotalPages(response.totalPages || 1);
-      // Use summary from backend if available
       if (response.summary) {
         setSummary({
           activeCount: response.summary.activeCount || response.summary.ActiveCount || 0,
@@ -45,7 +43,6 @@ const BookingsManagement = () => {
     fetchBookings();
   }, [fetchBookings]);
   
-  // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchTerm !== '') {
@@ -68,23 +65,13 @@ const BookingsManagement = () => {
     setCurrentPage(1);
   };
 
-  const getStatusColor = (status) => {
+  const getStatusConfig = (status) => {
     switch (status?.toLowerCase()) {
-      case 'completed': return { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e', border: 'rgba(34, 197, 94, 0.3)' };
-      case 'active': return { bg: 'rgba(59, 130, 246, 0.15)', text: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)' };
-      case 'pending': return { bg: 'rgba(250, 204, 21, 0.15)', text: '#facc15', border: 'rgba(250, 204, 21, 0.3)' };
-      case 'cancelled': return { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' };
-      default: return { bg: 'rgba(255, 255, 255, 0.05)', text: '#a1a1a1', border: 'rgba(255, 255, 255, 0.1)' };
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'completed': return <FiCheckCircle className="w-4 h-4" />;
-      case 'active': return <FiClock className="w-4 h-4" />;
-      case 'pending': return <FiClock className="w-4 h-4" />;
-      case 'cancelled': return <FiXCircle className="w-4 h-4" />;
-      default: return <FiClock className="w-4 h-4" />;
+      case 'completed': return { icon: FiCheckCircle, color: '#22c55e', bg: 'rgba(34, 197, 94, 0.15)' };
+      case 'active': return { icon: FiClock, color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' };
+      case 'pending': return { icon: FiClock, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)' };
+      case 'cancelled': return { icon: FiXCircle, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)' };
+      default: return { icon: FiClock, color: '#888888', bg: 'rgba(255, 255, 255, 0.05)' };
     }
   };
 
@@ -108,87 +95,92 @@ const BookingsManagement = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64" style={{ backgroundColor: '#0a0a0a' }}>
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
         <div className="w-12 h-12 border-2 rounded-full animate-spin" style={{ borderColor: '#22c55e', borderTopColor: 'transparent' }}></div>
       </div>
     );
   }
 
-  // Use summary from backend (calculated from all bookings, not just current page)
   const activeCount = summary.activeCount;
   const completedCount = summary.completedCount;
   const totalRevenue = summary.totalRevenue;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
-      {/* Header */}
-      <div className="p-8 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2" style={{ color: '#ffffff' }}>Bookings Management</h1>
-            <p style={{ color: '#a1a1a1' }}>Monitor and manage all equipment bookings</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="px-4 py-2 rounded-lg" style={{ 
-              backgroundColor: 'rgba(59, 130, 246, 0.1)', 
-              color: '#3b82f6',
-              border: '1px solid rgba(59, 130, 246, 0.2)'
-            }}>
-              {activeCount} Active
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#0a0a0a' }}>
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }} 
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mb-8"
+        >
+          <div className="flex items-center gap-4">
+            <div 
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ 
+                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+              }}
+            >
+              <FiPackage className="text-xl text-white" />
             </div>
-            <div className="px-4 py-2 rounded-lg" style={{ 
-              backgroundColor: 'rgba(34, 197, 94, 0.1)', 
-              color: '#22c55e',
-              border: '1px solid rgba(34, 197, 94, 0.2)'
-            }}>
-              {completedCount} Completed
-            </div>
-            <div className="px-4 py-2 rounded-lg" style={{ 
-              backgroundColor: 'rgba(251, 191, 36, 0.1)', 
-              color: '#fbbf24',
-              border: '1px solid rgba(251, 191, 36, 0.2)'
-            }}>
-              ₹{totalRevenue.toLocaleString()} Revenue
+            <div>
+              <h1 className="text-2xl font-bold" style={{ color: '#ffffff' }}>Bookings</h1>
+              <p className="text-sm" style={{ color: '#666666' }}>Manage all equipment bookings</p>
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
 
-      {/* Filters */}
-      <div className="p-8 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <label htmlFor="booking-search" className="sr-only">Search bookings</label>
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {[
+            { label: 'Active', value: activeCount, color: '#3b82f6', icon: FiClock },
+            { label: 'Completed', value: completedCount, color: '#22c55e', icon: FiCheckCircle },
+            { label: 'Revenue', value: `₹${totalRevenue.toLocaleString()}`, color: '#f59e0b', icon: FiTrendingUp }
+          ].map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div 
+                key={stat.label}
+                className="p-5 rounded-xl"
+                style={{ backgroundColor: `${stat.color}10`, border: `1px solid ${stat.color}20` }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <Icon className="text-lg" style={{ color: stat.color }} />
+                </div>
+                <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-xs" style={{ color: '#888888' }}>{stat.label}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            <FiSearch style={{ color: '#666666' }} />
             <input
               id="booking-search"
               name="booking-search"
               type="text"
-              placeholder="Search bookings by machine, farmer, or owner..."
+              placeholder="Search by machine, farmer, or owner..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg"
+              className="flex-1 bg-transparent outline-none text-sm"
               autoComplete="off"
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#ffffff'
-              }}
+              style={{ color: '#ffffff' }}
             />
           </div>
-          <div className="">
-            <label htmlFor="status-filter" className="sr-only">Filter by status</label>
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            <FiFilter style={{ color: '#666666' }} />
             <select
               id="status-filter"
               name="status-filter"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               autoComplete="off"
-              className="px-4 py-3 rounded-lg appearance-none cursor-pointer"
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#ffffff'
-              }}
+              className="bg-transparent outline-none cursor-pointer text-sm"
+              style={{ color: '#ffffff' }}
             >
               <option value="all" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>All Status</option>
               <option value="pending" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Pending</option>
@@ -198,126 +190,116 @@ const BookingsManagement = () => {
             </select>
           </div>
         </div>
-      </div>
 
-      {/* Bookings Table */}
-      <div className="p-8">
+        {/* Bookings Table */}
         <div className="rounded-2xl overflow-hidden" style={{ 
-          backgroundColor: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)'
+          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.06)'
         }}>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#a1a1a1' }}>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#666666' }}>
                     Booking Details
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#a1a1a1' }}>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#666666' }}>
                     Duration
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#a1a1a1' }}>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#666666' }}>
                     Amount
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#a1a1a1' }}>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#666666' }}>
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#a1a1a1' }}>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#666666' }}>
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y" style={{ borderColor: 'rgba(255, 255, 255, 0.05)' }}>
-                {bookings.map((booking, index) => (
-                  <motion.tr
-                    key={booking.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="hover:bg-opacity-50 transition-colors"
-                    style={{ hover: { backgroundColor: 'rgba(255, 255, 255, 0.02)' } }}
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-start">
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center mr-3" style={{ 
-                          backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                          border: '1px solid rgba(34, 197, 94, 0.2)'
-                        }}>
-                          <FiPackage className="text-sm" style={{ color: '#22c55e' }} />
+              <tbody className="divide-y" style={{ borderColor: 'rgba(255, 255, 255, 0.04)' }}>
+                {bookings.map((booking, index) => {
+                  const config = getStatusConfig(booking.status);
+                  const Icon = config.icon;
+                  return (
+                    <motion.tr
+                      key={booking.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      className="transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-start gap-3">
+                          <div 
+                            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
+                          >
+                            <FiPackage className="text-sm" style={{ color: '#22c55e' }} />
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium" style={{ color: '#ffffff' }}>
+                              {booking.machineName || 'Unknown Machine'}
+                            </div>
+                            <div className="text-xs mt-1" style={{ color: '#666666' }}>
+                              <FiUser className="inline mr-1" />
+                              {booking.farmerName || 'Unknown Farmer'}
+                            </div>
+                            <div className="text-xs" style={{ color: '#666666' }}>
+                              Owner: {booking.ownerName || 'Unknown Owner'}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="text-sm font-medium" style={{ color: '#ffffff' }}>
-                            {booking.machineName || 'Unknown Machine'}
-                          </div>
-                          <div className="text-sm" style={{ color: '#666666' }}>
-                            <FiUser className="inline mr-1" />
-                            {booking.farmerName || 'Unknown Farmer'}
-                          </div>
-                          <div className="text-sm" style={{ color: '#666666' }}>
-                            Owner: {booking.ownerName || 'Unknown Owner'}
-                          </div>
-                          <div className="text-xs" style={{ color: '#666666' }}>
-                            <FiMapPin className="inline mr-1" />
-                            {booking.location || 'Location not specified'}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: '#a1a1a1' }}>
-                      <div>
-                        <div className="flex items-center">
-                          <FiCalendar className="mr-1" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm" style={{ color: '#ffffff' }}>
                           {calculateDuration(booking.startDate, booking.endDate)}
                         </div>
-                        <div className="text-xs mt-1">
-                          {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
+                        <div className="text-xs mt-1" style={{ color: '#666666' }}>
+                          {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium" style={{ color: '#ffffff' }}>
-                        ₹{(booking.totalAmount || 0).toLocaleString()}
-                      </div>
-                      {booking.platformFee && (
-                        <div className="text-xs" style={{ color: '#666666' }}>
-                          Platform fee: ₹{booking.platformFee}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium" style={{ color: '#22c55e' }}>
+                          ₹{(booking.totalAmount || 0).toLocaleString()}
                         </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full border" style={{
-                        backgroundColor: getStatusColor(booking.status).bg,
-                        color: getStatusColor(booking.status).text,
-                        borderColor: getStatusColor(booking.status).border
-                      }}>
-                        {getStatusIcon(booking.status)}
-                        <span className="ml-1">{booking.status || 'Unknown'}</span>
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => setSelectedBooking(booking)}
-                        className="p-2 rounded-lg transition-colors"
-                        style={{
-                          backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                          color: '#22c55e'
-                        }}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(34, 197, 94, 0.2)'}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(34, 197, 94, 0.1)'}
-                      >
-                        <FiEye className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </motion.tr>
-                ))}
+                        {booking.platformFee && (
+                          <div className="text-xs" style={{ color: '#666666' }}>
+                            Fee: ₹{booking.platformFee}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span 
+                          className="px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5"
+                          style={{ backgroundColor: config.bg, color: config.color }}
+                        >
+                          <Icon className="w-3 h-3" />
+                          {booking.status || 'Unknown'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setSelectedBooking(booking)}
+                          className="p-2 rounded-lg"
+                          style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}
+                        >
+                          <FiEye className="w-4 h-4" />
+                        </motion.button>
+                      </td>
+                    </motion.tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
           
           {bookings.length === 0 && (
             <div className="text-center py-12">
-              <FiPackage className="mx-auto text-4xl mb-4" style={{ color: '#666666' }} />
-              <p style={{ color: '#a1a1a1' }}>No bookings found matching your criteria</p>
+              <FiPackage className="mx-auto text-4xl mb-4" style={{ color: '#333333' }} />
+              <p className="text-sm" style={{ color: '#666666' }}>No bookings found</p>
             </div>
           )}
         </div>
@@ -345,92 +327,53 @@ const BookingsManagement = () => {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
             style={{
               backgroundColor: '#1a1a1a',
               border: '1px solid rgba(255, 255, 255, 0.1)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold" style={{ color: '#ffffff' }}>Booking Details</h3>
-              <button
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold" style={{ color: '#ffffff' }}>Booking Details</h3>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setSelectedBooking(null)}
                 className="p-2 rounded-lg"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#888888' }}
               >
-                ×
-              </button>
+                <FiX />
+              </motion.button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <div className="space-y-4">
+              {[
+                { label: 'Machine', value: selectedBooking.machineName || 'N/A' },
+                { label: 'Farmer', value: selectedBooking.farmerName || 'N/A' },
+                { label: 'Owner', value: selectedBooking.ownerName || 'N/A' },
+                { label: 'Location', value: selectedBooking.location || 'N/A' },
+                { label: 'Duration', value: calculateDuration(selectedBooking.startDate, selectedBooking.endDate) },
+                { label: 'Total Amount', value: `₹${(selectedBooking.totalAmount || 0).toLocaleString()}`, color: '#22c55e' },
+                { label: 'Start Date', value: formatDate(selectedBooking.startDate) },
+                { label: 'End Date', value: formatDate(selectedBooking.endDate) }
+              ].map((item) => (
+                <div key={item.label}>
+                  <p className="text-xs mb-1" style={{ color: '#666666' }}>{item.label}</p>
+                  <p className="text-sm font-medium" style={{ color: item.color || '#ffffff' }}>{item.value}</p>
+                </div>
+              ))}
+              
               <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Machine</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>{selectedBooking.machineName || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Farmer</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>{selectedBooking.farmerName || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Owner</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>{selectedBooking.ownerName || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Location</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>{selectedBooking.location || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Duration</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>
-                  {calculateDuration(selectedBooking.startDate, selectedBooking.endDate)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Total Amount</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>
-                  ₹{(selectedBooking.totalAmount || 0).toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Status</p>
-                <span className="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full border" style={{
-                  backgroundColor: getStatusColor(selectedBooking.status).bg,
-                  color: getStatusColor(selectedBooking.status).text,
-                  borderColor: getStatusColor(selectedBooking.status).border
-                }}>
-                  {getStatusIcon(selectedBooking.status)}
-                  <span className="ml-1">{selectedBooking.status || 'Unknown'}</span>
+                <p className="text-xs mb-1" style={{ color: '#666666' }}>Status</p>
+                <span 
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5"
+                  style={{ backgroundColor: getStatusConfig(selectedBooking.status).bg, color: getStatusConfig(selectedBooking.status).color }}
+                >
+                  {selectedBooking.status || 'Unknown'}
                 </span>
               </div>
-              <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Created</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>
-                  {formatDate(selectedBooking.createdAt || selectedBooking.created_at)}
-                </p>
-              </div>
             </div>
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Start Date</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>
-                  {formatDate(selectedBooking.startDate)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>End Date</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>
-                  {formatDate(selectedBooking.endDate)}
-                </p>
-              </div>
-            </div>
-            {selectedBooking.platformFee && (
-              <div className="mt-4">
-                <p className="text-sm mb-1" style={{ color: '#a1a1a1' }}>Platform Fee</p>
-                <p className="font-medium" style={{ color: '#ffffff' }}>
-                  ₹{selectedBooking.platformFee}
-                </p>
-              </div>
-            )}
           </motion.div>
         </motion.div>
       )}

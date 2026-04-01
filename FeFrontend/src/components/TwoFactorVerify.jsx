@@ -106,22 +106,22 @@ const TwoFactorVerify = ({ email, onVerify, onBack, loading: parentLoading }) =>
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", duration: 0.5 }}
-          className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6"
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
           style={{ 
-            backgroundColor: 'rgba(34, 197, 94, 0.1)',
-            border: '2px solid rgba(34, 197, 94, 0.3)'
+            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+            boxShadow: '0 8px 20px rgba(34, 197, 94, 0.3)'
           }}
         >
-          <FiShield className="text-4xl" style={{ color: '#22c55e' }} />
+          <FiShield className="text-2xl text-white" />
         </motion.div>
         
-        <h2 className="text-2xl font-bold mb-2" style={{ color: '#ffffff' }}>
+        <h2 className="text-xl font-bold mb-2" style={{ color: '#ffffff' }}>
           Two-Factor Authentication
         </h2>
-        <p className="text-sm" style={{ color: '#a1a1a1' }}>
-          Enter the 6-digit code sent to your email
+        <p className="text-sm" style={{ color: '#888888' }}>
+          Enter the 6-digit code sent to
         </p>
-        <p className="text-xs mt-2 font-mono" style={{ color: '#22c55e' }}>
+        <p className="text-sm font-medium mt-1" style={{ color: '#22c55e' }}>
           {email}
         </p>
       </div>
@@ -131,20 +131,19 @@ const TwoFactorVerify = ({ email, onVerify, onBack, loading: parentLoading }) =>
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 rounded-lg flex items-center gap-3"
+          className="mb-5 p-3 rounded-xl flex items-center gap-3"
           style={{ 
             backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            color: '#ef4444'
+            border: '1px solid rgba(239, 68, 68, 0.2)'
           }}
         >
-          <FiAlertCircle className="text-xl flex-shrink-0" />
-          <span className="text-sm">{error}</span>
+          <FiAlertCircle className="text-lg flex-shrink-0" style={{ color: '#ef4444' }} />
+          <span className="text-sm" style={{ color: '#ef4444' }}>{error}</span>
         </motion.div>
       )}
 
       {/* Code Input */}
-      <div className="flex justify-center gap-2 mb-8">
+      <div className="flex justify-center gap-2 mb-6">
         {code.map((digit, index) => (
           <motion.input
             key={index}
@@ -159,10 +158,10 @@ const TwoFactorVerify = ({ email, onVerify, onBack, loading: parentLoading }) =>
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="w-12 h-14 text-center text-xl font-bold rounded-lg transition-all duration-200"
+            className="w-11 h-12 text-center text-lg font-bold rounded-xl transition-all duration-200 focus:outline-none"
             style={{
-              backgroundColor: digit ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-              border: digit ? '2px solid #22c55e' : '2px solid rgba(255, 255, 255, 0.1)',
+              backgroundColor: digit ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+              border: digit ? '2px solid #22c55e' : '1px solid rgba(255, 255, 255, 0.1)',
               color: '#ffffff',
               fontFamily: 'monospace'
             }}
@@ -174,23 +173,23 @@ const TwoFactorVerify = ({ email, onVerify, onBack, loading: parentLoading }) =>
       <motion.button
         onClick={handleSubmit}
         disabled={isLoading}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className="w-full py-3 text-lg font-semibold rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+        className="w-full py-3 text-base font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
         style={{ 
-          backgroundColor: '#22c55e', 
+          background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
           color: '#ffffff',
-          boxShadow: '0 10px 25px rgba(34, 197, 94, 0.3)'
+          boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
         }}
       >
         {isLoading ? (
           <>
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             Verifying...
           </>
         ) : (
           <>
-            <FiCheck />
+            <FiCheck className="text-lg" />
             Verify Code
           </>
         )}
@@ -199,38 +198,42 @@ const TwoFactorVerify = ({ email, onVerify, onBack, loading: parentLoading }) =>
       {/* Resend Code */}
       <div className="text-center mb-4">
         {canResend ? (
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleResend}
-            className="text-sm font-medium hover:text-green-400 transition-colors"
-            style={{ color: '#22c55e' }}
+            className="text-sm font-medium px-4 py-2 rounded-lg transition-all"
+            style={{ color: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
           >
             Resend Code
-          </button>
+          </motion.button>
         ) : (
-          <p className="text-sm" style={{ color: '#a1a1a1' }}>
-            Resend code in <span className="font-mono" style={{ color: '#22c55e' }}>{resendTimer}s</span>
+          <p className="text-sm" style={{ color: '#888888' }}>
+            Resend code in <span className="font-mono font-semibold" style={{ color: '#22c55e' }}>{resendTimer}s</span>
           </p>
         )}
       </div>
 
       {/* Back Button */}
-      <button
+      <motion.button
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
         onClick={onBack}
         disabled={isLoading}
-        className="w-full py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+        className="w-full py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50"
         style={{ 
           backgroundColor: 'rgba(255, 255, 255, 0.05)',
-          color: '#a1a1a1',
-          border: '1px solid rgba(255, 255, 255, 0.1)'
+          color: '#888888',
+          border: '1px solid rgba(255, 255, 255, 0.08)'
         }}
       >
         <FiArrowLeft />
         Back to Login
-      </button>
+      </motion.button>
 
       {/* Security Notice */}
       <div className="mt-6 text-center">
-        <div className="flex items-center justify-center gap-2 text-xs" style={{ color: '#a1a1a1' }}>
+        <div className="flex items-center justify-center gap-2 text-xs" style={{ color: '#666666' }}>
           <FiLock />
           <span>Protected by Two-Factor Authentication</span>
         </div>

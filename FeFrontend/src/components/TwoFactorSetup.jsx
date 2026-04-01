@@ -13,7 +13,6 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [backupCodes, setBackupCodes] = useState([]);
 
-  // Sync state when currentSettings prop changes (e.g., after API fetch)
   useEffect(() => {
     if (currentSettings) {
       console.log('TwoFactorSetup received settings:', currentSettings);
@@ -92,29 +91,29 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="p-6 rounded-2xl"
+      className="p-5 rounded-2xl"
       style={{ 
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)'
+        background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
+        border: '1px solid rgba(255, 255, 255, 0.06)'
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <div 
-            className="w-12 h-12 rounded-xl flex items-center justify-center"
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ 
-              backgroundColor: isEnabled ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-              border: `2px solid ${isEnabled ? '#22c55e' : 'rgba(255, 255, 255, 0.1)'}`
+              background: isEnabled ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' : 'rgba(255, 255, 255, 0.05)',
+              boxShadow: isEnabled ? '0 4px 12px rgba(34, 197, 94, 0.3)' : 'none'
             }}
           >
-            <FiShield className="text-xl" style={{ color: isEnabled ? '#22c55e' : '#a1a1a1' }} />
+            <FiShield className="text-lg" style={{ color: isEnabled ? '#ffffff' : '#888888' }} />
           </div>
           <div>
-            <h3 className="text-lg font-semibold" style={{ color: '#ffffff' }}>
+            <h3 className="text-base font-semibold" style={{ color: '#ffffff' }}>
               Two-Factor Authentication
             </h3>
-            <p className="text-sm" style={{ color: '#a1a1a1' }}>
+            <p className="text-xs" style={{ color: '#888888' }}>
               {isEnabled ? 'Enabled' : 'Disabled'}
             </p>
           </div>
@@ -122,11 +121,10 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
         
         {isEnabled && (
           <span 
-            className="px-3 py-1 rounded-full text-xs font-medium"
+            className="px-2.5 py-1 rounded-lg text-xs font-medium"
             style={{ 
-              backgroundColor: 'rgba(34, 197, 94, 0.1)',
-              color: '#22c55e',
-              border: '1px solid rgba(34, 197, 94, 0.3)'
+              backgroundColor: 'rgba(34, 197, 94, 0.15)',
+              color: '#22c55e'
             }}
           >
             Active
@@ -139,15 +137,14 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 p-3 rounded-lg flex items-center gap-2"
+          className="mb-4 p-3 rounded-xl flex items-center gap-2"
           style={{ 
             backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            color: '#ef4444'
+            border: '1px solid rgba(239, 68, 68, 0.2)'
           }}
         >
-          <FiAlertCircle className="flex-shrink-0" />
-          <span className="text-sm">{error}</span>
+          <FiAlertCircle className="flex-shrink-0" style={{ color: '#ef4444' }} />
+          <span className="text-sm" style={{ color: '#ef4444' }}>{error}</span>
         </motion.div>
       )}
 
@@ -155,75 +152,90 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 p-3 rounded-lg flex items-center gap-2"
+          className="mb-4 p-3 rounded-xl flex items-center gap-2"
           style={{ 
             backgroundColor: 'rgba(34, 197, 94, 0.1)',
-            border: '1px solid rgba(34, 197, 94, 0.2)',
-            color: '#22c55e'
+            border: '1px solid rgba(34, 197, 94, 0.2)'
           }}
         >
-          <FiCheck className="flex-shrink-0" />
-          <span className="text-sm">{success}</span>
+          <FiCheck className="flex-shrink-0" style={{ color: '#22c55e' }} />
+          <span className="text-sm" style={{ color: '#22c55e' }}>{success}</span>
         </motion.div>
       )}
 
       {/* Method Selection */}
-      <div className="mb-6">
+      <div className="mb-5">
         <label className="block text-sm font-medium mb-3" style={{ color: '#ffffff' }}>
           Verification Method
         </label>
         <div className="grid grid-cols-2 gap-3">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
             onClick={() => handleMethodChange('email')}
             disabled={isEnabled}
-            className={`p-4 rounded-lg transition-all ${method === 'email' ? '' : 'opacity-60'}`}
+            className="p-4 rounded-xl transition-all text-center"
             style={{
-              backgroundColor: method === 'email' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-              border: method === 'email' ? '2px solid #22c55e' : '2px solid rgba(255, 255, 255, 0.1)',
-              cursor: isEnabled ? 'not-allowed' : 'pointer'
+              backgroundColor: method === 'email' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+              border: method === 'email' ? '2px solid #22c55e' : '1px solid rgba(255, 255, 255, 0.08)',
+              cursor: isEnabled ? 'not-allowed' : 'pointer',
+              opacity: isEnabled && method !== 'email' ? 0.5 : 1
             }}
           >
-            <FiMail className="text-2xl mb-2 mx-auto" style={{ color: method === 'email' ? '#22c55e' : '#a1a1a1' }} />
-            <p className="text-sm font-medium" style={{ color: method === 'email' ? '#22c55e' : '#a1a1a1' }}>
+            <div 
+              className="w-9 h-9 rounded-lg flex items-center justify-center mx-auto mb-2"
+              style={{ backgroundColor: method === 'email' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.05)' }}
+            >
+              <FiMail className="text-lg" style={{ color: method === 'email' ? '#22c55e' : '#888888' }} />
+            </div>
+            <p className="text-sm font-medium" style={{ color: method === 'email' ? '#22c55e' : '#ffffff' }}>
               Email OTP
             </p>
-            <p className="text-xs mt-1" style={{ color: '#a1a1a1' }}>
+            <p className="text-xs mt-1" style={{ color: '#888888' }}>
               Receive code via email
             </p>
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
             onClick={() => handleMethodChange('authenticator')}
             disabled={isEnabled}
-            className={`p-4 rounded-lg transition-all ${method === 'authenticator' ? '' : 'opacity-60'}`}
+            className="p-4 rounded-xl transition-all text-center"
             style={{
-              backgroundColor: method === 'authenticator' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-              border: method === 'authenticator' ? '2px solid #22c55e' : '2px solid rgba(255, 255, 255, 0.1)',
-              cursor: isEnabled ? 'not-allowed' : 'pointer'
+              backgroundColor: method === 'authenticator' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+              border: method === 'authenticator' ? '2px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.08)',
+              cursor: isEnabled ? 'not-allowed' : 'pointer',
+              opacity: isEnabled && method !== 'authenticator' ? 0.5 : 1
             }}
           >
-            <FiSmartphone className="text-2xl mb-2 mx-auto" style={{ color: method === 'authenticator' ? '#22c55e' : '#a1a1a1' }} />
-            <p className="text-sm font-medium" style={{ color: method === 'authenticator' ? '#22c55e' : '#a1a1a1' }}>
+            <div 
+              className="w-9 h-9 rounded-lg flex items-center justify-center mx-auto mb-2"
+              style={{ backgroundColor: method === 'authenticator' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)' }}
+            >
+              <FiSmartphone className="text-lg" style={{ color: method === 'authenticator' ? '#3b82f6' : '#888888' }} />
+            </div>
+            <p className="text-sm font-medium" style={{ color: method === 'authenticator' ? '#3b82f6' : '#ffffff' }}>
               Authenticator App
             </p>
-            <p className="text-xs mt-1" style={{ color: '#a1a1a1' }}>
-              Google/Microsoft Authenticator
+            <p className="text-xs mt-1" style={{ color: '#888888' }}>
+              Google/Microsoft Auth
             </p>
-          </button>
+          </motion.button>
         </div>
       </div>
 
-      {/* QR Code Display (for authenticator setup) */}
+      {/* QR Code Display */}
       {showQRCode && qrCodeUrl && (
-        <div className="mb-6 p-4 rounded-lg text-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
-          <p className="text-sm mb-3" style={{ color: '#a1a1a1' }}>
+        <div className="mb-5 p-4 rounded-xl text-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}>
+          <p className="text-sm mb-3" style={{ color: '#888888' }}>
             Scan this QR code with your authenticator app
           </p>
           <img src={qrCodeUrl} alt="2FA QR Code" className="mx-auto mb-3" />
           {backupCodes.length > 0 && (
             <div>
-              <p className="text-xs mb-2" style={{ color: '#a1a1a1' }}>
-                Save these backup codes in a safe place:
+              <p className="text-xs mb-2" style={{ color: '#888888' }}>
+                Save these backup codes:
               </p>
               <div className="grid grid-cols-2 gap-1 text-xs font-mono" style={{ color: '#22c55e' }}>
                 {backupCodes.map((code, i) => (
@@ -236,16 +248,15 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
       )}
 
       {/* Info Box */}
-      <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'rgba(34, 197, 94, 0.05)' }}>
+      <div className="mb-5 p-4 rounded-xl" style={{ backgroundColor: 'rgba(34, 197, 94, 0.05)', border: '1px solid rgba(34, 197, 94, 0.1)' }}>
         <div className="flex items-start gap-3">
-          <FiLock className="text-lg mt-0.5" style={{ color: '#22c55e' }} />
+          <FiLock className="text-base mt-0.5" style={{ color: '#22c55e' }} />
           <div>
             <p className="text-sm font-medium" style={{ color: '#ffffff' }}>
               Enhanced Security
             </p>
-            <p className="text-xs mt-1" style={{ color: '#a1a1a1' }}>
-              Two-factor authentication adds an extra layer of security to your account. 
-              Even if someone knows your password, they won't be able to access your account without the verification code.
+            <p className="text-xs mt-1" style={{ color: '#888888', lineHeight: '1.5' }}>
+              Two-factor authentication adds an extra layer of security. Even if someone knows your password, they won't be able to access your account.
             </p>
           </div>
         </div>
@@ -256,7 +267,7 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mb-6 p-4 rounded-lg"
+          className="mb-5 p-4 rounded-xl"
           style={{ 
             backgroundColor: 'rgba(239, 68, 68, 0.1)',
             border: '1px solid rgba(239, 68, 68, 0.2)'
@@ -266,28 +277,32 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
             Are you sure you want to disable two-factor authentication? This will make your account less secure.
           </p>
           <div className="flex gap-3">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
               onClick={handleDisable}
               disabled={loading}
-              className="flex-1 py-2 rounded-lg font-medium text-sm transition-all"
+              className="flex-1 py-2.5 rounded-xl font-medium text-sm transition-all"
               style={{ 
                 backgroundColor: '#ef4444',
                 color: '#ffffff'
               }}
             >
               {loading ? 'Disabling...' : 'Yes, Disable 2FA'}
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
               onClick={() => setShowConfirmDisable(false)}
-              className="flex-1 py-2 rounded-lg font-medium text-sm transition-all"
+              className="flex-1 py-2.5 rounded-xl font-medium text-sm transition-all"
               style={{ 
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                color: '#a1a1a1',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                color: '#888888',
+                border: '1px solid rgba(255, 255, 255, 0.08)'
               }}
             >
               Cancel
-            </button>
+            </motion.button>
           </div>
         </motion.div>
       )}
@@ -296,10 +311,12 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
       {!showConfirmDisable && (
         <div className="flex gap-3">
           {isEnabled ? (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
               onClick={() => setShowConfirmDisable(true)}
               disabled={loading}
-              className="flex-1 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
               style={{ 
                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
                 color: '#ef4444',
@@ -308,15 +325,18 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
             >
               <FiX />
               Disable 2FA
-            </button>
+            </motion.button>
           ) : (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
               onClick={handleEnable}
               disabled={loading}
-              className="flex-1 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
               style={{ 
-                backgroundColor: '#22c55e',
-                color: '#ffffff'
+                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                color: '#ffffff',
+                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
               }}
             >
               {loading ? (
@@ -330,22 +350,24 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
                   Enable 2FA
                 </>
               )}
-            </button>
+            </motion.button>
           )}
           
           {onClose && (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
               onClick={onClose}
               disabled={loading}
-              className="px-6 py-3 rounded-lg font-medium transition-all"
+              className="px-5 py-3 rounded-xl font-medium transition-all"
               style={{ 
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                color: '#a1a1a1',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                color: '#888888',
+                border: '1px solid rgba(255, 255, 255, 0.08)'
               }}
             >
               Close
-            </button>
+            </motion.button>
           )}
         </div>
       )}

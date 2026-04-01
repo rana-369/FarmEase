@@ -10,7 +10,8 @@ import {
   FiSettings, 
   FiUsers,
   FiLogOut,
-  FiPlus
+  FiPlus,
+  FiUser
 } from 'react-icons/fi';
 import { RupeeIcon } from './RupeeIcon';
 
@@ -63,28 +64,94 @@ const Sidebar = () => {
     navigate('/login');
   };
 
+  const getRoleColor = () => {
+    switch (user?.role) {
+      case 'Admin': return { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' };
+      case 'Farmer': return { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e', border: 'rgba(34, 197, 94, 0.3)' };
+      case 'Owner': return { bg: 'rgba(59, 130, 246, 0.15)', text: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)' };
+      default: return { bg: 'rgba(255, 255, 255, 0.1)', text: '#a1a1a1', border: 'rgba(255, 255, 255, 0.2)' };
+    }
+  };
+
   return (
     <motion.div
       initial={{ x: -300 }}
       animate={{ x: 0 }}
       transition={{ duration: 0.3 }}
-      className="w-64 h-full flex flex-col"
+      className="w-72 h-full flex flex-col"
       style={{ 
-        backgroundColor: '#0a0a0a',
-        borderRight: '1px solid rgba(255, 255, 255, 0.1)'
+        background: 'linear-gradient(180deg, #0f0f0f 0%, #0a0a0a 100%)',
+        borderRight: '1px solid rgba(255, 255, 255, 0.06)'
       }}
     >
-      <div className="p-6 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-        <h2 className="text-2xl font-bold" style={{ color: '#22c55e' }}>AgriConnect</h2>
+      {/* Logo Section */}
+      <div className="p-6 pb-4">
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ 
+              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+              boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+            }}
+          >
+            <span className="text-white font-bold text-lg">A</span>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold" style={{ color: '#ffffff' }}>AgriConnect</h2>
+            <p className="text-xs" style={{ color: '#666666' }}>Farm Equipment Platform</p>
+          </div>
+        </div>
       </div>
+
+      {/* User Profile Section */}
+      {user && (
+        <div className="px-4 pb-4">
+          <div 
+            className="p-4 rounded-2xl"
+            style={{ 
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.06)'
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div 
+                className="w-11 h-11 rounded-full flex items-center justify-center"
+                style={{ 
+                  backgroundColor: getRoleColor().bg,
+                  border: `2px solid ${getRoleColor().border}`
+                }}
+              >
+                <FiUser className="text-lg" style={{ color: getRoleColor().text }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate" style={{ color: '#ffffff' }}>
+                  {user.fullName || user.email?.split('@')[0] || 'User'}
+                </p>
+                <span 
+                  className="text-xs px-2 py-0.5 rounded-full inline-block mt-1"
+                  style={{ 
+                    backgroundColor: getRoleColor().bg,
+                    color: getRoleColor().text
+                  }}
+                >
+                  {user.role || 'User'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
-      <nav className="flex-1 p-4">
-        <ul className="space-y-2">
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-2 overflow-y-auto">
+        <div className="mb-2 px-3">
+          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#555555' }}>
+            Menu
+          </span>
+        </div>
+        <ul className="space-y-1">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
-            // Precise active state logic: 
-            // 1. Exact match for main dashboard (/admin, /farmer, or /owner)
-            // 2. StartsWith match for sub-pages
             const isDashboard = item.path === '/admin' || item.path === '/farmer' || item.path === '/owner';
             const isActive = isDashboard 
               ? location.pathname === item.path 
@@ -93,18 +160,34 @@ const Sidebar = () => {
             return (
               <li key={index}>
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ x: 4 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => navigate(item.path)}
-                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group"
                   style={{
                     backgroundColor: isActive ? 'rgba(34, 197, 94, 0.1)' : 'transparent',
-                    color: isActive ? '#22c55e' : '#a1a1a1',
-                    border: isActive ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid transparent'
+                    color: isActive ? '#22c55e' : '#888888',
                   }}
                 >
-                  <Icon className="text-xl" />
-                  <span className="font-medium">{item.label}</span>
+                  <div 
+                    className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
+                    style={{ 
+                      backgroundColor: isActive 
+                        ? 'rgba(34, 197, 94, 0.2)' 
+                        : 'rgba(255, 255, 255, 0.05)',
+                      boxShadow: isActive ? '0 2px 8px rgba(34, 197, 94, 0.2)' : 'none'
+                    }}
+                  >
+                    <Icon className="text-lg" />
+                  </div>
+                  <span className="font-medium text-sm">{item.label}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeIndicator"
+                      className="w-1.5 h-1.5 rounded-full ml-auto"
+                      style={{ backgroundColor: '#22c55e' }}
+                    />
+                  )}
                 </motion.button>
               </li>
             );
@@ -112,21 +195,34 @@ const Sidebar = () => {
         </ul>
       </nav>
       
-      <div className="p-4 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleLogout}
-          className="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all"
-          style={{
-            color: '#ef4444',
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)'
+      {/* Logout Section */}
+      <div className="p-4 mt-auto">
+        <div 
+          className="p-1 rounded-2xl"
+          style={{ 
+            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)',
+            border: '1px solid rgba(239, 68, 68, 0.15)'
           }}
         >
-          <FiLogOut className="text-xl" />
-          <span className="font-medium">Logout</span>
-        </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
+            style={{
+              color: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.05)'
+            }}
+          >
+            <div 
+              className="w-9 h-9 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)' }}
+            >
+              <FiLogOut className="text-lg" />
+            </div>
+            <span className="font-medium text-sm">Logout</span>
+          </motion.button>
+        </div>
       </div>
     </motion.div>
   );

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiTruck, FiPackage, FiCalendar, FiTrendingUp, FiClock, FiMapPin, FiArrowUpRight } from 'react-icons/fi';
+import { FiTruck, FiPackage, FiCalendar, FiTrendingUp, FiClock, FiMapPin, FiArrowUpRight, FiSun, FiCheckCircle } from 'react-icons/fi';
 import { RupeeIcon } from '../../components/RupeeIcon';
 import { getFarmerStats, getFarmerBookings } from '../../services/dashboardService';
 import { useNavigate } from 'react-router-dom';
@@ -24,13 +24,11 @@ const FarmerDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      // Fetch stats and bookings from backend
       const [statsData, bookingsData] = await Promise.all([
         getFarmerStats().catch(() => null),
         getFarmerBookings().catch(() => [])
       ]);
       
-      // Set stats with fallback to zeros
       if (statsData) {
         setStats({
           totalBookings: statsData.totalBookings || 0,
@@ -40,7 +38,6 @@ const FarmerDashboard = () => {
         });
       }
       
-      // Transform bookings data to match frontend structure
       const transformedBookings = (bookingsData || []).map(booking => ({
         id: booking.id || booking.Id,
         machineName: booking.machineName || booking.MachineName || 'Equipment',
@@ -66,86 +63,67 @@ const FarmerDashboard = () => {
       value: stats.totalBookings,
       icon: FiPackage,
       color: '#22c55e',
-      change: '+12%',
-      changeType: 'positive'
+      change: '+12%'
     },
     {
       title: 'Active Rentals',
       value: stats.activeBookings,
       icon: FiClock,
       color: '#3b82f6',
-      change: '+2',
-      changeType: 'positive'
+      change: '+2'
     },
     {
       title: 'Completed',
       value: stats.completedBookings,
-      icon: FiTrendingUp,
+      icon: FiCheckCircle,
       color: '#a855f7',
-      change: '+10',
-      changeType: 'positive'
+      change: '+10'
     },
     {
       title: 'Total Spent',
       value: `₹${(stats.totalSpent || 0).toLocaleString()}`,
-      icon: RupeeIcon,
+      icon: FiTrendingUp,
       color: '#f59e0b',
-      change: stats.totalSpent > 0 ? 'Live' : '0%',
-      changeType: 'positive'
+      change: 'Live'
     }
   ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64" style={{ backgroundColor: '#0a0a0a', minHeight: '100vh' }}>
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
         <div className="w-12 h-12 border-2 rounded-full animate-spin" style={{ borderColor: '#22c55e', borderTopColor: 'transparent' }}></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
-      {/* Header Section with Gradient */}
-      <div className="relative" style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #141414 50%, #16a34a 100%)' }}>
-        <div className="absolute inset-0" style={{ 
-          backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(22, 163, 74, 0.15) 0%, transparent 50%)', 
-          backgroundSize: '100% 100%'
-        }}></div>
-        <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between"
-          >
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#0a0a0a' }}>
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }} 
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center gap-4">
+            <div 
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ 
+                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+              }}
+            >
+              <FiSun className="text-xl text-white" />
+            </div>
             <div>
-              <div className="mb-6">
-                <span className="px-5 py-2.5 rounded-full text-sm font-semibold" style={{ 
-                  backgroundColor: 'rgba(22, 163, 74, 0.15)', 
-                  color: '#22c55e',
-                  border: '1px solid rgba(22, 163, 74, 0.3)'
-                }}>
-                  Farmer Console
-                </span>
-              </div>
-              <h1 className="text-5xl md:text-6xl font-bold mb-4 leading-tight" style={{ color: '#ffffff' }}>
-                Farmer Dashboard
-              </h1>
-              <p className="text-xl leading-relaxed" style={{ color: '#888888' }}>Welcome back! Manage your equipment rentals and agricultural operations.</p>
+              <h1 className="text-2xl font-bold" style={{ color: '#ffffff' }}>Farmer Dashboard</h1>
+              <p className="text-sm" style={{ color: '#666666' }}>Manage your equipment rentals</p>
             </div>
-            <div className="hidden md:block px-8 py-4 rounded-2xl" style={{ 
-              backgroundColor: 'rgba(255, 255, 255, 0.03)', 
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              backdropFilter: 'blur(10px)'
-            }}>
-              <span className="text-base font-semibold" style={{ color: '#22c55e' }}>Farmer Account</span>
-            </div>
-          </motion.div>
-        </div>
-      </div>
+          </div>
+        </motion.div>
 
-      {/* Stats Section */}
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {statCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -154,178 +132,177 @@ const FarmerDashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="p-10 rounded-3xl"
+                whileHover={{ scale: 1.02 }}
+                className="p-5 rounded-2xl cursor-pointer"
                 style={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
                   border: '1px solid rgba(255, 255, 255, 0.06)'
                 }}
               >
-                <div className="flex items-center justify-between mb-8">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ 
-                    backgroundColor: `${stat.color}12`,
-                    border: `1px solid ${stat.color}25`
-                  }}>
-                    <Icon className="text-2xl" style={{ color: stat.color }} />
+                <div className="flex items-center justify-between mb-4">
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ backgroundColor: `${stat.color}15` }}
+                  >
+                    <Icon className="text-lg" style={{ color: stat.color }} />
                   </div>
-                  <span className="text-sm font-semibold px-4 py-2 rounded-xl" style={{ 
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)', 
-                    color: '#22c55e',
-                    border: '1px solid rgba(34, 197, 94, 0.2)'
-                  }}>
+                  <span 
+                    className="text-xs font-semibold px-2 py-1 rounded-lg"
+                    style={{ backgroundColor: `${stat.color}15`, color: stat.color }}
+                  >
                     {stat.change}
                   </span>
                 </div>
-                <h3 className="text-4xl font-bold mb-2" style={{ color: '#ffffff' }}>{stat.value}</h3>
-                <p className="text-base font-medium" style={{ color: '#666666' }}>{stat.title}</p>
+                <h3 className="text-2xl font-bold mb-1" style={{ color: '#ffffff' }}>{stat.value}</h3>
+                <p className="text-sm" style={{ color: '#888888' }}>{stat.title}</p>
               </motion.div>
             );
           })}
         </div>
-      </div>
 
-      {/* Recent Bookings Section */}
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
+        {/* Recent Bookings */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="p-10 rounded-3xl"
+          className="p-6 rounded-2xl mb-8"
           style={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.02)',
+            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
             border: '1px solid rgba(255, 255, 255, 0.06)'
           }}
         >
-          <div className="flex items-center justify-between mb-10">
-            <h2 className="text-3xl font-bold" style={{ color: '#ffffff' }}>Recent Equipment Rentals</h2>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div 
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)' }}
+              >
+                <FiPackage className="text-lg" style={{ color: '#22c55e' }} />
+              </div>
+              <h2 className="text-lg font-semibold" style={{ color: '#ffffff' }}>Recent Rentals</h2>
+            </div>
             <button 
               onClick={() => navigate('/farmer/bookings')}
-              className="font-semibold text-base px-8 py-3 rounded-xl transition-all" 
-              style={{ 
-                color: '#22c55e',
-                backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                border: '1px solid rgba(34, 197, 94, 0.2)'
-              }}
+              className="text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-white/5" 
+              style={{ color: '#22c55e' }}
             >
-              View All
+              View All →
             </button>
           </div>
 
-          <div className="space-y-6">
-            {recentBookings.map((booking, index) => (
+          <div className="space-y-3">
+            {recentBookings.length > 0 ? recentBookings.map((booking, index) => (
               <motion.div
                 key={booking.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + index * 0.1 }}
-                className="p-8 rounded-2xl transition-all duration-300"
-                style={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                  border: '1px solid rgba(255, 255, 255, 0.04)'
-                }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 + index * 0.05 }}
+                className="flex items-center justify-between p-4 rounded-xl"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}
               >
-                <div className="flex items-center justify-between gap-6">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-5 mb-4">
-                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ 
-                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                        border: '1px solid rgba(34, 197, 94, 0.2)'
-                      }}>
-                        <FiTruck className="text-2xl" style={{ color: '#22c55e' }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-xl truncate" style={{ color: '#ffffff' }}>{booking.machineName}</h3>
-                        <p className="text-base mt-1" style={{ color: '#666666' }}>{booking.ownerName}</p>
-                      </div>
-                      <span className="px-5 py-2 rounded-full text-sm font-semibold flex-shrink-0" style={{ 
-                        backgroundColor: booking.status.toLowerCase() === 'active' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255, 255, 255, 0.03)',
-                        color: booking.status.toLowerCase() === 'active' ? '#22c55e' : '#888888',
-                        border: booking.status.toLowerCase() === 'active' ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(255, 255, 255, 0.06)'
-                      }}>
-                        {booking.status}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-base" style={{ color: '#888888' }}>
-                      <FiCalendar className="text-lg" style={{ color: '#22c55e' }} />
-                      <span>Rental Period:</span>
-                      <span className="font-medium" style={{ color: '#ffffff' }}>{booking.startDate} - {booking.endDate}</span>
-                    </div>
+                <div className="flex items-center gap-4">
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)' }}
+                  >
+                    <FiTruck className="text-lg" style={{ color: '#22c55e' }} />
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-3xl font-bold" style={{ color: '#22c55e' }}>₹{booking.totalCost.toLocaleString()}</p>
-                    <p className="text-sm font-semibold uppercase tracking-wider mt-2" style={{ color: '#444444' }}>Total Amount</p>
+                  <div>
+                    <h3 className="font-medium" style={{ color: '#ffffff' }}>{booking.machineName}</h3>
+                    <p className="text-xs" style={{ color: '#666666' }}>{booking.ownerName}</p>
                   </div>
                 </div>
+
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2 text-sm" style={{ color: '#888888' }}>
+                    <FiCalendar className="text-sm" />
+                    <span>{booking.startDate}</span>
+                  </div>
+                  <span 
+                    className="px-3 py-1 rounded-lg text-xs font-medium"
+                    style={{ 
+                      backgroundColor: booking.status.toLowerCase() === 'active' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(168, 85, 247, 0.15)',
+                      color: booking.status.toLowerCase() === 'active' ? '#22c55e' : '#a855f7'
+                    }}
+                  >
+                    {booking.status}
+                  </span>
+                  <span className="font-semibold" style={{ color: '#22c55e' }}>₹{booking.totalCost.toLocaleString()}</span>
+                </div>
               </motion.div>
-            ))}
-          </div>
-
-          {recentBookings.length === 0 && (
-            <div className="text-center py-24">
-              <div className="w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-8" style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.06)'
-              }}>
-                <FiPackage className="text-4xl" style={{ color: '#333333' }} />
+            )) : (
+              <div className="text-center py-12">
+                <div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                >
+                  <FiPackage className="text-3xl" style={{ color: '#333333' }} />
+                </div>
+                <p className="mb-4" style={{ color: '#666666' }}>No rentals yet</p>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate('/farmer/machines')}
+                  className="px-6 py-3 rounded-xl font-medium"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                    color: '#ffffff'
+                  }}
+                >
+                  Browse Equipment
+                </motion.button>
               </div>
-              <h3 className="text-3xl font-bold mb-4" style={{ color: '#ffffff' }}>No rentals found</h3>
-              <p className="mb-12 text-xl leading-relaxed" style={{ color: '#666666' }}>You haven't rented any equipment yet. Start your first journey today!</p>
-              <button 
-                onClick={() => navigate('/farmer/machines')}
-                className="px-12 py-5 rounded-2xl font-semibold text-lg transition-all duration-300" 
-                style={{ 
-                  backgroundColor: '#22c55e', 
-                  color: '#000000',
-                  boxShadow: '0 10px 30px rgba(34, 197, 94, 0.35)'
-                }}
-              >
-                Browse Equipment
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </motion.div>
-      </div>
 
-      {/* Quick Actions Section */}
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="p-12 rounded-3xl"
+            className="p-6 rounded-2xl"
             style={{ 
-              backgroundColor: 'rgba(255, 255, 255, 0.02)',
+              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
               border: '1px solid rgba(255, 255, 255, 0.06)'
             }}
           >
-            <h3 className="text-3xl font-bold mb-10" style={{ color: '#ffffff' }}>Quick Actions</h3>
-            <div className="grid grid-cols-1 gap-5">
-              <button 
+            <h3 className="text-lg font-semibold mb-4" style={{ color: '#ffffff' }}>Quick Actions</h3>
+            <div className="space-y-3">
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
                 onClick={() => navigate('/farmer/machines')}
-                className="group flex items-center justify-between p-7 rounded-2xl font-semibold text-lg transition-all duration-300" 
-                style={{ backgroundColor: '#22c55e', color: '#000000', boxShadow: '0 8px 25px rgba(34, 197, 94, 0.35)' }}
-              >
-                <div className="flex items-center gap-5">
-                  <FiTruck className="text-2xl" />
-                  <span>Browse Equipment</span>
-                </div>
-                <FiArrowUpRight className="text-2xl group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-              </button>
-              <button 
-                onClick={() => navigate('/farmer/bookings')}
-                className="group flex items-center justify-between p-7 rounded-2xl font-semibold text-lg transition-all duration-300" 
+                className="w-full flex items-center justify-between p-4 rounded-xl"
                 style={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.03)', 
+                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                  color: '#ffffff'
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <FiTruck className="text-lg" />
+                  <span className="font-medium">Browse Equipment</span>
+                </div>
+                <FiArrowUpRight />
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={() => navigate('/farmer/bookings')}
+                className="w-full flex items-center justify-between p-4 rounded-xl"
+                style={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
                   color: '#ffffff',
                   border: '1px solid rgba(255, 255, 255, 0.06)'
                 }}
               >
-                <div className="flex items-center gap-5">
-                  <FiPackage className="text-2xl" />
-                  <span>My Bookings</span>
+                <div className="flex items-center gap-3">
+                  <FiPackage className="text-lg" />
+                  <span className="font-medium">My Bookings</span>
                 </div>
-                <FiArrowUpRight className="text-2xl group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-              </button>
+                <FiArrowUpRight />
+              </motion.button>
             </div>
           </motion.div>
 
@@ -333,23 +310,36 @@ const FarmerDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="p-12 rounded-3xl"
+            className="p-6 rounded-2xl"
             style={{ 
-              backgroundColor: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(255, 255, 255, 0.06)'
+              background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%)',
+              border: '1px solid rgba(59, 130, 246, 0.2)'
             }}
           >
-            <h3 className="text-3xl font-bold mb-6" style={{ color: '#ffffff' }}>Agricultural Insights</h3>
-            <p className="text-xl mb-12 leading-relaxed" style={{ color: '#666666' }}>
-              Access local weather forecasts, crop health monitoring, and expert market price trends tailored for your location.
+            <div className="flex items-center gap-3 mb-4">
+              <div 
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)' }}
+              >
+                <FiTrendingUp className="text-lg" style={{ color: '#3b82f6' }} />
+              </div>
+              <h3 className="text-lg font-semibold" style={{ color: '#ffffff' }}>Agricultural Insights</h3>
+            </div>
+            <p className="text-sm mb-4" style={{ color: '#888888', lineHeight: '1.6' }}>
+              Access weather forecasts, crop health monitoring, and market price trends for your area.
             </p>
-            <button className="w-full py-6 rounded-2xl font-semibold text-lg transition-all duration-300" style={{ 
-              backgroundColor: 'rgba(255, 255, 255, 0.03)', 
-              color: '#ffffff',
-              border: '1px solid rgba(255, 255, 255, 0.06)'
-            }}>
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="w-full p-4 rounded-xl font-medium"
+              style={{ 
+                backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                color: '#3b82f6',
+                border: '1px solid rgba(59, 130, 246, 0.2)'
+              }}
+            >
               View Insights
-            </button>
+            </motion.button>
           </motion.div>
         </div>
       </div>

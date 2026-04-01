@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiPackage, FiTruck, FiCalendar, FiClock, FiCheckCircle, FiAlertCircle, FiXCircle, FiFilter, FiSearch, FiArrowUpRight, FiMapPin, FiCreditCard, FiRefreshCw } from 'react-icons/fi';
+import { FiPackage, FiTruck, FiCalendar, FiClock, FiCheckCircle, FiAlertCircle, FiXCircle, FiFilter, FiSearch, FiArrowUpRight, FiMapPin, FiCreditCard, FiRefreshCw, FiX } from 'react-icons/fi';
 import { getFarmerBookings } from '../../services/dashboardService';
 import { cancelBooking } from '../../services/bookingService';
 import { processPayment, processRefund } from '../../services/paymentService';
@@ -32,7 +32,6 @@ const FarmerBookings = () => {
           totalCost: booking.totalAmount || booking.TotalAmount || 0,
           createdAt: booking.createdAt || booking.CreatedAt,
           isPaid: booking.isPaid || booking.IsPaid || false,
-          // Payment and refund info
           payment: booking.payment || booking.Payment || null,
           hasRefund: booking.payment?.refundAmount || booking.Payment?.RefundAmount || booking.payment?.RefundAmount ? true : false,
           refundAmount: booking.payment?.refundAmount || booking.Payment?.RefundAmount || booking.payment?.RefundAmount || 0,
@@ -58,7 +57,6 @@ const FarmerBookings = () => {
       const result = await processPayment(booking.id, booking.machineName);
       
       if (result.success) {
-        // Update local state
         setBookings(prev => prev.map(b => 
           b.id === booking.id ? { ...b, status: 'Active', isPaid: true } : b
         ));
@@ -108,14 +106,14 @@ const FarmerBookings = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const getStatusColor = (status) => {
+  const getStatusConfig = (status) => {
     switch (status?.toLowerCase()) {
-      case 'active': return { color: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.2)' };
-      case 'pending': return { color: '#facc15', bg: 'rgba(250, 204, 21, 0.1)', border: 'rgba(250, 204, 21, 0.2)' };
-      case 'completed': return { color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', border: 'rgba(59, 130, 246, 0.2)' };
+      case 'active': return { icon: FiClock, color: '#22c55e', bg: 'rgba(34, 197, 94, 0.15)' };
+      case 'pending': return { icon: FiClock, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)' };
+      case 'completed': return { icon: FiCheckCircle, color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' };
       case 'rejected':
-      case 'cancelled': return { color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.2)' };
-      default: return { color: '#a1a1a1', bg: 'rgba(255, 255, 255, 0.05)', border: 'rgba(255, 255, 255, 0.1)' };
+      case 'cancelled': return { icon: FiXCircle, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)' };
+      default: return { icon: FiClock, color: '#888888', bg: 'rgba(255, 255, 255, 0.05)' };
     }
   };
 
@@ -128,71 +126,84 @@ const FarmerBookings = () => {
   }
 
   return (
-    <div className="min-h-screen p-8" style={{ backgroundColor: '#0a0a0a' }}>
-      <div className="max-w-7xl mx-auto space-y-10">
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#0a0a0a' }}>
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }} 
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-center justify-between gap-6"
+          className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
         >
-          <div>
-            <h1 className="text-4xl font-bold text-white mb-2">My Bookings</h1>
-            <p className="text-lg text-gray-400">Track and manage your equipment rental requests</p>
+          <div className="flex items-center gap-4">
+            <div 
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ 
+                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+              }}
+            >
+              <FiTruck className="text-xl text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold" style={{ color: '#ffffff' }}>My Bookings</h1>
+              <p className="text-sm" style={{ color: '#666666' }}>Track and manage your rentals</p>
+            </div>
           </div>
-          <button 
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => navigate('/farmer/machines')}
-            className="px-8 py-4 rounded-2xl font-bold transition-all flex items-center gap-2 hover:scale-105"
+            className="px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2"
             style={{ backgroundColor: '#22c55e', color: '#000000' }}
           >
-            <FiTruck className="text-xl" /> Rent More Equipment
-          </button>
+            <FiTruck /> Rent Equipment
+          </motion.button>
         </motion.div>
 
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {[
+            { label: 'Total', value: bookings.length, color: '#3b82f6' },
+            { label: 'Active', value: bookings.filter(b => b.status.toLowerCase() === 'active').length, color: '#22c55e' },
+            { label: 'Completed', value: bookings.filter(b => b.status.toLowerCase() === 'completed').length, color: '#a855f7' }
+          ].map((stat) => (
+            <div 
+              key={stat.label}
+              className="p-4 rounded-xl text-center"
+              style={{ backgroundColor: `${stat.color}10`, border: `1px solid ${stat.color}20` }}
+            >
+              <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+              <p className="text-xs" style={{ color: '#888888' }}>{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
         {/* Filters */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
-          <div style={{ flex: '1 1 300px', display: 'flex', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', paddingLeft: '16px' }}>
-            <FiSearch style={{ color: '#a1a1a1', fontSize: '20px', flexShrink: 0 }} />
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            <FiSearch style={{ color: '#666666' }} />
             <input 
               id="booking-search"
               name="booking-search"
               type="text"
-              placeholder="Search by machine or owner name..."
+              placeholder="Search by machine or owner..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               autoComplete="off"
-              style={{ 
-                flex: 1,
-                padding: '16px 16px 16px 12px',
-                borderRadius: '16px',
-                color: '#ffffff',
-                outline: 'none',
-                border: 'none',
-                backgroundColor: 'transparent',
-                fontSize: '16px'
-              }}
+              className="flex-1 bg-transparent outline-none text-sm"
+              style={{ color: '#ffffff' }}
             />
           </div>
-          <div style={{ flex: '0 1 200px', display: 'flex', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', paddingLeft: '16px' }}>
-            <FiFilter style={{ color: '#a1a1a1', fontSize: '20px', flexShrink: 0 }} />
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            <FiFilter style={{ color: '#666666' }} />
             <select 
               id="status-filter"
               name="status-filter"
               value={filterStatus}
               onChange={(e) => setFilterRole(e.target.value)}
               autoComplete="off"
-              style={{ 
-                flex: 1,
-                padding: '16px 16px 16px 12px',
-                borderRadius: '16px',
-                color: '#ffffff',
-                outline: 'none',
-                cursor: 'pointer',
-                appearance: 'none',
-                backgroundColor: 'transparent',
-                border: 'none',
-                fontSize: '16px'
-              }}
+              className="bg-transparent outline-none cursor-pointer text-sm"
+              style={{ color: '#ffffff' }}
             >
               <option value="all" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>All Statuses</option>
               <option value="pending" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Pending</option>
@@ -205,112 +216,118 @@ const FarmerBookings = () => {
         </div>
 
         {/* Bookings List */}
-        <div className="space-y-6">
+        <div className="space-y-3">
           {filteredBookings.length > 0 ? (
             filteredBookings.map((booking, index) => {
-              const status = getStatusColor(booking.status);
+              const config = getStatusConfig(booking.status);
+              const Icon = config.icon;
               return (
                 <motion.div
                   key={booking.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="p-8 rounded-3xl transition-all duration-300"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                  className="p-4 rounded-xl transition-all"
                   style={{ 
-                    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                    background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
                     border: '1px solid rgba(255, 255, 255, 0.06)'
                   }}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                    <div className="flex-1">
-                      <div className="flex items-start gap-5 mb-6">
-                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                          <FiTruck className="text-2xl" style={{ color: '#22c55e' }} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-bold truncate" style={{ color: '#ffffff' }}>{booking.machineName}</h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <FiMapPin className="text-sm flex-shrink-0" style={{ color: '#666666' }} />
-                            <span className="text-sm truncate" style={{ color: '#666666' }}>Owned by {booking.ownerName}</span>
-                          </div>
-                        </div>
-                        <span className="px-4 py-2 rounded-full text-xs font-semibold border flex-shrink-0" style={{ backgroundColor: status.bg, color: status.color, borderColor: status.border }}>
-                          {booking.status}
-                        </span>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3 flex-1">
+                      <div 
+                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
+                      >
+                        <FiTruck className="text-lg" style={{ color: '#22c55e' }} />
                       </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}>
-                            <FiCalendar className="text-lg" style={{ color: '#22c55e' }} />
-                          </div>
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#444444' }}>Rental Period</p>
-                            <p className="font-medium" style={{ color: '#ffffff' }}>{booking.startDate} - {booking.endDate}</p>
-                          </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-medium text-sm" style={{ color: '#ffffff' }}>{booking.machineName}</h3>
+                          <span 
+                            className="px-2.5 py-1 rounded-lg text-xs font-medium inline-flex items-center gap-1"
+                            style={{ backgroundColor: config.bg, color: config.color }}
+                          >
+                            <Icon className="w-3 h-3" />
+                            {booking.status}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}>
-                            <FiClock className="text-lg" style={{ color: '#22c55e' }} />
+                        <div className="flex items-center gap-2 text-xs" style={{ color: '#666666' }}>
+                          <FiMapPin className="flex-shrink-0" />
+                          <span>Owned by {booking.ownerName}</span>
+                        </div>
+                        <div className="flex items-center gap-4 mt-2 text-xs" style={{ color: '#888888' }}>
+                          <div className="flex items-center gap-1">
+                            <FiCalendar />
+                            <span>{booking.startDate} - {booking.endDate}</span>
                           </div>
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#444444' }}>Booking ID</p>
-                            <p className="font-medium font-mono" style={{ color: '#ffffff' }}>#{booking.id.toString().substring(0, 8)}</p>
+                          <div className="flex items-center gap-1">
+                            <FiClock />
+                            <span>#{booking.id.toString().substring(0, 8)}</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col items-end gap-4 min-w-[180px] pt-4 lg:pt-0" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                      <div className="text-right">
-                        <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#444444' }}>Total Amount</p>
-                        <p className="text-3xl font-bold" style={{ color: '#22c55e' }}>₹{booking.totalCost.toLocaleString()}</p>
+                    <div className="flex items-center justify-between md:justify-end gap-4">
+                      <div>
+                        <p className="text-xs" style={{ color: '#666666' }}>Total</p>
+                        <p className="text-lg font-bold" style={{ color: '#22c55e' }}>₹{booking.totalCost.toLocaleString()}</p>
                       </div>
                       
                       {booking.status === 'Accepted' && !booking.isPaid && (
-                        <button 
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={() => handlePayment(booking)}
                           disabled={paymentLoading === booking.id}
-                          className="w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300"
-                          style={{ backgroundColor: '#22c55e', color: '#000000', boxShadow: '0 8px 25px rgba(34, 197, 94, 0.35)' }}
+                          className="px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2"
+                          style={{ backgroundColor: '#22c55e', color: '#000000' }}
                         >
                           {paymentLoading === booking.id ? (
-                            <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                           ) : (
-                            <><FiCreditCard className="text-lg" /> Pay Now</>
+                            <><FiCreditCard /> Pay</>
                           )}
-                        </button>
+                        </motion.button>
                       )}
 
                       {booking.isPaid && !booking.hasRefund && (
-                        <div className="flex items-center gap-2 font-semibold py-2 px-4 rounded-xl" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}>
-                          <FiCheckCircle /> Paid
+                        <div className="flex items-center gap-1.5 font-medium text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}>
+                          <FiCheckCircle className="w-3 h-3" /> Paid
                         </div>
                       )}
 
                       {booking.hasRefund && (
-                        <div className="flex items-center gap-2 font-semibold py-2 px-4 rounded-xl" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
-                          <FiRefreshCw /> Refunded ₹{booking.refundAmount?.toLocaleString()}
+                        <div className="flex items-center gap-1.5 font-medium text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+                          <FiRefreshCw className="w-3 h-3" /> Refunded
                         </div>
                       )}
 
-                      <button 
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => setSelectedBooking(booking)}
-                        className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border border-white/10 hover:bg-white/5"
-                        style={{ color: '#22c55e' }}
+                        className="px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2"
+                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#22c55e', border: '1px solid rgba(255, 255, 255, 0.08)' }}
                       >
-                        View Details <FiArrowUpRight />
-                      </button>
+                        Details <FiArrowUpRight className="w-3 h-3" />
+                      </motion.button>
                     </div>
                   </div>
                 </motion.div>
               );
             })
           ) : (
-            <div className="text-center py-32 rounded-3xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
-              <FiPackage className="text-6xl text-gray-700 mx-auto mb-6" />
-              <h3 className="text-2xl font-bold text-white mb-2">No bookings match your search</h3>
-              <p className="text-gray-400 max-w-md mx-auto">Try adjusting your filters or search terms to find what you're looking for.</p>
+            <div className="text-center py-16 rounded-2xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+              <div 
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+              >
+                <FiPackage className="text-3xl" style={{ color: '#333333' }} />
+              </div>
+              <p className="text-sm mb-1" style={{ color: '#ffffff' }}>No bookings found</p>
+              <p className="text-xs" style={{ color: '#666666' }}>Try adjusting your filters</p>
             </div>
           )}
         </div>
@@ -322,145 +339,87 @@ const FarmerBookings = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedBooking(null)}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 50,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '16px',
-              backgroundColor: 'rgba(0, 0, 0, 0.8)'
-            }}
+            className="fixed inset-0 flex items-center justify-center p-4 z-50"
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               onClick={(e) => e.stopPropagation()}
-              style={{
-                width: '100%',
-                maxWidth: '512px',
-                borderRadius: '24px',
-                padding: '32px',
-                backgroundColor: '#1a1a1a',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
-              }}
+              className="rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+              style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255, 255, 255, 0.1)' }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff' }}>Booking Details</h2>
-                <button 
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Booking Details</h2>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => setSelectedBooking(null)}
-                  style={{ padding: '8px', borderRadius: '8px', cursor: 'pointer', background: 'transparent', border: 'none' }}
+                  className="p-2 rounded-lg"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#888888' }}
                 >
-                  <FiXCircle style={{ fontSize: '20px', color: '#a1a1a1' }} />
-                </button>
+                  <FiX />
+                </motion.button>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div>
-                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Equipment</p>
-                  <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff' }}>{selectedBooking.machineName}</p>
-                </div>
-                <div>
-                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Owner</p>
-                  <p style={{ fontSize: '18px', fontWeight: '500', color: '#ffffff' }}>{selectedBooking.ownerName}</p>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div>
-                    <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Start Date</p>
-                    <p style={{ fontWeight: '500', color: '#ffffff' }}>{selectedBooking.startDate}</p>
+              <div className="space-y-4">
+                {[
+                  { label: 'Equipment', value: selectedBooking.machineName },
+                  { label: 'Owner', value: selectedBooking.ownerName },
+                  { label: 'Start Date', value: selectedBooking.startDate },
+                  { label: 'End Date', value: selectedBooking.endDate },
+                  { label: 'Total Amount', value: `₹${selectedBooking.totalCost?.toLocaleString()}`, color: '#22c55e' },
+                  { label: 'Booking ID', value: `#${selectedBooking.id}` }
+                ].map((item) => (
+                  <div key={item.label}>
+                    <p className="text-xs mb-1" style={{ color: '#666666' }}>{item.label}</p>
+                    <p className="text-sm font-medium" style={{ color: item.color || '#ffffff' }}>{item.value}</p>
                   </div>
-                  <div>
-                    <p style={{ fontSize: '14px', color: '#a1a1a1' }}>End Date</p>
-                    <p style={{ fontWeight: '500', color: '#ffffff' }}>{selectedBooking.endDate}</p>
-                  </div>
-                </div>
+                ))}
+                
                 <div>
-                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Status</p>
-                  <span style={{ 
-                    display: 'inline-block',
-                    padding: '4px 12px',
-                    borderRadius: '9999px',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    backgroundColor: getStatusColor(selectedBooking.status).bg, 
-                    color: getStatusColor(selectedBooking.status).color,
-                    border: `1px solid ${getStatusColor(selectedBooking.status).border}`
-                  }}>
+                  <p className="text-xs mb-1" style={{ color: '#666666' }}>Status</p>
+                  <span 
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5"
+                    style={{ backgroundColor: getStatusConfig(selectedBooking.status).bg, color: getStatusConfig(selectedBooking.status).color }}
+                  >
                     {selectedBooking.status}
                   </span>
                 </div>
-                <div>
-                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Total Amount</p>
-                  <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#22c55e' }}>₹{selectedBooking.totalCost?.toLocaleString()}</p>
-                </div>
                 
-                {/* Refund Information */}
                 {selectedBooking.hasRefund && (
-                  <div style={{ 
-                    padding: '16px', 
-                    borderRadius: '12px', 
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)', 
-                    border: '1px solid rgba(59, 130, 246, 0.2)',
-                    marginTop: '8px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <div 
+                    className="p-4 rounded-xl"
+                    style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)' }}
+                  >
+                    <div className="flex items-center gap-2 mb-3">
                       <FiRefreshCw style={{ color: '#3b82f6' }} />
-                      <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>Refund Processed</span>
+                      <span className="font-medium text-sm" style={{ color: '#3b82f6' }}>Refund Processed</span>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <p style={{ fontSize: '12px', color: '#888' }}>Refund Amount</p>
-                        <p style={{ fontWeight: 'bold', color: '#3b82f6' }}>₹{selectedBooking.refundAmount?.toLocaleString()}</p>
+                        <p className="text-xs" style={{ color: '#888888' }}>Amount</p>
+                        <p className="font-medium" style={{ color: '#3b82f6' }}>₹{selectedBooking.refundAmount?.toLocaleString()}</p>
                       </div>
                       <div>
-                        <p style={{ fontSize: '12px', color: '#888' }}>Refund Date</p>
-                        <p style={{ fontWeight: '500', color: '#fff' }}>
+                        <p className="text-xs" style={{ color: '#888888' }}>Date</p>
+                        <p className="font-medium" style={{ color: '#ffffff' }}>
                           {selectedBooking.refundDate ? new Date(selectedBooking.refundDate).toLocaleDateString() : 'N/A'}
                         </p>
                       </div>
                     </div>
-                    {selectedBooking.refundReason && (
-                      <div style={{ marginTop: '8px' }}>
-                        <p style={{ fontSize: '12px', color: '#888' }}>Reason</p>
-                        <p style={{ fontSize: '14px', color: '#ccc' }}>{selectedBooking.refundReason}</p>
-                      </div>
-                    )}
-                    <p style={{ fontSize: '12px', color: '#888', marginTop: '12px' }}>
-                      Refund will be credited to your original payment method within 5-7 business days.
-                    </p>
                   </div>
                 )}
-                
-                <div>
-                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Booking ID</p>
-                  <p style={{ fontFamily: 'monospace', color: '#ffffff' }}>#{selectedBooking.id}</p>
-                </div>
               </div>
 
-              {/* Cancel Button for cancellable bookings */}
               {['Pending', 'Accepted', 'Active'].includes(selectedBooking.status) && (
-                <button 
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
                   onClick={() => handleCancel(selectedBooking)}
                   disabled={cancelLoading === selectedBooking.id}
-                  style={{
-                    width: '100%',
-                    marginTop: '16px',
-                    padding: '12px',
-                    borderRadius: '12px',
-                    fontWeight: 'bold',
-                    color: '#ef4444',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    cursor: cancelLoading === selectedBooking.id ? 'wait' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px'
-                  }}
+                  className="w-full mt-6 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2"
+                  style={{ color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
                 >
                   {cancelLoading === selectedBooking.id ? (
                     <>
@@ -472,25 +431,18 @@ const FarmerBookings = () => {
                       <FiXCircle /> Cancel Booking
                     </>
                   )}
-                </button>
+                </motion.button>
               )}
 
-              <button 
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
                 onClick={() => setSelectedBooking(null)}
-                style={{
-                  width: '100%',
-                  marginTop: '16px',
-                  padding: '12px',
-                  borderRadius: '12px',
-                  fontWeight: 'bold',
-                  color: '#ffffff',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'transparent',
-                  cursor: 'pointer'
-                }}
+                className="w-full mt-3 py-3 rounded-xl font-medium text-sm"
+                style={{ color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.1)', backgroundColor: 'transparent' }}
               >
                 Close
-              </button>
+              </motion.button>
             </motion.div>
           </motion.div>
         )}

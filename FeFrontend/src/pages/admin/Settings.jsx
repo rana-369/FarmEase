@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiSettings, FiShield, FiGlobe, FiBell, FiSave, FiRefreshCw, FiDatabase, FiUser } from 'react-icons/fi';
+import { FiSettings, FiShield, FiGlobe, FiBell, FiSave, FiRefreshCw, FiDatabase, FiUser, FiCheck } from 'react-icons/fi';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import TwoFactorSetup from '../../components/TwoFactorSetup';
@@ -100,151 +100,261 @@ const SettingsPage = () => {
   }
 
   const tabs = [
-    { id: 'general', label: 'General', icon: FiGlobe },
-    { id: 'security', label: 'Security', icon: FiShield },
-    { id: 'account', label: 'Account', icon: FiUser },
+    { id: 'general', label: 'General', icon: FiGlobe, description: 'Platform configuration' },
+    { id: 'security', label: 'Security', icon: FiShield, description: 'Security policies' },
+    { id: 'account', label: 'Account', icon: FiUser, description: 'Account settings' },
   ];
 
   return (
-    <div className="min-h-screen p-8" style={{ backgroundColor: '#0a0a0a' }}>
-      <div className="max-w-4xl mx-auto space-y-12">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-4xl font-bold mb-2" style={{ color: '#ffffff' }}>System Settings</h1>
-          <p className="text-lg" style={{ color: '#a1a1a1' }}>Configure global platform parameters and security policies</p>
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#0a0a0a' }}>
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }} 
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center gap-4 mb-2">
+            <div 
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ 
+                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+              }}
+            >
+              <FiSettings className="text-xl text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold" style={{ color: '#ffffff' }}>System Settings</h1>
+              <p className="text-sm" style={{ color: '#666666' }}>Configure platform parameters and security policies</p>
+            </div>
+          </div>
         </motion.div>
 
-        <div className="flex gap-4 border-b pb-1" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {tabs.map(tab => (
-            <button
+            <motion.button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-4 font-bold transition-all relative ${
-                activeTab === tab.id ? '' : 'hover:text-white'
-              }`}
-              style={{ color: activeTab === tab.id ? '#22c55e' : '#666666' }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center gap-3 px-5 py-3 rounded-xl transition-all flex-shrink-0"
+              style={{ 
+                background: activeTab === tab.id 
+                  ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%)'
+                  : 'rgba(255, 255, 255, 0.03)',
+                border: activeTab === tab.id 
+                  ? '1px solid rgba(34, 197, 94, 0.3)'
+                  : '1px solid rgba(255, 255, 255, 0.06)',
+                color: activeTab === tab.id ? '#22c55e' : '#888888'
+              }}
             >
-              <tab.icon className="text-xl" />
-              {tab.label}
-              {activeTab === tab.id && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-1"
-                  style={{ backgroundColor: '#22c55e' }}
-                />
-              )}
-            </button>
+              <tab.icon className="text-lg" />
+              <div className="text-left">
+                <div className="font-semibold text-sm">{tab.label}</div>
+                <div className="text-xs opacity-70">{tab.description}</div>
+              </div>
+            </motion.button>
           ))}
         </div>
 
+        {/* Content */}
         <motion.div 
           key={activeTab}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="p-10 rounded-3xl"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl overflow-hidden"
           style={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)'
+            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.06)'
           }}
         >
           {activeTab === 'general' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <label htmlFor="siteName" className="text-sm font-bold uppercase tracking-wider" style={{ color: '#666666' }}>Platform Name</label>
-                <input
-                  id="siteName"
-                  type="text"
-                  value={settings.general.siteName}
-                  onChange={(e) => handleChange('general', 'siteName', e.target.value)}
-                  className="w-full px-5 py-4 rounded-xl text-white outline-none transition-all"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
-                />
-              </div>
-              <div className="space-y-3">
-                <label htmlFor="supportEmail" className="text-sm font-bold uppercase tracking-wider" style={{ color: '#666666' }}>Support Email</label>
-                <input
-                  id="supportEmail"
-                  type="email"
-                  value={settings.general.supportEmail}
-                  onChange={(e) => handleChange('general', 'supportEmail', e.target.value)}
-                  className="w-full px-5 py-4 rounded-xl text-white outline-none transition-all"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
-                />
-              </div>
-              <div className="space-y-3">
-                <label htmlFor="platformFee" className="text-sm font-bold uppercase tracking-wider" style={{ color: '#666666' }}>Platform Fee (%)</label>
-                <input
-                  id="platformFee"
-                  type="number"
-                  value={settings.general.platformFee}
-                  onChange={(e) => handleChange('general', 'platformFee', parseInt(e.target.value))}
-                  className="w-full px-5 py-4 rounded-xl text-white outline-none transition-all"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
-                />
-              </div>
-              <div className="flex items-center justify-between p-6 rounded-2xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                <div>
-                  <p className="font-bold" style={{ color: '#ffffff' }}>Maintenance Mode</p>
-                  <p className="text-sm" style={{ color: '#666666' }}>Disable platform for users</p>
+            <div className="p-6 lg:p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Platform Name */}
+                <div className="space-y-2">
+                  <label htmlFor="siteName" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
+                    <FiGlobe className="text-green-500" />
+                    Platform Name
+                  </label>
+                  <input
+                    id="siteName"
+                    type="text"
+                    value={settings.general.siteName}
+                    onChange={(e) => handleChange('general', 'siteName', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                    style={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}
+                  />
                 </div>
-                <button
-                  onClick={() => handleChange('general', 'maintenanceMode', !settings.general.maintenanceMode)}
-                  className="w-14 h-7 rounded-full transition-all relative"
-                  style={{ backgroundColor: settings.general.maintenanceMode ? '#ef4444' : '#333333' }}
+
+                {/* Support Email */}
+                <div className="space-y-2">
+                  <label htmlFor="supportEmail" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
+                    <FiBell className="text-blue-500" />
+                    Support Email
+                  </label>
+                  <input
+                    id="supportEmail"
+                    type="email"
+                    value={settings.general.supportEmail}
+                    onChange={(e) => handleChange('general', 'supportEmail', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                    style={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}
+                  />
+                </div>
+
+                {/* Platform Fee */}
+                <div className="space-y-2">
+                  <label htmlFor="platformFee" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
+                    <FiDatabase className="text-yellow-500" />
+                    Platform Fee (%)
+                  </label>
+                  <input
+                    id="platformFee"
+                    type="number"
+                    value={settings.general.platformFee}
+                    onChange={(e) => handleChange('general', 'platformFee', parseInt(e.target.value))}
+                    className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                    style={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}
+                  />
+                </div>
+
+                {/* Maintenance Mode */}
+                <div 
+                  className="p-4 rounded-xl flex items-center justify-between"
+                  style={{ 
+                    background: settings.general.maintenanceMode 
+                      ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)'
+                      : 'rgba(255, 255, 255, 0.03)',
+                    border: settings.general.maintenanceMode 
+                      ? '1px solid rgba(239, 68, 68, 0.2)'
+                      : '1px solid rgba(255, 255, 255, 0.06)'
+                  }}
                 >
-                  <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${
-                    settings.general.maintenanceMode ? 'right-1' : 'left-1'
-                  }`} />
-                </button>
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ 
+                        backgroundColor: settings.general.maintenanceMode 
+                          ? 'rgba(239, 68, 68, 0.15)'
+                          : 'rgba(255, 255, 255, 0.05)'
+                      }}
+                    >
+                      <FiSettings style={{ color: settings.general.maintenanceMode ? '#ef4444' : '#666666' }} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm" style={{ color: '#ffffff' }}>Maintenance Mode</p>
+                      <p className="text-xs" style={{ color: '#666666' }}>Disable platform for users</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleChange('general', 'maintenanceMode', !settings.general.maintenanceMode)}
+                    className="w-14 h-7 rounded-full transition-all duration-300 relative"
+                    style={{ 
+                      background: settings.general.maintenanceMode 
+                        ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                        : 'rgba(255, 255, 255, 0.1)',
+                      boxShadow: settings.general.maintenanceMode ? '0 2px 8px rgba(239, 68, 68, 0.3)' : 'none'
+                    }}
+                  >
+                    <motion.div
+                      animate={{ x: settings.general.maintenanceMode ? 28 : 2 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-md"
+                    />
+                  </button>
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === 'security' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <label htmlFor="sessionTimeout" className="text-sm font-bold uppercase tracking-wider" style={{ color: '#666666' }}>Session Timeout (minutes)</label>
-                <input
-                  id="sessionTimeout"
-                  type="number"
-                  value={settings.security.sessionTimeout}
-                  onChange={(e) => handleChange('security', 'sessionTimeout', parseInt(e.target.value))}
-                  className="w-full px-5 py-4 rounded-xl text-white outline-none transition-all"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
-                />
-              </div>
-              <div className="space-y-3">
-                <label htmlFor="minPasswordLength" className="text-sm font-bold uppercase tracking-wider" style={{ color: '#666666' }}>Min Password Length</label>
-                <input
-                  id="minPasswordLength"
-                  type="number"
-                  value={settings.security.minPasswordLength}
-                  onChange={(e) => handleChange('security', 'minPasswordLength', parseInt(e.target.value))}
-                  className="w-full px-5 py-4 rounded-xl text-white outline-none transition-all"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
-                />
+            <div className="p-6 lg:p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Session Timeout */}
+                <div className="space-y-2">
+                  <label htmlFor="sessionTimeout" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
+                    <FiShield className="text-purple-500" />
+                    Session Timeout (minutes)
+                  </label>
+                  <input
+                    id="sessionTimeout"
+                    type="number"
+                    value={settings.security.sessionTimeout}
+                    onChange={(e) => handleChange('security', 'sessionTimeout', parseInt(e.target.value))}
+                    className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                    style={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}
+                  />
+                </div>
+
+                {/* Min Password Length */}
+                <div className="space-y-2">
+                  <label htmlFor="minPasswordLength" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
+                    <FiShield className="text-orange-500" />
+                    Min Password Length
+                  </label>
+                  <input
+                    id="minPasswordLength"
+                    type="number"
+                    value={settings.security.minPasswordLength}
+                    onChange={(e) => handleChange('security', 'minPasswordLength', parseInt(e.target.value))}
+                    className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                    style={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}
+                  />
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === 'account' && (
-            <div className="space-y-8">
+            <div className="p-6 lg:p-8">
               {message.text && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`p-4 rounded-lg flex items-center gap-3 ${
-                    message.type === 'success' ? 'bg-green-500/10 border border-green-500/20 text-green-500' : 'bg-red-500/10 border border-red-500/20 text-red-500'
+                  className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
+                    message.type === 'success' 
+                      ? 'bg-green-500/10 border border-green-500/20 text-green-500' 
+                      : 'bg-red-500/10 border border-red-500/20 text-red-500'
                   }`}
                 >
-                  {message.text}
+                  <FiCheck />
+                  <span className="text-sm font-medium">{message.text}</span>
                 </motion.div>
               )}
               <div>
-                <h3 className="text-xl font-bold mb-4" style={{ color: '#ffffff' }}>Two-Factor Authentication</h3>
-                <p className="text-sm mb-6" style={{ color: '#666666' }}>
-                  Add an extra layer of security to your admin account by enabling two-factor authentication.
-                </p>
+                <div className="flex items-center gap-3 mb-4">
+                  <div 
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ 
+                      background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%)',
+                      border: '1px solid rgba(34, 197, 94, 0.3)'
+                    }}
+                  >
+                    <FiShield className="text-lg" style={{ color: '#22c55e' }} />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold" style={{ color: '#ffffff' }}>Two-Factor Authentication</h3>
+                    <p className="text-xs" style={{ color: '#666666' }}>Add an extra layer of security</p>
+                  </div>
+                </div>
                 <TwoFactorSetup 
                   currentSettings={twoFASettings}
                   onUpdate={handle2FAUpdate}
@@ -253,23 +363,43 @@ const SettingsPage = () => {
             </div>
           )}
 
+          {/* Action Buttons */}
           {activeTab !== 'account' && (
-            <div className="mt-12 pt-8 border-t flex justify-end gap-5" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-              <button 
-                className="px-8 py-4 rounded-xl font-bold flex items-center gap-2 transition-all"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#a1a1a1' }}
+            <div 
+              className="px-6 lg:px-8 py-4 flex justify-end gap-3"
+              style={{ 
+                borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                backgroundColor: 'rgba(255, 255, 255, 0.02)'
+              }}
+            >
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all"
+                style={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                  border: '1px solid rgba(255, 255, 255, 0.1)', 
+                  color: '#a1a1a1' 
+                }}
               >
-                <FiRefreshCw className={saving ? 'animate-spin' : ''} /> Reset
-              </button>
-              <button
+                <FiRefreshCw className={saving ? 'animate-spin' : ''} />
+                <span>Reset</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleSave}
                 disabled={saving}
-                className="px-10 py-4 rounded-xl font-bold flex items-center gap-2 transition-all"
-                style={{ backgroundColor: '#22c55e', color: '#000000' }}
+                className="px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all"
+                style={{ 
+                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                  color: '#ffffff',
+                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                }}
               >
                 {saving ? <FiRefreshCw className="animate-spin" /> : <FiSave />}
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
+                <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+              </motion.button>
             </div>
           )}
         </motion.div>
