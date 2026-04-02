@@ -1,7 +1,8 @@
-using System.Net;
-using System.Net.Mail;
+using MailKit.Net.Smtp;
+using MimeKit;
 using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace FEServices.Service
 {
@@ -14,10 +15,12 @@ namespace FEServices.Service
     public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<EmailService> _logger;
 
-        public EmailService(IConfiguration configuration)
+        public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<bool> SendOtpEmailAsync(string toEmail, string otp)
@@ -29,24 +32,22 @@ namespace FEServices.Service
                 var port = int.Parse(smtpSettings["Port"] ?? "587");
                 var email = smtpSettings["Email"] ?? "";
                 var password = smtpSettings["Password"] ?? "";
-                var enableSsl = bool.Parse(smtpSettings["EnableSsl"] ?? "true");
+                var useSsl = bool.Parse(smtpSettings["UseSsl"] ?? "false"); // Typically false for STARTTLS on port 587
 
                 if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
                 {
-                    Console.WriteLine("SMTP settings not configured. OTP not sent via email.");
+                    _logger.LogWarning("SMTP settings not configured. OTP not sent via email.");
                     return false;
                 }
 
-                using var client = new SmtpClient(host, port);
-                client.EnableSsl = enableSsl;
-                client.Credentials = new NetworkCredential(email, password);
-                client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress("AgriConnect", email));
+                message.To.Add(new MailboxAddress(toEmail, toEmail));
+                message.Subject = "Password Reset OTP - AgriConnect";
 
-                var mailMessage = new MailMessage
+                var bodyBuilder = new BodyBuilder
                 {
-                    From = new MailAddress(email, "AgriConnect"),
-                    Subject = "Password Reset OTP - AgriConnect",
-                    Body = $@"
+                    HtmlBody = $@"
 <!DOCTYPE html>
 <html>
 <head>
@@ -83,19 +84,28 @@ namespace FEServices.Service
         </div>
     </div>
 </body>
-</html>",
-                    IsBodyHtml = true
+</html>"
                 };
+                message.Body = bodyBuilder.ToMessageBody();
 
-                mailMessage.To.Add(toEmail);
-
-                await client.SendMailAsync(mailMessage);
-                Console.WriteLine($"OTP email sent successfully to {toEmail}");
+                using var client = new SmtpClient();
+                
+                // Connect with proper SSL/TLS settings
+                await client.ConnectAsync(host, port, useSsl ? MailKit.Security.SecureSocketOptions.SslOnConnect : MailKit.Security.SecureSocketOptions.StartTls);
+                
+                // Authenticate
+                await client.AuthenticateAsync(email, password);
+                
+                // Send
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+                
+                _logger.LogInformation("OTP email sent successfully to {Email}", toEmail);
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to send email: {ex.Message}");
+                _logger.LogError(ex, "Failed to send OTP email to {Email}", toEmail);
                 return false;
             }
         }
@@ -109,24 +119,22 @@ namespace FEServices.Service
                 var port = int.Parse(smtpSettings["Port"] ?? "587");
                 var email = smtpSettings["Email"] ?? "";
                 var password = smtpSettings["Password"] ?? "";
-                var enableSsl = bool.Parse(smtpSettings["EnableSsl"] ?? "true");
+                var useSsl = bool.Parse(smtpSettings["UseSsl"] ?? "false");
 
                 if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
                 {
-                    Console.WriteLine("SMTP settings not configured. 2FA OTP not sent via email.");
+                    _logger.LogWarning("SMTP settings not configured. 2FA OTP not sent via email.");
                     return false;
                 }
 
-                using var client = new SmtpClient(host, port);
-                client.EnableSsl = enableSsl;
-                client.Credentials = new NetworkCredential(email, password);
-                client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress("AgriConnect", email));
+                message.To.Add(new MailboxAddress(toEmail, toEmail));
+                message.Subject = "Your Verification Code - AgriConnect";
 
-                var mailMessage = new MailMessage
+                var bodyBuilder = new BodyBuilder
                 {
-                    From = new MailAddress(email, "AgriConnect"),
-                    Subject = "Your Verification Code - AgriConnect",
-                    Body = $@"
+                    HtmlBody = $@"
 <!DOCTYPE html>
 <html>
 <head>
@@ -165,19 +173,28 @@ namespace FEServices.Service
         </div>
     </div>
 </body>
-</html>",
-                    IsBodyHtml = true
+</html>"
                 };
+                message.Body = bodyBuilder.ToMessageBody();
 
-                mailMessage.To.Add(toEmail);
-
-                await client.SendMailAsync(mailMessage);
-                Console.WriteLine($"2FA OTP email sent successfully to {toEmail}");
+                using var client = new SmtpClient();
+                
+                // Connect with proper SSL/TLS settings
+                await client.ConnectAsync(host, port, useSsl ? MailKit.Security.SecureSocketOptions.SslOnConnect : MailKit.Security.SecureSocketOptions.StartTls);
+                
+                // Authenticate
+                await client.AuthenticateAsync(email, password);
+                
+                // Send
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+                
+                _logger.LogInformation("2FA OTP email sent successfully to {Email}", toEmail);
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to send 2FA email: {ex.Message}");
+                _logger.LogError(ex, "Failed to send 2FA email to {Email}", toEmail);
                 return false;
             }
         }

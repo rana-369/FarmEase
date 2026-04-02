@@ -6,11 +6,14 @@ namespace FECommon.Enums
     public enum BookingStatus
     {
         Pending = 0,
-        Confirmed = 1,
-        InProgress = 2,
-        Completed = 3,
-        Cancelled = 4,
-        Rejected = 5
+        PendingOwnerApproval = 1,
+        Accepted = 2,
+        Confirmed = 3,
+        InProgress = 4,
+        Active = 5,
+        Completed = 6,
+        Cancelled = 7,
+        Rejected = 8
     }
 
     /// <summary>
@@ -23,8 +26,11 @@ namespace FECommon.Enums
             return status switch
             {
                 BookingStatus.Pending => "Pending",
+                BookingStatus.PendingOwnerApproval => "Pending Owner Approval",
+                BookingStatus.Accepted => "Accepted",
                 BookingStatus.Confirmed => "Confirmed",
                 BookingStatus.InProgress => "In Progress",
+                BookingStatus.Active => "Active",
                 BookingStatus.Completed => "Completed",
                 BookingStatus.Cancelled => "Cancelled",
                 BookingStatus.Rejected => "Rejected",
@@ -37,16 +43,13 @@ namespace FECommon.Enums
             if (string.IsNullOrEmpty(statusString))
                 return BookingStatus.Pending;
 
-            return statusString.ToLower().Replace(" ", "") switch
-            {
-                "pending" => BookingStatus.Pending,
-                "confirmed" => BookingStatus.Confirmed,
-                "inprogress" => BookingStatus.InProgress,
-                "completed" => BookingStatus.Completed,
-                "cancelled" => BookingStatus.Cancelled,
-                "rejected" => BookingStatus.Rejected,
-                _ => BookingStatus.Pending
-            };
+            // Remove spaces efficiently and parse ignoring case (no extra string allocations)
+            var cleanString = statusString.Replace(" ", "");
+            
+            if (Enum.TryParse<BookingStatus>(cleanString, true, out var status))
+                return status;
+
+            return BookingStatus.Pending; // Default fallback
         }
     }
 }

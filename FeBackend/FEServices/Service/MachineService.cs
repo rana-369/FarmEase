@@ -3,6 +3,7 @@ using FEDomain.Interfaces;
 using FEServices.Interface;
 using Microsoft.AspNetCore.Http;
 using FECommon.DTO;
+using Microsoft.EntityFrameworkCore;
 
 namespace FEServices.Service
 {
@@ -17,80 +18,81 @@ namespace FEServices.Service
 
         public async Task<IEnumerable<Machine>> GetAllMachinesAsync()
         {
-            return await _unitOfWork.Machines.GetAllAsync();
+            return await _unitOfWork.Machines.Query().AsNoTracking().ToListAsync();
         }
 
-        public async Task<PagedResult<object>> GetAllMachinesPagedAsync(int page, int limit, string? search, string? status)
+        public async Task<PagedResult<MachineSummaryDto>> GetAllMachinesPagedAsync(int page, int limit, string? search, string? status)
         {
-            var allMachines = await _unitOfWork.Machines.GetAllAsync();
-            var allUsers = await _unitOfWork.Users.GetAllAsync();
-            
-            // Join machines with owners
-            var machinesWithOwners = allMachines.Select(m =>
-            {
-                var owner = allUsers.FirstOrDefault(u => string.Equals(u.Id, m.OwnerId, StringComparison.OrdinalIgnoreCase));
-                return new
-                {
-                    m.Id,
-                    m.Name,
-                    m.Type,
-                    m.Rate,
-                    m.Status,
-                    m.ImageUrl,
-                    m.CreatedAt,
-                    m.Location,
-                    m.Description,
-                    OwnerName = owner?.FullName ?? "Unknown",
-                    OwnerLocation = owner?.Location ?? "",
-                    m.OwnerId
-                };
-            }).AsEnumerable();
-            
-            // Apply filters
-            if (!string.IsNullOrEmpty(search))
-            {
-                machinesWithOwners = machinesWithOwners.Where(m => 
-                    (m.Name?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                    (m.OwnerName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                    (m.OwnerLocation?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                    (m.Type?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
-            }
-            
+            var query = _unitOfWork.Machines.Query().AsNoTracking();
+
+            // Apply status filter at DB level
             if (!string.IsNullOrEmpty(status) && status.ToLower() != "all")
             {
-                machinesWithOwners = machinesWithOwners.Where(m => 
-                    m.Status?.Equals(status, StringComparison.OrdinalIgnoreCase) ?? false);
+                query = query.Where(m => m.Status == status);
             }
-            
-            // Get total count after filtering
-            var totalItems = machinesWithOwners.Count();
-            
-            // Apply pagination
-            var pagedMachines = machinesWithOwners
+
+            // Apply search filter at DB level BEFORE pagination
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(m => 
+                    (m.Name != null && m.Name.Contains(search)) ||
+                    (m.Type != null && m.Type.Contains(search)) ||
+                    (m.Location != null && m.Location.Contains(search)));
+            }
+
+            // Total count AFTER all filters
+            var totalItems = await query.CountAsync();
+
+            // Get paged machines
+            var machines = await query
                 .OrderByDescending(m => m.CreatedAt)
                 .Skip((page - 1) * limit)
                 .Take(limit)
-                .ToList();
-            
-            return new PagedResult<object>(pagedMachines.Cast<object>().ToList(), totalItems, page, limit);
+                .ToListAsync();
+
+            // Get owner data only for this page
+            var ownerIds = machines.Select(m => m.OwnerId).Where(id => !string.IsNullOrEmpty(id)).Distinct().ToList();
+            var users = ownerIds.Any()
+                ? await _unitOfWork.Users.Query().AsNoTracking().Where(u => ownerIds.Contains(u.Id)).ToListAsync()
+                : new List<ApplicationUser>();
+
+            // Map data to DTO
+            var result = machines.Select(m =>
+            {
+                var owner = users.FirstOrDefault(u => u.Id == m.OwnerId);
+                return new MachineSummaryDto
+                {
+                    Id = m.Id,
+                    Name = m.Name ?? "Unknown",
+                    Type = m.Type ?? "Unknown",
+                    Rate = m.Rate,
+                    Status = m.Status ?? "Unknown",
+                    ImageUrl = m.ImageUrl,
+                    CreatedAt = m.CreatedAt,
+                    Location = m.Location ?? owner?.Location ?? "N/A",
+                    Description = m.Description,
+                    OwnerId = m.OwnerId ?? "",
+                    OwnerName = owner?.FullName ?? "Unknown",
+                    OwnerLocation = owner?.Location
+                };
+            }).ToList();
+
+            return new PagedResult<MachineSummaryDto>(result, totalItems, page, limit);
         }
 
         public async Task<IEnumerable<Machine>> GetOwnerMachinesAsync(string ownerId)
         {
-            var allMachines = await _unitOfWork.Machines.GetAllAsync();
-            return allMachines
-                .Where(m => string.Equals(m.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(m => m.CreatedAt);
+            return await _unitOfWork.Machines.GetByOwnerAsync(ownerId);
         }
 
         public async Task<IEnumerable<Machine>> GetActiveMachinesAsync()
         {
-            return await _unitOfWork.Machines.FindAsync(m => m.Status == "Active" || m.Status == "Verified");
+            return await _unitOfWork.Machines.GetActiveAsync();
         }
 
         public async Task<IEnumerable<Machine>> GetPendingVerificationAsync()
         {
-            return await _unitOfWork.Machines.FindAsync(m => m.Status == "Pending Verification" || m.Status == "Pending");
+            return await _unitOfWork.Machines.GetPendingAsync();
         }
 
         public async Task<Machine?> GetByIdAsync(int id)
@@ -134,32 +136,39 @@ namespace FEServices.Service
             return (true, "Machine rejected successfully.");
         }
 
-        public async Task<IEnumerable<object>> GetAvailableEquipmentAsync()
+        public async Task<IEnumerable<MachineSummaryDto>> GetAvailableEquipmentAsync()
         {
-            var machines = await _unitOfWork.Machines.GetAllAsync();
-            var users = await _unitOfWork.Users.GetAllAsync();
+            var machines = await _unitOfWork.Machines.GetVerifiedAsync();
+            var ownerIds = machines.Select(m => m.OwnerId).Where(id => !string.IsNullOrEmpty(id)).Distinct().ToList();
+            var users = ownerIds.Any()
+                ? await _unitOfWork.Users.Query().Where(u => ownerIds.Contains(u.Id)).ToListAsync()
+                : new List<ApplicationUser>();
 
-            return machines
-                .Where(m => m.Status == "Active" || m.Status == "Verified")
-                .Join(users,
-                    m => m.OwnerId,
-                    u => u.Id,
-                    (m, u) => new
-                    {
-                        Id = m.Id,
-                        Name = m.Name,
-                        Category = m.Type,
-                        PricePerHour = m.Rate,
-                        Location = u.Location ?? "N/A",
-                        ImageUrl = m.ImageUrl,
-                        OwnerName = u.FullName
-                    });
+            return machines.Select(m =>
+            {
+                var owner = users.FirstOrDefault(u => u.Id == m.OwnerId);
+                return new MachineSummaryDto
+                {
+                    Id = m.Id,
+                    Name = m.Name ?? "Unknown",
+                    Type = m.Type ?? "Unknown",
+                    Rate = m.Rate,
+                    Status = m.Status ?? "Unknown",
+                    ImageUrl = m.ImageUrl,
+                    CreatedAt = m.CreatedAt,
+                    Location = m.Location ?? owner?.Location ?? "N/A",
+                    Description = m.Description,
+                    OwnerId = m.OwnerId ?? "",
+                    OwnerName = owner?.FullName ?? "Unknown",
+                    OwnerLocation = owner?.Location
+                };
+            });
         }
 
         public async Task<IEnumerable<string>> GetActiveCitiesAsync()
         {
-            var users = await _unitOfWork.Users.FindAsync(u => u.Role == "owner" && !string.IsNullOrEmpty(u.Location));
-            var cities = users.Select(u => u.Location).Where(l => l != null).Cast<string>().Distinct().ToList();
+            var owners = await _unitOfWork.Users.GetOwnersAsync();
+            var cities = owners.Select(u => u.Location).Where(l => !string.IsNullOrEmpty(l)).Cast<string>().Distinct().ToList();
 
             if (!cities.Any())
                 cities = new List<string> { "Mohali", "Chandigarh", "Panchkula", "Ludhiana" };

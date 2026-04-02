@@ -6,17 +6,30 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using FEDomain.Interfaces;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 // --- ARCHITECTURE NAMESPACES ---
 using FEDomain;
 using FERepositories;
 using FEServices.Interface;
 using FEServices.Service;
+using FarmEase.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- 1. DATABASE CONTEXT ---
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(maxRetryCount: 3);
+            sqlOptions.CommandTimeout(30);
+        }));
+
+// --- 1.1. RESPONSE CACHING ---
+builder.Services.AddResponseCaching();
+builder.Services.AddMemoryCache();
 
 // --- 1.5. UNIT OF WORK & REPOSITORY REGISTRATIONS ---
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -28,6 +41,34 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 // --- 1.6. SERVICE REGISTRATIONS ---
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+// --- 1.7. RATE LIMITING ---
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    
+    // Auth endpoints - strict rate limiting (5 requests per minute)
+    options.AddPolicy("AuthPolicy", httpContext =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 2
+            }));
+    
+    // General API - moderate rate limiting (100 requests per minute)
+    options.AddPolicy("ApiPolicy", httpContext =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 4
+            }));
+});
 
 // --- 2. IDENTITY SETUP ---
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -188,6 +229,9 @@ using (var scope = app.Services.CreateScope())
 }
 
 // --- 9. MIDDLEWARE PIPELINE ---
+// Exception handling middleware - must be first to catch all errors
+app.UseExceptionHandling();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -231,6 +275,7 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseCors("FarmEasePolicy");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using FEDomain;
@@ -8,6 +9,7 @@ using FEDTO.DTOs;
 using FEServices.Interface;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using OtpNet;
 
@@ -18,12 +20,14 @@ namespace FEServices.Service
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration, IEmailService emailService)
+        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration, IEmailService emailService, ILogger<AuthService> logger)
         {
             _userManager = userManager;
             _configuration = configuration;
             _emailService = emailService;
+            _logger = logger;
         }
 
         public async Task<(bool Success, string Message, string? Token, string? Role, string? UserId)> RegisterAsync(RegisterDto model)
@@ -82,14 +86,14 @@ namespace FEServices.Service
                 // Generate and store 2FA OTP for email method
                 if (user.TwoFactorMethod == "email")
                 {
-                    var otp = new Random().Next(100000, 999999).ToString();
+                    var otp = GenerateSecureOtp();
                     user.TwoFactorOtp = otp;
                     user.TwoFactorOtpExpiry = DateTime.UtcNow.AddMinutes(5);
                     await _userManager.UpdateAsync(user);
 
                     // Send OTP email
                     await _emailService.Send2FAOtpEmailAsync(user.Email, otp);
-                    Console.WriteLine($"\n=== 2FA OTP FOR {user.Email}: {otp} ===\n");
+                    _logger.LogInformation("2FA OTP generated for {Email}", user.Email);
                 }
                 
                 var displayRole = char.ToUpper(actualRole[0]) + actualRole.Substring(1);
@@ -150,13 +154,13 @@ namespace FEServices.Service
                 return (false, "Please wait before requesting a new code.");
             }
 
-            var otp = new Random().Next(100000, 999999).ToString();
+            var otp = GenerateSecureOtp();
             user.TwoFactorOtp = otp;
             user.TwoFactorOtpExpiry = DateTime.UtcNow.AddMinutes(5);
             await _userManager.UpdateAsync(user);
 
             await _emailService.Send2FAOtpEmailAsync(user.Email, otp);
-            Console.WriteLine($"\n=== RESENT 2FA OTP FOR {user.Email}: {otp} ===\n");
+            _logger.LogInformation("2FA OTP resent for {Email}", user.Email);
 
             return (true, "Verification code sent successfully.");
         }
@@ -222,12 +226,6 @@ namespace FEServices.Service
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
                 return (null, false, "User not found.");
-
-            Console.WriteLine($"\n=== 2FA SETTINGS DEBUG ===");
-            Console.WriteLine($"UserId: {userId}");
-            Console.WriteLine($"TwoFactorEnabled: {user.TwoFactorEnabled}");
-            Console.WriteLine($"TwoFactorMethod: {user.TwoFactorMethod}");
-            Console.WriteLine($"===========================\n");
 
             var settings = new TwoFactorSettingsDto
             {
@@ -322,23 +320,17 @@ namespace FEServices.Service
             if (user == null)
                 return (true, "If that email exists, an OTP has been sent.");
 
-            var otp = new Random().Next(100000, 999999).ToString();
+            var otp = GenerateSecureOtp();
             user.ResetOtp = otp;
             user.ResetOtpExpiry = DateTime.UtcNow.AddMinutes(15);
             await _userManager.UpdateAsync(user);
 
-            Console.WriteLine($"\n=== PASSWORD RESET OTP FOR {user.Email}: {otp} ===\n");
+            _logger.LogInformation("Password reset OTP generated for {Email}", user.Email);
 
             var emailSent = await _emailService.SendOtpEmailAsync(user.Email, otp);
             
-            if (emailSent)
-            {
-                return (true, "OTP has been sent to your email address. Please check your inbox.");
-            }
-            else
-            {
-                return (true, $"Email sending failed. For testing, use OTP: {otp}");
-            }
+            // Always return same message to prevent email enumeration
+            return (true, "If that email exists, an OTP has been sent.");
         }
 
         public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordDto model)
@@ -395,13 +387,15 @@ namespace FEServices.Service
         private List<string> GenerateBackupCodes(int count = 8)
         {
             var codes = new List<string>();
-            var random = new Random();
             
             for (int i = 0; i < count; i++)
             {
-                // Use 9 bytes to ensure at least 8 chars after removing special chars
+                // Use cryptographically secure RNG for backup codes
                 var bytes = new byte[9];
-                random.NextBytes(bytes);
+                using (var rng = RandomNumberGenerator.Create())
+                {
+                    rng.GetBytes(bytes);
+                }
                 var base64 = Convert.ToBase64String(bytes)
                     .Replace("+", "")
                     .Replace("/", "")
@@ -417,9 +411,17 @@ namespace FEServices.Service
 
         private string HashCode(string code)
         {
-            using var sha256 = System.Security.Cryptography.SHA256.Create();
+            using var sha256 = SHA256.Create();
             var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(code));
             return Convert.ToBase64String(bytes);
+        }
+
+        private string GenerateSecureOtp()
+        {
+            // Cryptographically secure 6-digit OTP
+            var bytes = RandomNumberGenerator.GetBytes(4);
+            var number = BitConverter.ToUInt32(bytes, 0) % 900000 + 100000;
+            return number.ToString();
         }
     }
 }

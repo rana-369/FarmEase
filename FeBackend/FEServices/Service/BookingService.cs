@@ -3,6 +3,9 @@ using FEDomain.Interfaces;
 using FEDTO.DTOs;
 using FEServices.Interface;
 using FECommon.DTO;
+using FECommon.Exceptions;
+using FECommon.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace FEServices.Service
 {
@@ -17,509 +20,687 @@ namespace FEServices.Service
             _paymentService = paymentService;
         }
 
-        public async Task<IEnumerable<Booking>> GetAllBookingsAsync()
+        public async Task<IEnumerable<BookingSummaryDto>> GetAllBookingsAsync()
         {
-            return await _unitOfWork.Bookings.GetAllAsync();
-        }
+            try
+            {
+                var bookings = await _unitOfWork.Bookings.Query()
+                    .AsNoTracking()
+                    .Include(b => b.Machine)
+                    .Include(b => b.Farmer)
+                    .Include(b => b.Owner)
+                    .OrderByDescending(b => b.CreatedAt)
+                    .ToListAsync();
 
-        public async Task<PagedResult<object>> GetAllBookingsPagedAsync(int page, int limit, string? search, string? status)
-        {
-            var allBookings = await _unitOfWork.Bookings.GetAllAsync();
-            var allMachines = await _unitOfWork.Machines.GetAllAsync();
-            var allUsers = await _unitOfWork.Users.GetAllAsync();
-            var allPayments = (await _unitOfWork.Payments.GetAllAsync()).ToList();
-            
-            // Get booking IDs that have been refunded
-            var refundedBookingIds = allPayments
-                .Where(p => p.RefundAmount != null && p.RefundAmount > 0)
-                .Select(p => p.BookingId)
-                .ToHashSet();
-            
-            // Calculate summary stats from ALL bookings first (before filtering)
-            var activeCount = allBookings.Count(b => b.Status?.ToLower() == "active");
-            var completedCount = allBookings.Count(b => b.Status?.ToLower() == "completed" && !refundedBookingIds.Contains(b.Id));
-            var platformRevenue = allBookings
-                .Where(b => b.Status?.ToLower() == "completed" && !refundedBookingIds.Contains(b.Id))
-                .Sum(b => b.PlatformFee);
-            
-            // Join bookings with machines and users
-            var bookingsWithDetails = allBookings.Select(b =>
-            {
-                var machine = allMachines.FirstOrDefault(m => m.Id == b.MachineId);
-                var farmer = allUsers.FirstOrDefault(u => string.Equals(u.Id, b.FarmerId, StringComparison.OrdinalIgnoreCase));
-                var owner = allUsers.FirstOrDefault(u => string.Equals(u.Id, b.OwnerId, StringComparison.OrdinalIgnoreCase));
-                var isRefunded = refundedBookingIds.Contains(b.Id);
-                
-                return new
-                {
-                    b.Id,
-                    b.MachineId,
-                    MachineName = b.MachineName ?? machine?.Name ?? "Unknown",
-                    b.FarmerId,
-                    FarmerName = b.FarmerName ?? farmer?.FullName ?? "Unknown",
-                    b.OwnerId,
-                    OwnerName = owner?.FullName ?? "Unknown",
-                    Location = machine?.Location ?? owner?.Location ?? "",
-                    b.Hours,
-                    b.BaseAmount,
-                    b.PlatformFee,
-                    b.TotalAmount,
-                    b.Status,
-                    b.CreatedAt,
-                    IsRefunded = isRefunded
-                };
-            }).AsEnumerable();
-            
-            // Apply filters
-            if (!string.IsNullOrEmpty(search))
-            {
-                bookingsWithDetails = bookingsWithDetails.Where(b => 
-                    (b.MachineName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                    (b.FarmerName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                    (b.OwnerName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
-            }
-            
-            if (!string.IsNullOrEmpty(status) && status.ToLower() != "all")
-            {
-                bookingsWithDetails = bookingsWithDetails.Where(b => 
-                    b.Status?.Equals(status, StringComparison.OrdinalIgnoreCase) ?? false);
-            }
-            
-            // Get total count after filtering
-            var totalItems = bookingsWithDetails.Count();
-            
-            // Apply pagination
-            var pagedBookings = bookingsWithDetails
-                .OrderByDescending(b => b.CreatedAt)
-                .Skip((page - 1) * limit)
-                .Take(limit)
-                .ToList();
-            
-            return new PagedResult<object>(pagedBookings.Cast<object>().ToList(), totalItems, page, limit)
-            {
-                Summary = new
-                {
-                    ActiveCount = activeCount,
-                    CompletedCount = completedCount,
-                    TotalRevenue = platformRevenue
-                }
-            };
-        }
+                var bookingIds = bookings.Select(b => b.Id).ToList();
+                var payments = bookingIds.Any()
+                    ? await _unitOfWork.Payments.Query().AsNoTracking().Where(p => bookingIds.Contains(p.BookingId)).ToListAsync()
+                    : new List<Payment>();
 
-        public async Task<IEnumerable<Booking>> GetOwnerBookingsAsync(string ownerId)
-        {
-            var allBookings = await _unitOfWork.Bookings.GetAllAsync();
-            return allBookings
-                .Where(b => string.Equals(b.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(b => b.CreatedAt);
-        }
-
-        public async Task<IEnumerable<object>> GetFarmerBookingsAsync(string farmerId)
-        {
-            var allBookings = await _unitOfWork.Bookings.GetAllAsync();
-            var allPayments = await _unitOfWork.Payments.GetAllAsync();
-            
-            var farmerBookings = allBookings
-                .Where(b => string.Equals(b.FarmerId?.Trim(), farmerId?.Trim(), StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(b => b.CreatedAt)
-                .Select(b => {
-                    var payment = allPayments.FirstOrDefault(p => p.BookingId == b.Id);
-                    return new {
-                        b.Id,
-                        b.MachineId,
-                        b.MachineName,
-                        b.FarmerId,
-                        b.FarmerName,
-                        b.OwnerId,
-                        b.Hours,
-                        b.BaseAmount,
-                        b.PlatformFee,
-                        b.TotalAmount,
-                        b.Status,
-                        b.CreatedAt,
-                        IsPaid = payment != null && payment.Status == "Captured",
-                        Payment = payment != null ? new {
-                            payment.Id,
-                            payment.RazorpayPaymentId,
-                            payment.Status,
-                            payment.Amount,
-                            payment.CreatedAt,
-                            payment.RefundAmount,
-                            payment.RefundId,
-                            payment.RefundedAt,
-                            payment.RefundReason
-                        } : null
+                return bookings.Select(b => {
+                    var payment = payments.FirstOrDefault(p => p.BookingId == b.Id);
+                    return new BookingSummaryDto
+                    {
+                        Id = b.Id,
+                        MachineId = b.MachineId,
+                        MachineName = b.Machine?.Name ?? "Unknown",
+                        FarmerId = b.FarmerId,
+                        FarmerName = b.Farmer?.FullName ?? "Unknown",
+                        OwnerId = b.OwnerId,
+                        OwnerName = b.Owner?.FullName ?? "Unknown",
+                        Location = b.Machine?.Location ?? b.Owner?.Location ?? "",
+                        Hours = b.Hours,
+                        BaseAmount = b.BaseAmount,
+                        PlatformFee = b.PlatformFee,
+                        TotalAmount = b.TotalAmount,
+                        Status = b.Status.ToDisplayString(),
+                        CreatedAt = b.CreatedAt,
+                        IsRefunded = payment?.RefundAmount > 0
                     };
-                })
-                .ToList();
-            
-            return farmerBookings.Cast<object>();
+                });
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve bookings", ex);
+            }
+        }
+
+        public async Task<PagedResult<BookingSummaryDto>> GetAllBookingsPagedAsync(int page, int limit, string? search, string? status, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                IQueryable<Booking> query = _unitOfWork.Bookings.Query()
+                    .Include(b => b.Machine)
+                    .Include(b => b.Farmer)
+                    .Include(b => b.Owner);
+
+                // Apply status filter at DB level - parse string to enum
+                BookingStatus? statusEnum = null;
+                if (!string.IsNullOrEmpty(status) && status.ToLower() != "all")
+                {
+                    statusEnum = BookingStatusExtensions.FromString(status);
+                    query = query.Where(b => b.Status == statusEnum.Value);
+                }
+
+                // Apply search filter at DB level BEFORE pagination - now using navigation properties
+                if (!string.IsNullOrEmpty(search))
+                {
+                    query = query.Where(b => 
+                        (b.Machine != null && b.Machine.Name != null && b.Machine.Name.Contains(search)) ||
+                        (b.Farmer != null && b.Farmer.FullName != null && b.Farmer.FullName.Contains(search)) ||
+                        (b.OwnerId != null && b.OwnerId.Contains(search)));
+                }
+
+                // Total count AFTER all filters
+                var totalItems = await query.CountAsync(cancellationToken);
+
+                // Get paged bookings with navigation properties already loaded
+                var bookings = await query
+                    .OrderByDescending(b => b.CreatedAt)
+                    .Skip((page - 1) * limit)
+                    .Take(limit)
+                    .ToListAsync(cancellationToken);
+
+                var bookingIds = bookings.Select(b => b.Id).ToList();
+                var payments = await _unitOfWork.Payments.Query()
+                    .Where(p => bookingIds.Contains(p.BookingId))
+                    .ToListAsync(cancellationToken);
+
+                var refundedBookingIds = payments
+                    .Where(p => p.RefundAmount != null && p.RefundAmount > 0)
+                    .Select(p => p.BookingId)
+                    .ToHashSet();
+
+                // Map data to DTO using navigation properties
+                var result = bookings.Select(b =>
+                {
+                    var isRefunded = refundedBookingIds.Contains(b.Id);
+
+                    return new BookingSummaryDto
+                    {
+                        Id = b.Id,
+                        MachineId = b.MachineId,
+                        MachineName = b.Machine?.Name ?? "Unknown",
+                        FarmerId = b.FarmerId,
+                        FarmerName = b.Farmer?.FullName ?? "Unknown",
+                        OwnerId = b.OwnerId,
+                        OwnerName = b.Owner?.FullName ?? "Unknown",
+                        Location = b.Machine?.Location ?? b.Owner?.Location ?? "",
+                        Hours = b.Hours,
+                        BaseAmount = b.BaseAmount,
+                        PlatformFee = b.PlatformFee,
+                        TotalAmount = b.TotalAmount,
+                        Status = b.Status.ToDisplayString(),
+                        CreatedAt = b.CreatedAt,
+                        IsRefunded = isRefunded
+                    };
+                }).ToList();
+
+                // Combined stats query - single DB roundtrip
+                var stats = await _unitOfWork.Bookings.Query()
+                    .GroupBy(b => 1)
+                    .Select(g => new
+                    {
+                        ActiveCount = g.Count(b => b.Status == BookingStatus.Active),
+                        CompletedCount = g.Count(b => b.Status == BookingStatus.Completed),
+                        TotalRevenue = g.Where(b => b.Status == BookingStatus.Completed).Sum(b => b.PlatformFee)
+                    })
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                return new PagedResult<BookingSummaryDto>(result, totalItems, page, limit)
+                {
+                    Summary = new
+                    {
+                        ActiveCount = stats?.ActiveCount ?? 0,
+                        CompletedCount = stats?.CompletedCount ?? 0,
+                        TotalRevenue = stats?.TotalRevenue ?? 0
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve paged bookings", ex);
+            }
+        }
+
+        public async Task<IEnumerable<BookingSummaryDto>> GetOwnerBookingsAsync(string ownerId)
+        {
+            try
+            {
+                var bookings = await _unitOfWork.Bookings.Query()
+                    .AsNoTracking()
+                    .Include(b => b.Machine)
+                    .Include(b => b.Farmer)
+                    .Include(b => b.Owner)
+                    .Where(b => b.OwnerId == ownerId)
+                    .OrderByDescending(b => b.CreatedAt)
+                    .ToListAsync();
+
+                var bookingIds = bookings.Select(b => b.Id).ToList();
+                var payments = bookingIds.Any()
+                    ? await _unitOfWork.Payments.Query().AsNoTracking().Where(p => bookingIds.Contains(p.BookingId)).ToListAsync()
+                    : new List<Payment>();
+
+                return bookings.Select(b => {
+                    var payment = payments.FirstOrDefault(p => p.BookingId == b.Id);
+                    return new BookingSummaryDto
+                    {
+                        Id = b.Id,
+                        MachineId = b.MachineId,
+                        MachineName = b.Machine?.Name ?? "Unknown",
+                        FarmerId = b.FarmerId,
+                        FarmerName = b.Farmer?.FullName ?? "Unknown",
+                        OwnerId = b.OwnerId,
+                        OwnerName = b.Owner?.FullName ?? "Unknown",
+                        Location = b.Machine?.Location ?? b.Owner?.Location ?? "",
+                        Hours = b.Hours,
+                        BaseAmount = b.BaseAmount,
+                        PlatformFee = b.PlatformFee,
+                        TotalAmount = b.TotalAmount,
+                        Status = b.Status.ToDisplayString(),
+                        CreatedAt = b.CreatedAt,
+                        IsRefunded = payment?.RefundAmount > 0
+                    };
+                });
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve owner bookings", ex);
+            }
+        }
+
+        public async Task<IEnumerable<BookingSummaryDto>> GetFarmerBookingsAsync(string farmerId)
+        {
+            try
+            {
+                var farmerBookings = await _unitOfWork.Bookings.Query()
+                    .AsNoTracking()
+                    .Include(b => b.Machine)
+                    .Include(b => b.Owner)
+                    .Where(b => b.FarmerId == farmerId)
+                    .OrderByDescending(b => b.CreatedAt)
+                    .ToListAsync();
+
+                var bookingIds = farmerBookings.Select(b => b.Id).ToList();
+                var payments = bookingIds.Any()
+                    ? await _unitOfWork.Payments.Query().AsNoTracking().Where(p => bookingIds.Contains(p.BookingId)).ToListAsync()
+                    : new List<Payment>();
+                
+                return farmerBookings.Select(b => {
+                    var payment = payments.FirstOrDefault(p => p.BookingId == b.Id);
+                    return new BookingSummaryDto
+                    {
+                        Id = b.Id,
+                        MachineId = b.MachineId,
+                        MachineName = b.Machine?.Name ?? "Unknown",
+                        FarmerId = b.FarmerId,
+                        FarmerName = b.Farmer?.FullName ?? "Unknown",
+                        OwnerId = b.OwnerId,
+                        OwnerName = b.Owner?.FullName ?? "Unknown",
+                        Location = b.Machine?.Location ?? b.Owner?.Location ?? "",
+                        Hours = b.Hours,
+                        BaseAmount = b.BaseAmount,
+                        PlatformFee = b.PlatformFee,
+                        TotalAmount = b.TotalAmount,
+                        Status = b.Status.ToDisplayString(),
+                        CreatedAt = b.CreatedAt,
+                        IsRefunded = payment?.RefundAmount > 0
+                    };
+                });
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve farmer bookings", ex);
+            }
         }
 
         public async Task<Booking?> GetByIdAsync(int id)
         {
-            return await _unitOfWork.Bookings.GetByIdAsync(id);
+            try
+            {
+                return await _unitOfWork.Bookings.GetByIdAsync(id);
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve booking", ex);
+            }
         }
 
         public async Task<(bool Success, string Message, Booking? Booking)> CreateAsync(CreateBookingDto request, string farmerId, string farmerName)
         {
-            var machine = await _unitOfWork.Machines.GetByIdAsync(request.MachineId);
-
-            if (machine == null || machine.Status != "Active")
-                return (false, "Invalid or unavailable machine.", null);
-
-            int safeHours = request.Hours > 0 ? request.Hours : 1;
-            var rate = machine.Rate > 0 ? machine.Rate : 1;
-
-            var booking = new Booking
+            try
             {
-                MachineId = machine.Id,
-                MachineName = machine.Name,
-                FarmerId = farmerId,
-                FarmerName = farmerName,
-                OwnerId = machine.OwnerId,
-                Hours = safeHours,
-                BaseAmount = rate * safeHours,
-                PlatformFee = (rate * safeHours) * 0.10m,
-                TotalAmount = (rate * safeHours) * 1.10m,
-                Status = "Pending",
-                CreatedAt = DateTime.UtcNow
-            };
+                var machine = await _unitOfWork.Machines.Query()
+                    .Include(m => m.Owner)
+                    .FirstOrDefaultAsync(m => m.Id == request.MachineId);
 
-            await _unitOfWork.Bookings.AddAsync(booking);
+                if (machine == null || machine.Status != "Active")
+                    return (false, "Invalid or unavailable machine.", null);
 
-            var ownerNotification = new Notification
+                int safeHours = request.Hours > 0 ? request.Hours : 1;
+                var rate = machine.Rate > 0 ? machine.Rate : 1;
+
+                var booking = new Booking
+                {
+                    MachineId = machine.Id,
+                    FarmerId = farmerId,
+                    OwnerId = machine.OwnerId,
+                    Hours = safeHours,
+                    BaseAmount = rate * safeHours,
+                    PlatformFee = (rate * safeHours) * 0.10m,
+                    TotalAmount = (rate * safeHours) * 1.10m,
+                    Status = BookingStatus.Pending,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.Bookings.AddAsync(booking);
+
+                var ownerNotification = new Notification
+                {
+                    UserId = machine.OwnerId,
+                    Title = "New Booking Request",
+                    Message = $"New rental request from {farmerName} for your {machine.Name}.",
+                    Type = "info",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.Notifications.AddAsync(ownerNotification);
+                await _unitOfWork.SaveChangesAsync();
+
+                return (true, "Booking created!", booking);
+            }
+            catch (Exception ex)
             {
-                UserId = machine.OwnerId,
-                Title = "New Booking Request",
-                Message = $"New rental request from {farmerName} for your {machine.Name}.",
-                Type = "info",
-                IsRead = false,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _unitOfWork.Notifications.AddAsync(ownerNotification);
-            await _unitOfWork.SaveChangesAsync();
-
-            return (true, "Booking created!", booking);
+                throw new AppException("Failed to create booking", ex);
+            }
         }
 
         public async Task<(bool Success, string Message)> AcceptAsync(int id, string ownerId)
         {
-            var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
-            if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
-                return (false, "Unauthorized or booking not found.");
-
-            booking.Status = "Accepted";
-            _unitOfWork.Bookings.Update(booking);
-
-            var notification = new Notification
+            try
             {
-                UserId = booking.FarmerId,
-                Title = "Booking Accepted",
-                Message = $"Your request for {booking.MachineName} was ACCEPTED!",
-                Type = "success",
-                IsRead = false,
-                CreatedAt = DateTime.UtcNow
-            };
+                var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+                if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return (false, "Unauthorized or booking not found.");
 
-            await _unitOfWork.Notifications.AddAsync(notification);
-            await _unitOfWork.SaveChangesAsync();
+                booking.Status = BookingStatus.Accepted;
+                _unitOfWork.Bookings.Update(booking);
 
-            return (true, "Booking accepted!");
+                var notification = new Notification
+                {
+                    UserId = booking.FarmerId,
+                    Title = "Booking Accepted",
+                    Message = $"Your request for {booking.Machine?.Name ?? "the machine"} was ACCEPTED!",
+                    Type = "success",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.Notifications.AddAsync(notification);
+                await _unitOfWork.SaveChangesAsync();
+
+                return (true, "Booking accepted!");
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to accept booking", ex);
+            }
         }
 
         public async Task<(bool Success, string Message)> RejectAsync(int id, string ownerId)
         {
-            var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
-            if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
-                return (false, "Unauthorized or booking not found.");
+            try
+            {
+                var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+                if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return (false, "Unauthorized or booking not found.");
 
-            booking.Status = "Rejected";
-            _unitOfWork.Bookings.Update(booking);
-            await _unitOfWork.SaveChangesAsync();
+                booking.Status = BookingStatus.Rejected;
+                _unitOfWork.Bookings.Update(booking);
+                await _unitOfWork.SaveChangesAsync();
 
-            return (true, "Booking rejected.");
+                return (true, "Booking rejected.");
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to reject booking", ex);
+            }
         }
 
         public async Task<(bool Success, string Message)> CompleteAsync(int id, string ownerId)
         {
-            var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
-            if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
-                return (false, "Unauthorized or booking not found.");
-
-            booking.Status = "Completed";
-            _unitOfWork.Bookings.Update(booking);
-
-            var notification = new Notification
+            try
             {
-                UserId = booking.FarmerId,
-                Title = "Booking Completed",
-                Message = $"The job for {booking.MachineName} has been marked as COMPLETED.",
-                Type = "success",
-                IsRead = false,
-                CreatedAt = DateTime.UtcNow
-            };
+                var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+                if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return (false, "Unauthorized or booking not found.");
 
-            await _unitOfWork.Notifications.AddAsync(notification);
-            await _unitOfWork.SaveChangesAsync();
+                booking.Status = BookingStatus.Completed;
+                _unitOfWork.Bookings.Update(booking);
 
-            return (true, "Booking completed!");
+                var notification = new Notification
+                {
+                    UserId = booking.FarmerId,
+                    Title = "Booking Completed",
+                    Message = $"The job for {booking.Machine?.Name ?? "the machine"} has been marked as COMPLETED.",
+                    Type = "success",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.Notifications.AddAsync(notification);
+                await _unitOfWork.SaveChangesAsync();
+
+                return (true, "Booking completed!");
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to complete booking", ex);
+            }
         }
 
         public async Task<(bool Success, string Message)> CancelAsync(int id, string farmerId)
         {
-            var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
-            if (booking == null || !string.Equals(booking.FarmerId?.Trim(), farmerId?.Trim(), StringComparison.OrdinalIgnoreCase))
-                return (false, "Unauthorized or booking not found.");
-
-            // Handle pending bookings - just delete
-            if (booking.Status == "Pending")
+            try
             {
-                _unitOfWork.Bookings.Delete(booking);
-                await _unitOfWork.SaveChangesAsync();
-                return (true, "Booking cancelled.");
-            }
+                var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+                if (booking == null || !string.Equals(booking.FarmerId?.Trim(), farmerId?.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return (false, "Unauthorized or booking not found.");
 
-            // Handle active bookings - process refund
-            if (booking.Status == "Active")
-            {
-                var (success, message, _) = await _paymentService.RefundAsync(id, "Cancelled by farmer");
-                if (!success)
-                    return (false, $"Failed to process refund: {message}");
-                
-                return (true, "Booking cancelled and refund processed successfully.");
-            }
-
-            // Handle accepted bookings - check if payment exists
-            if (booking.Status == "Accepted")
-            {
-                var payments = await _unitOfWork.Payments.GetAllAsync();
-                var payment = payments.FirstOrDefault(p => p.BookingId == id && p.Status == "Captured");
-                
-                if (payment != null)
+                // Handle pending bookings - just delete
+                if (booking.Status == BookingStatus.Pending)
                 {
-                    // Payment was made, process refund
+                    _unitOfWork.Bookings.Delete(booking);
+                    await _unitOfWork.SaveChangesAsync();
+                    return (true, "Booking cancelled.");
+                }
+
+                // Handle active bookings - process refund
+                if (booking.Status == BookingStatus.Active)
+                {
                     var (success, message, _) = await _paymentService.RefundAsync(id, "Cancelled by farmer");
                     if (!success)
                         return (false, $"Failed to process refund: {message}");
                     
                     return (true, "Booking cancelled and refund processed successfully.");
                 }
-                
-                // No payment, just update status
-                booking.Status = "Cancelled";
-                _unitOfWork.Bookings.Update(booking);
-                
-                var notification = new Notification
-                {
-                    UserId = booking.OwnerId,
-                    Title = "Booking Cancelled",
-                    Message = $"Booking for {booking.MachineName} has been cancelled by the farmer.",
-                    Type = "info",
-                    IsRead = false,
-                    CreatedAt = DateTime.UtcNow
-                };
-                await _unitOfWork.Notifications.AddAsync(notification);
-                await _unitOfWork.SaveChangesAsync();
-                
-                return (true, "Booking cancelled.");
-            }
 
-            return (false, $"Cannot cancel booking with status '{booking.Status}'.");
+                // Handle accepted bookings - check if payment exists
+                if (booking.Status == BookingStatus.Accepted)
+                {
+                    var payment = await _unitOfWork.Payments.Query()
+                        .FirstOrDefaultAsync(p => p.BookingId == id && p.Status == "Captured");
+                    
+                    if (payment != null)
+                    {
+                        // Payment was made, process refund
+                        var (success, message, _) = await _paymentService.RefundAsync(id, "Cancelled by farmer");
+                        if (!success)
+                            return (false, $"Failed to process refund: {message}");
+                        
+                        return (true, "Booking cancelled and refund processed successfully.");
+                    }
+                    
+                    // No payment, just update status
+                    booking.Status = BookingStatus.Cancelled;
+                    _unitOfWork.Bookings.Update(booking);
+                    
+                    var notification = new Notification
+                    {
+                        UserId = booking.OwnerId,
+                        Title = "Booking Cancelled",
+                        Message = $"Booking for {booking.Machine?.Name ?? "the machine"} has been cancelled by the farmer.",
+                        Type = "info",
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _unitOfWork.Notifications.AddAsync(notification);
+                    await _unitOfWork.SaveChangesAsync();
+                    
+                    return (true, "Booking cancelled.");
+                }
+
+                return (false, $"Cannot cancel booking with status '{booking.Status.ToDisplayString()}'.");
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to cancel booking", ex);
+            }
         }
 
         public async Task<(bool Success, string Message)> PayAsync(int id, string farmerId)
         {
-            var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
-            if (booking == null || !string.Equals(booking.FarmerId?.Trim(), farmerId?.Trim(), StringComparison.OrdinalIgnoreCase))
-                return (false, "Unauthorized or booking not found.");
-
-            if (booking.Status != "Accepted")
-                return (false, "Only accepted bookings can be paid for.");
-
-            booking.Status = "Active";
-            _unitOfWork.Bookings.Update(booking);
-
-            var notification = new Notification
+            try
             {
-                UserId = booking.OwnerId,
-                Title = "Payment Received",
-                Message = $"Payment successful! The rental for {booking.MachineName} is now ACTIVE.",
-                Type = "success",
-                IsRead = false,
-                CreatedAt = DateTime.UtcNow
-            };
+                var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+                if (booking == null || !string.Equals(booking.FarmerId?.Trim(), farmerId?.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return (false, "Unauthorized or booking not found.");
 
-            await _unitOfWork.Notifications.AddAsync(notification);
-            await _unitOfWork.SaveChangesAsync();
+                if (booking.Status != BookingStatus.Accepted)
+                    return (false, "Only accepted bookings can be paid for.");
 
-            return (true, "Payment successful!");
-        }
+                booking.Status = BookingStatus.Active;
+                _unitOfWork.Bookings.Update(booking);
 
-        public async Task<object> GetOwnerDashboardStatsAsync(string ownerId)
-        {
-            var allMachines = await _unitOfWork.Machines.GetAllAsync();
-            var ownerMachines = allMachines
-                .Where(m => string.Equals(m.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
-                .ToList();
+                var notification = new Notification
+                {
+                    UserId = booking.OwnerId,
+                    Title = "Payment Received",
+                    Message = $"Payment successful! The rental for {booking.Machine?.Name ?? "the machine"} is now ACTIVE.",
+                    Type = "success",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
 
-            var machineIds = ownerMachines.Select(m => m.Id).ToList();
+                await _unitOfWork.Notifications.AddAsync(notification);
+                await _unitOfWork.SaveChangesAsync();
 
-            var allBookings = await _unitOfWork.Bookings.GetAllAsync();
-            var payments = (await _unitOfWork.Payments.GetAllAsync()).ToList();
-            var bookings = allBookings.Where(b => machineIds.Contains(b.MachineId)).ToList();
-
-            // Get booking IDs that have been refunded
-            var refundedBookingIds = payments
-                .Where(p => p.RefundAmount != null && p.RefundAmount > 0)
-                .Select(p => p.BookingId)
-                .ToHashSet();
-
-            // Only count earnings from completed bookings that haven't been refunded
-            var earnings = bookings
-                .Where(b => b.Status == "Completed" && !refundedBookingIds.Contains(b.Id))
-                .Sum(b => b.TotalAmount - b.PlatformFee);
-
-            var activeCount = bookings.Count(b => b.Status == "Active");
-            var pendingCount = bookings.Count(b => b.Status == "Pending" || b.Status == "Pending Owner Approval");
-
-            return new
-            {
-                totalMachines = ownerMachines.Count,
-                totalEarnings = (double)earnings,
-                activeRentals = activeCount,
-                pendingRequests = pendingCount,
-                lastSync = DateTime.UtcNow
-            };
-        }
-
-        public async Task<object> GetFarmerStatsAsync(string farmerId)
-        {
-            var allBookings = await _unitOfWork.Bookings.GetAllAsync();
-            var myBookings = allBookings
-                .Where(b => string.Equals(b.FarmerId?.Trim(), farmerId?.Trim(), StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            var totalBookings = myBookings.Count;
-            var activeBookings = myBookings.Count(b => b.Status == "Accepted" || b.Status == "Pending");
-            var completedBookings = myBookings.Count(b => b.Status == "Completed");
-            var totalSpent = myBookings.Where(b => b.Status == "Completed").Sum(b => b.TotalAmount);
-
-            return new
-            {
-                totalBookings,
-                activeBookings,
-                completedBookings,
-                totalSpent
-            };
-        }
-
-        public async Task<object> GetAdminStatsAsync()
-        {
-            var users = await _unitOfWork.Users.GetAllAsync();
-            var machines = await _unitOfWork.Machines.GetAllAsync();
-            var bookings = await _unitOfWork.Bookings.GetAllAsync();
-            var payments = (await _unitOfWork.Payments.GetAllAsync()).ToList();
-
-            Console.WriteLine($"[AdminStats] Total payments: {payments.Count}");
-            foreach (var p in payments)
-            {
-                Console.WriteLine($"[AdminStats] Payment: Id={p.Id}, Status={p.Status}, RefundAmount={p.RefundAmount}");
+                return (true, "Payment successful!");
             }
-
-            var totalUsers = users.Count();
-            var totalFarmers = users.Count(u => u.Role == "farmer");
-            var totalOwners = users.Count(u => u.Role == "owner");
-
-            var totalMachines = machines.Count();
-            var pendingMachines = machines.Count(m => m.Status == "Pending Verification" || m.Status == "Pending");
-
-            var totalBookings = bookings.Count();
-            
-            // Get booking IDs that have been refunded
-            var refundedBookingIds = payments
-                .Where(p => p.RefundAmount != null && p.RefundAmount > 0)
-                .Select(p => p.BookingId)
-                .ToHashSet();
-
-            // Count only completed bookings that haven't been refunded
-            var completedBookings = bookings
-                .Where(b => b.Status == "Completed" && !refundedBookingIds.Contains(b.Id))
-                .ToList();
-
-            var totalTransactionValue = completedBookings.Sum(b => b.TotalAmount);
-            var platformProfit = completedBookings.Sum(b => b.PlatformFee);
-
-            Console.WriteLine($"[AdminStats] Completed bookings: {completedBookings.Count}, Refunded booking IDs: {string.Join(",", refundedBookingIds)}");
-            Console.WriteLine($"[AdminStats] TotalTransactionValue: {totalTransactionValue}, PlatformProfit: {platformProfit}");
-
-            var recentBookings = bookings
-                .OrderByDescending(b => b.CreatedAt)
-                .Take(5)
-                .Select(b => new { b.Id, b.MachineName, b.FarmerName, b.TotalAmount, b.Status, b.CreatedAt });
-
-            return new
+            catch (Exception ex)
             {
-                Stats = new
+                throw new AppException("Failed to process payment", ex);
+            }
+        }
+
+        public async Task<OwnerDashboardStatsDto> GetOwnerDashboardStatsAsync(string ownerId)
+        {
+            try
+            {
+                var machineIds = await _unitOfWork.Machines.Query()
+                    .Where(m => m.OwnerId == ownerId)
+                    .Select(m => m.Id)
+                    .ToListAsync();
+
+                var totalMachines = machineIds.Count;
+
+                var activeCount = await _unitOfWork.Bookings.Query()
+                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == BookingStatus.Active)
+                    .CountAsync();
+
+                var completedCount = await _unitOfWork.Bookings.Query()
+                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == BookingStatus.Completed)
+                    .CountAsync();
+
+                var pendingCount = await _unitOfWork.Bookings.Query()
+                    .Where(b => machineIds.Contains(b.MachineId) && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.PendingOwnerApproval))
+                    .CountAsync();
+
+                var totalRevenue = await _unitOfWork.Bookings.Query()
+                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == BookingStatus.Completed)
+                    .SumAsync(b => b.TotalAmount);
+
+                var platformFees = await _unitOfWork.Bookings.Query()
+                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == BookingStatus.Completed)
+                    .SumAsync(b => b.PlatformFee);
+
+                return new OwnerDashboardStatsDto
+                {
+                    TotalMachines = totalMachines,
+                    ActiveBookings = activeCount,
+                    CompletedBookings = completedCount,
+                    TotalRevenue = totalRevenue - platformFees,
+                    PlatformFeesEarned = platformFees,
+                    PendingBookings = pendingCount
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve owner dashboard stats", ex);
+            }
+        }
+
+        public async Task<FarmerDashboardStatsDto> GetFarmerStatsAsync(string farmerId)
+        {
+            try
+            {
+                var totalBookings = await _unitOfWork.Bookings.Query()
+                    .Where(b => b.FarmerId == farmerId)
+                    .CountAsync();
+                var activeBookings = await _unitOfWork.Bookings.Query()
+                    .Where(b => b.FarmerId == farmerId && (b.Status == BookingStatus.Accepted || b.Status == BookingStatus.Pending))
+                    .CountAsync();
+                var completedBookings = await _unitOfWork.Bookings.Query()
+                    .Where(b => b.FarmerId == farmerId && b.Status == BookingStatus.Completed)
+                    .CountAsync();
+                var pendingBookings = await _unitOfWork.Bookings.Query()
+                    .Where(b => b.FarmerId == farmerId && b.Status == BookingStatus.Pending)
+                    .CountAsync();
+                var totalSpent = await _unitOfWork.Bookings.Query()
+                    .Where(b => b.FarmerId == farmerId && b.Status == BookingStatus.Completed)
+                    .SumAsync(b => b.TotalAmount);
+
+                return new FarmerDashboardStatsDto
+                {
+                    TotalBookings = totalBookings,
+                    ActiveBookings = activeBookings,
+                    CompletedBookings = completedBookings,
+                    TotalSpent = totalSpent,
+                    PendingBookings = pendingBookings
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve farmer stats", ex);
+            }
+        }
+
+        public async Task<AdminDashboardStatsDto> GetAdminStatsAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var totalUsers = await _unitOfWork.Users.Query().CountAsync(cancellationToken);
+                var totalFarmers = await _unitOfWork.Users.Query().CountAsync(u => u.Role == "farmer", cancellationToken);
+                var totalOwners = await _unitOfWork.Users.Query().CountAsync(u => u.Role == "owner", cancellationToken);
+
+                var totalMachines = await _unitOfWork.Machines.Query().CountAsync(cancellationToken);
+
+                var totalBookings = await _unitOfWork.Bookings.Query().CountAsync(cancellationToken);
+                var activeBookings = await _unitOfWork.Bookings.Query()
+                    .Where(b => b.Status == BookingStatus.Active)
+                    .CountAsync(cancellationToken);
+                var completedBookings = await _unitOfWork.Bookings.Query()
+                    .Where(b => b.Status == BookingStatus.Completed)
+                    .CountAsync(cancellationToken);
+
+                var totalRevenue = await _unitOfWork.Bookings.Query()
+                    .Where(b => b.Status == BookingStatus.Completed)
+                    .SumAsync(b => b.TotalAmount, cancellationToken);
+                var platformRevenue = await _unitOfWork.Bookings.Query()
+                    .Where(b => b.Status == BookingStatus.Completed)
+                    .SumAsync(b => b.PlatformFee, cancellationToken);
+
+                var recentBookingsData = await _unitOfWork.Bookings.Query()
+                    .Include(b => b.Machine)
+                    .Include(b => b.Farmer)
+                    .OrderByDescending(b => b.CreatedAt)
+                    .Take(5)
+                    .ToListAsync(cancellationToken);
+
+                var recentBookings = recentBookingsData.Select(b => new RecentBookingDto
+                {
+                    Id = b.Id,
+                    MachineName = b.Machine != null ? b.Machine.Name : "Unknown",
+                    FarmerName = b.Farmer != null ? b.Farmer.FullName : "Unknown",
+                    OwnerName = "",
+                    Status = b.Status.ToDisplayString(),
+                    TotalAmount = b.TotalAmount,
+                    CreatedAt = b.CreatedAt
+                }).ToList();
+
+                return new AdminDashboardStatsDto
                 {
                     TotalUsers = totalUsers,
-                    Farmers = totalFarmers,
-                    Owners = totalOwners,
+                    TotalFarmers = totalFarmers,
+                    TotalOwners = totalOwners,
                     TotalMachines = totalMachines,
-                    PendingApprovals = pendingMachines,
                     TotalBookings = totalBookings,
-                    Revenue = platformProfit,
-                    TotalTransactionValue = totalTransactionValue,
-                    SuccessfulPayments = completedBookings.Count
-                },
-                RecentBookings = recentBookings
-            };
+                    ActiveBookings = activeBookings,
+                    CompletedBookings = completedBookings,
+                    TotalRevenue = totalRevenue,
+                    PlatformRevenue = platformRevenue,
+                    RecentBookings = recentBookings
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve admin stats", ex);
+            }
         }
 
-        public async Task<IEnumerable<object>> GetRevenueByMonthAsync()
+        public async Task<IEnumerable<MonthlyRevenueDto>> GetRevenueByMonthAsync()
         {
-            var sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
-
-            var bookings = await _unitOfWork.Bookings.GetAllAsync();
-            var payments = (await _unitOfWork.Payments.GetAllAsync()).ToList();
-            
-            // Get booking IDs that have been refunded
-            var refundedBookingIds = payments
-                .Where(p => p.RefundAmount != null && p.RefundAmount > 0)
-                .Select(p => p.BookingId)
-                .ToHashSet();
-
-            // Count only completed bookings that haven't been refunded
-            var completedBookings = bookings
-                .Where(b => b.Status == "Completed" && !refundedBookingIds.Contains(b.Id) && b.CreatedAt >= sixMonthsAgo)
-                .ToList();
-
-            var revenueByMonth = completedBookings
-                .GroupBy(b => new { b.CreatedAt.Year, b.CreatedAt.Month })
-                .Select(g => new
-                {
-                    Month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM"),
-                    Revenue = g.Sum(b => b.TotalAmount),
-                    SortDate = new DateTime(g.Key.Year, g.Key.Month, 1)
-                })
-                .OrderBy(x => x.SortDate)
-                .Select(x => new { x.Month, x.Revenue });
-
-            if (!revenueByMonth.Any())
+            try
             {
-                var months = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-                var today = DateTime.UtcNow;
-                var dummyData = new List<object>();
-                for (int i = 5; i >= 0; i--)
-                {
-                    var targetDate = today.AddMonths(-i);
-                    dummyData.Add(new { Month = months[targetDate.Month - 1], Revenue = 0m });
-                }
-                return dummyData;
-            }
+                var sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
 
-            return revenueByMonth;
+                var rawData = await _unitOfWork.Bookings.Query()
+                    .Where(b => b.Status == BookingStatus.Completed && b.CreatedAt >= sixMonthsAgo)
+                    .GroupBy(b => new { b.CreatedAt.Year, b.CreatedAt.Month })
+                    .Select(g => new
+                    {
+                        MonthNum = g.Key.Month,
+                        Year = g.Key.Year,
+                        Revenue = g.Sum(b => b.TotalAmount),
+                        BookingCount = g.Count()
+                    })
+                    .OrderBy(x => x.Year)
+                    .ThenBy(x => x.MonthNum)
+                    .ToListAsync();
+
+                if (!rawData.Any())
+                {
+                    var months = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+                    var today = DateTime.UtcNow;
+                    var dummyData = new List<MonthlyRevenueDto>();
+                    for (int i = 5; i >= 0; i--)
+                    {
+                        var targetDate = today.AddMonths(-i);
+                        dummyData.Add(new MonthlyRevenueDto
+                        {
+                            Month = months[targetDate.Month - 1],
+                            Year = targetDate.Year,
+                            Revenue = 0,
+                            BookingCount = 0
+                        });
+                    }
+                    return dummyData;
+                }
+
+                var monthNames = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+                return rawData.Select(x => new MonthlyRevenueDto
+                {
+                    Month = monthNames[x.MonthNum - 1],
+                    Year = x.Year,
+                    Revenue = x.Revenue,
+                    BookingCount = x.BookingCount
+                });
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve revenue by month", ex);
+            }
         }
     }
 }

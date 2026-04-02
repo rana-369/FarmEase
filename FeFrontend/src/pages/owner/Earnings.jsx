@@ -25,10 +25,11 @@ const OwnerEarnings = () => {
         console.log('Earnings Stats Received:', statsData);
         
         if (statsData) {
+          // Backend returns OwnerDashboardStatsDto with specific property names
           setStats({
-            totalEarnings: statsData.totalEarnings ?? 0,
-            activeRentals: statsData.activeRentals ?? 0,
-            totalMachines: statsData.totalMachines ?? 0
+            totalEarnings: statsData.totalRevenue ?? statsData.TotalRevenue ?? 0,
+            activeRentals: statsData.activeBookings ?? statsData.ActiveBookings ?? 0,
+            totalMachines: statsData.totalMachines ?? statsData.TotalMachines ?? 0
           });
         }
         

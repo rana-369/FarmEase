@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiCamera, FiSave, FiRefreshCw, FiGrid, FiCheck } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiMapPin, FiCamera, FiSave, FiRefreshCw, FiGrid, FiCheck, FiEdit2, FiX } from 'react-icons/fi';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import TwoFactorSetup from '../../components/TwoFactorSetup';
 
 const FarmerProfile = () => {
   const { get2FASettings, update2FASettings } = useAuth();
+  const fileInputRef = useRef(null);
   const [profile, setProfile] = useState({
     fullName: '',
     email: '',
@@ -15,8 +16,11 @@ const FarmerProfile = () => {
     farmSize: '',
     profileImageUrl: ''
   });
+  const [originalProfile, setOriginalProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [twoFASettings, setTwoFASettings] = useState({ enabled: false, method: 'email' });
 
@@ -37,18 +41,60 @@ const FarmerProfile = () => {
       setLoading(true);
       const response = await api.get('/profile');
       const data = response.data || {};
-      setProfile({
+      const profileData = {
         fullName: data.fullName || '',
         email: data.email || '',
         phoneNumber: data.phoneNumber || '',
         location: data.location || '',
         farmSize: data.farmSize || '',
         profileImageUrl: data.profileImageUrl || ''
-      });
+      };
+      setProfile(profileData);
+      setOriginalProfile(profileData);
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Please select an image file' });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Image size should be less than 5MB' });
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await api.post('/profile/upload-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      setProfile(prev => ({
+        ...prev,
+        profileImageUrl: response.data.profileImageUrl || response.data.url
+      }));
+      setMessage({ type: 'success', text: 'Profile image updated!' });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      setMessage({ type: 'error', text: 'Failed to upload image' });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -58,6 +104,8 @@ const FarmerProfile = () => {
       setSaving(true);
       setMessage({ type: '', text: '' });
       await api.put('/profile', profile);
+      setOriginalProfile(profile);
+      setIsEditing(false);
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -70,6 +118,14 @@ const FarmerProfile = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfile(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCancel = () => {
+    if (originalProfile) {
+      setProfile(originalProfile);
+    }
+    setIsEditing(false);
+    setMessage({ type: '', text: '' });
   };
 
   const handle2FAUpdate = async (settings) => {
@@ -98,7 +154,7 @@ const FarmerProfile = () => {
         <motion.div 
           initial={{ opacity: 0, y: -20 }} 
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="flex items-center justify-between mb-8"
         >
           <div className="flex items-center gap-4">
             <div 
@@ -115,7 +171,39 @@ const FarmerProfile = () => {
               <p className="text-sm" style={{ color: '#666666' }}>Manage your personal information and farm details</p>
             </div>
           </div>
+          
+          {!isEditing && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsEditing(true)}
+              className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2"
+              style={{ 
+                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                color: '#ffffff',
+                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+              }}
+            >
+              <FiEdit2 className="w-4 h-4" />
+              Edit Profile
+            </motion.button>
+          )}
         </motion.div>
+
+        {message.text && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
+              message.type === 'success' 
+                ? 'bg-green-500/10 border border-green-500/20 text-green-500' 
+                : 'bg-red-500/10 border border-red-500/20 text-red-500'
+            }`}
+          >
+            {message.type === 'success' ? <FiCheck /> : <FiX />}
+            <span className="text-sm font-medium">{message.text}</span>
+          </motion.div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Avatar Card */}
@@ -154,14 +242,28 @@ const FarmerProfile = () => {
                 <motion.button 
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
+                  onClick={handleImageClick}
+                  disabled={uploading}
                   className="absolute -bottom-1 -right-1 w-9 h-9 rounded-xl flex items-center justify-center"
                   style={{ 
                     background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.4)'
+                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.4)',
+                    opacity: uploading ? 0.7 : 1
                   }}
                 >
-                  <FiCamera className="text-white text-sm" />
+                  {uploading ? (
+                    <FiRefreshCw className="text-white text-sm animate-spin" />
+                  ) : (
+                    <FiCamera className="text-white text-sm" />
+                  )}
                 </motion.button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
               </div>
 
               {/* User Info */}
@@ -219,21 +321,6 @@ const FarmerProfile = () => {
                 border: '1px solid rgba(255, 255, 255, 0.06)'
               }}
             >
-              {message.text && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`mx-6 mt-6 p-4 rounded-xl flex items-center gap-3 ${
-                    message.type === 'success' 
-                      ? 'bg-green-500/10 border border-green-500/20 text-green-500' 
-                      : 'bg-red-500/10 border border-red-500/20 text-red-500'
-                  }`}
-                >
-                  <FiCheck />
-                  <span className="text-sm font-medium">{message.text}</span>
-                </motion.div>
-              )}
-
               <form onSubmit={handleSave} className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* Full Name */}
@@ -246,12 +333,15 @@ const FarmerProfile = () => {
                       id="fullName"
                       name="fullName" 
                       value={profile.fullName} 
-                      onChange={handleChange} 
+                      onChange={handleChange}
+                      disabled={!isEditing}
                       autoComplete="name"
-                      className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                      className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200"
                       style={{ 
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                        backgroundColor: isEditing ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)', 
+                        border: isEditing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.05)',
+                        color: isEditing ? '#ffffff' : '#a1a1a1',
+                        cursor: isEditing ? 'text' : 'default'
                       }}
                     />
                   </div>
@@ -287,12 +377,15 @@ const FarmerProfile = () => {
                       id="phoneNumber"
                       name="phoneNumber" 
                       value={profile.phoneNumber} 
-                      onChange={handleChange} 
+                      onChange={handleChange}
+                      disabled={!isEditing}
                       autoComplete="tel"
-                      className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                      className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200"
                       style={{ 
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                        backgroundColor: isEditing ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)', 
+                        border: isEditing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.05)',
+                        color: isEditing ? '#ffffff' : '#a1a1a1',
+                        cursor: isEditing ? 'text' : 'default'
                       }}
                     />
                   </div>
@@ -307,12 +400,15 @@ const FarmerProfile = () => {
                       id="location"
                       name="location" 
                       value={profile.location} 
-                      onChange={handleChange} 
+                      onChange={handleChange}
+                      disabled={!isEditing}
                       autoComplete="address-level2"
-                      className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                      className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200"
                       style={{ 
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                        backgroundColor: isEditing ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)', 
+                        border: isEditing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.05)',
+                        color: isEditing ? '#ffffff' : '#a1a1a1',
+                        cursor: isEditing ? 'text' : 'default'
                       }}
                     />
                   </div>
@@ -327,54 +423,59 @@ const FarmerProfile = () => {
                       id="farmSize"
                       name="farmSize" 
                       value={profile.farmSize} 
-                      onChange={handleChange} 
+                      onChange={handleChange}
+                      disabled={!isEditing}
                       placeholder="e.g. 50"
                       autoComplete="off"
-                      className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                      className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200"
                       style={{ 
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                        backgroundColor: isEditing ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)', 
+                        border: isEditing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.05)',
+                        color: isEditing ? '#ffffff' : '#a1a1a1',
+                        cursor: isEditing ? 'text' : 'default'
                       }}
                     />
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div 
-                  className="flex justify-end gap-3 mt-6 pt-6"
-                  style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}
-                >
-                  <motion.button 
-                    type="button"
-                    onClick={fetchProfile}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all"
-                    style={{ 
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-                      border: '1px solid rgba(255, 255, 255, 0.1)', 
-                      color: '#a1a1a1'
-                    }}
+                {isEditing && (
+                  <div 
+                    className="flex justify-end gap-3 mt-6 pt-6"
+                    style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}
                   >
-                    <FiRefreshCw className={loading ? 'animate-spin' : ''} />
-                    <span>Reset</span>
-                  </motion.button>
-                  <motion.button 
-                    type="submit"
-                    disabled={saving}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all"
-                    style={{ 
-                      background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                      color: '#ffffff',
-                      boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
-                    }}
-                  >
-                    {saving ? <FiRefreshCw className="animate-spin" /> : <FiSave />}
-                    <span>{saving ? 'Saving...' : 'Save Changes'}</span>
-                  </motion.button>
-                </div>
+                    <motion.button 
+                      type="button"
+                      onClick={handleCancel}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all"
+                      style={{ 
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                        border: '1px solid rgba(255, 255, 255, 0.1)', 
+                        color: '#a1a1a1'
+                      }}
+                    >
+                      <FiX className="w-4 h-4" />
+                      Cancel
+                    </motion.button>
+                    <motion.button 
+                      type="submit"
+                      disabled={saving}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all"
+                      style={{ 
+                        background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                        color: '#ffffff',
+                        boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                      }}
+                    >
+                      {saving ? <FiRefreshCw className="w-4 h-4 animate-spin" /> : <FiSave className="w-4 h-4" />}
+                      <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                    </motion.button>
+                  </div>
+                )}
               </form>
 
               {/* 2FA Section */}

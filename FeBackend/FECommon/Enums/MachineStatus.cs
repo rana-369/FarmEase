@@ -35,16 +35,17 @@ namespace FECommon.Enums
             if (string.IsNullOrEmpty(statusString))
                 return MachineStatus.PendingVerification;
 
-            return statusString.ToLower().Replace(" ", "") switch
-            {
-                "pendingverification" => MachineStatus.PendingVerification,
-                "pending" => MachineStatus.PendingVerification,
-                "verified" => MachineStatus.Verified,
-                "active" => MachineStatus.Active,
-                "rejected" => MachineStatus.Rejected,
-                "maintenance" => MachineStatus.Maintenance,
-                _ => MachineStatus.PendingVerification
-            };
+            // Remove spaces efficiently and parse ignoring case (no extra string allocations)
+            var cleanString = statusString.Replace(" ", "");
+            
+            // Handle "Pending" as alias for PendingVerification
+            if (cleanString.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                return MachineStatus.PendingVerification;
+            
+            if (Enum.TryParse<MachineStatus>(cleanString, true, out var status))
+                return status;
+
+            return MachineStatus.PendingVerification; // Default fallback
         }
     }
 }

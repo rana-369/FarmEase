@@ -1,9 +1,17 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace FEDTO.DTOs
 {
     public class CreateBookingDto
     {
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "MachineId must be a positive number")]
         public int MachineId { get; set; }
+
         public string MachineName { get; set; } = string.Empty;
+
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Hours must be at least 1")]
         public int Hours { get; set; }
     }
 
@@ -25,6 +33,7 @@ namespace FEDTO.DTOs
 
     public class UpdateBookingStatusDto
     {
+        [Required]
         public string Status { get; set; } = string.Empty;
     }
 }

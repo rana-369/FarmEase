@@ -4,6 +4,8 @@ namespace FEDomain.Interfaces
 {
     public interface IGenericRepository<T> where T : class
     {
+        IQueryable<T> Query();
+        IQueryable<T> QueryNoTracking();
         Task<T?> GetByIdAsync(int id);
         Task<T?> GetByIdAsync(string id);
         Task<IEnumerable<T>> GetAllAsync(params Expression<Func<T, object>>[] includes);

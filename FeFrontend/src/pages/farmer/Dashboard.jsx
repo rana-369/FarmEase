@@ -30,11 +30,12 @@ const FarmerDashboard = () => {
       ]);
       
       if (statsData) {
+        // Backend returns FarmerDashboardStatsDto with specific property names
         setStats({
-          totalBookings: statsData.totalBookings || 0,
-          activeBookings: statsData.activeBookings || 0,
-          completedBookings: statsData.completedBookings || 0,
-          totalSpent: statsData.totalSpent || 0
+          totalBookings: statsData.totalBookings ?? statsData.TotalBookings ?? 0,
+          activeBookings: statsData.activeBookings ?? statsData.ActiveBookings ?? 0,
+          completedBookings: statsData.completedBookings ?? statsData.CompletedBookings ?? 0,
+          totalSpent: statsData.totalSpent ?? statsData.TotalSpent ?? 0
         });
       }
       

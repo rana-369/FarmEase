@@ -25,36 +25,16 @@ export const login = async (email, password, selectedRole = null) => {
   
   const response = await api.post('/auth/login', payload);
   
-  if (import.meta.env.DEV) {
-    console.log('Backend response:', response.data);
-    console.log('Response keys:', Object.keys(response.data));
-  }
-  
   // Handle both lowercase and capitalized field names
   const token = response.data.token || response.data.Token;
   const role = response.data.role || response.data.Role;
   const userId = response.data.userId || response.data.UserId;
-  
-  if (import.meta.env.DEV) {
-    console.log('Raw response data:', JSON.stringify(response.data, null, 2));
-  }
-  
-  if (import.meta.env.DEV) {
-    console.log('Extracted values:', { token, role, userId });
-  }
   
   // Store token and user info in localStorage
   if (token) {
     localStorage.setItem('token', token);
     localStorage.setItem('role', role);
     localStorage.setItem('userId', userId);
-    if (import.meta.env.DEV) {
-      console.log('Stored in localStorage');
-    }
-  } else {
-    if (import.meta.env.DEV) {
-      console.error('No token received from backend');
-    }
   }
   
   return {

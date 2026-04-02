@@ -1,4 +1,4 @@
-namespace FECommon.DTO
+ namespace FECommon.DTO
 {
     public class PagedResult<T>
     {

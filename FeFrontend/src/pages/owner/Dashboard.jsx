@@ -38,11 +38,12 @@ const OwnerDashboard = () => {
       }
       
       if (statsData) {
+        // Backend returns OwnerDashboardStatsDto with specific property names
         setStats({
-          totalMachines: statsData.totalMachines ?? 0,
-          activeRentals: statsData.activeRentals ?? 0,
-          totalEarnings: statsData.totalEarnings ?? 0,
-          pendingRequests: statsData.pendingRequests ?? 0
+          totalMachines: statsData.totalMachines ?? statsData.TotalMachines ?? 0,
+          activeRentals: statsData.activeBookings ?? statsData.ActiveBookings ?? 0,
+          totalEarnings: statsData.totalRevenue ?? statsData.TotalRevenue ?? 0,
+          pendingRequests: statsData.pendingBookings ?? statsData.PendingBookings ?? 0
         });
         
         if (statsData.debugInfo) {

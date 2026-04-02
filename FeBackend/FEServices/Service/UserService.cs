@@ -5,6 +5,7 @@ using FEServices.Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using FECommon.DTO;
+using Microsoft.EntityFrameworkCore;
 
 namespace FEServices.Service
 {
@@ -23,69 +24,69 @@ namespace FEServices.Service
 
         public async Task<IEnumerable<UserProfileDto>> GetAllUsersAsync()
         {
-            var users = await _unitOfWork.Users.GetAllAsync();
-            return users.Select(user => new UserProfileDto
-            {
-                Id = user.Id ?? string.Empty,
-                FullName = user.FullName ?? string.Empty,
-                Email = user.Email ?? string.Empty,
-                Role = user.Role ?? "farmer",
-                IsSuspended = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow,
-                CreatedAt = user.CreatedAt,
-                ProfileImageUrl = user.ProfileImageUrl,
-                Location = user.Location,
-                PhoneNumber = user.PhoneNumber,
-                FarmSize = user.FarmSize,
-                CompanyName = user.CompanyName
-            });
+            var users = await _unitOfWork.Users.Query()
+                .Select(user => new UserProfileDto
+                {
+                    Id = user.Id ?? string.Empty,
+                    FullName = user.FullName ?? string.Empty,
+                    Email = user.Email ?? string.Empty,
+                    Role = user.Role ?? "farmer",
+                    IsSuspended = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow,
+                    CreatedAt = user.CreatedAt,
+                    ProfileImageUrl = user.ProfileImageUrl,
+                    Location = user.Location,
+                    PhoneNumber = user.PhoneNumber,
+                    FarmSize = user.FarmSize,
+                    CompanyName = user.CompanyName
+                })
+                .ToListAsync();
+
+            return users;
         }
 
         public async Task<PagedResult<UserProfileDto>> GetAllUsersPagedAsync(int page, int limit, string? search, string? role)
         {
-            var allUsers = await _unitOfWork.Users.GetAllAsync();
-            
-            // Apply filters
-            var filteredUsers = allUsers.AsEnumerable();
-            
-            if (!string.IsNullOrEmpty(search))
-            {
-                filteredUsers = filteredUsers.Where(u => 
-                    (u.FullName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                    (u.Email?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
-            }
-            
+            var query = _unitOfWork.Users.Query();
+
+            // Apply role filter at DB level
             if (!string.IsNullOrEmpty(role) && role.ToLower() != "all")
             {
-                filteredUsers = filteredUsers.Where(u => 
-                    u.Role?.Equals(role, StringComparison.OrdinalIgnoreCase) ?? false);
+                query = query.Where(u => u.Role == role);
             }
-            
-            // Get total count after filtering
-            var totalItems = filteredUsers.Count();
-            
-            // Apply pagination
-            var pagedUsers = filteredUsers
+
+            // Apply search filter at DB level
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(u =>
+                    (u.FullName != null && u.FullName.Contains(search)) ||
+                    (u.Email != null && u.Email.Contains(search)));
+            }
+
+            // Total count
+            var totalItems = await query.CountAsync();
+
+            // Get paged users
+            var users = await query
                 .OrderByDescending(u => u.CreatedAt)
                 .Skip((page - 1) * limit)
-                .Take(limit);
-            
-            // Map to DTOs
-            var userDtos = pagedUsers.Select(user => new UserProfileDto
-            {
-                Id = user.Id ?? string.Empty,
-                FullName = user.FullName ?? string.Empty,
-                Email = user.Email ?? string.Empty,
-                Role = user.Role ?? "farmer",
-                IsSuspended = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow,
-                CreatedAt = user.CreatedAt,
-                ProfileImageUrl = user.ProfileImageUrl,
-                Location = user.Location,
-                PhoneNumber = user.PhoneNumber,
-                FarmSize = user.FarmSize,
-                CompanyName = user.CompanyName
-            }).ToList();
-            
-            return new PagedResult<UserProfileDto>(userDtos, totalItems, page, limit);
+                .Take(limit)
+                .Select(user => new UserProfileDto
+                {
+                    Id = user.Id ?? string.Empty,
+                    FullName = user.FullName ?? string.Empty,
+                    Email = user.Email ?? string.Empty,
+                    Role = user.Role ?? "farmer",
+                    IsSuspended = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow,
+                    CreatedAt = user.CreatedAt,
+                    ProfileImageUrl = user.ProfileImageUrl,
+                    Location = user.Location,
+                    PhoneNumber = user.PhoneNumber,
+                    FarmSize = user.FarmSize,
+                    CompanyName = user.CompanyName
+                })
+                .ToListAsync();
+
+            return new PagedResult<UserProfileDto>(users, totalItems, page, limit);
         }
 
         public async Task<UserProfileDto?> GetUserByIdAsync(string id)
@@ -151,16 +152,42 @@ namespace FEServices.Service
             return (true, $"User role successfully updated to {role}.");
         }
 
-        public async Task<IEnumerable<object>> GetFarmersAsync()
+        public async Task<IEnumerable<FarmerSummaryDto>> GetFarmersAsync()
         {
-            var farmers = await _unitOfWork.Users.FindAsync(u => u.Role == "farmer");
-            return farmers.Select(u => new { u.Id, u.FullName, u.Location, u.ProfileImageUrl });
+            var farmers = await _unitOfWork.Users.GetFarmersAsync();
+            return farmers.Select(u => new FarmerSummaryDto
+            {
+                Id = u.Id ?? string.Empty,
+                FullName = u.FullName ?? string.Empty,
+                Email = u.Email ?? string.Empty,
+                Location = u.Location,
+                ProfileImageUrl = u.ProfileImageUrl,
+                PhoneNumber = u.PhoneNumber,
+                CreatedAt = u.CreatedAt
+            });
         }
 
-        public async Task<IEnumerable<object>> GetOwnersAsync()
+        public async Task<IEnumerable<OwnerSummaryDto>> GetOwnersAsync()
         {
-            var owners = await _unitOfWork.Users.FindAsync(u => u.Role == "owner");
-            return owners.Select(u => new { u.Id, u.FullName, u.CompanyName, u.Location, u.ProfileImageUrl });
+            var owners = await _unitOfWork.Users.GetOwnersAsync();
+            var ownerIds = owners.Select(o => o.Id).ToList();
+            var machineCounts = await _unitOfWork.Machines.Query()
+                .Where(m => ownerIds.Contains(m.OwnerId))
+                .GroupBy(m => m.OwnerId)
+                .Select(g => new { OwnerId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.OwnerId, x => x.Count);
+
+            return owners.Select(u => new OwnerSummaryDto
+            {
+                Id = u.Id ?? string.Empty,
+                FullName = u.FullName ?? string.Empty,
+                Email = u.Email ?? string.Empty,
+                Location = u.Location,
+                ProfileImageUrl = u.ProfileImageUrl,
+                PhoneNumber = u.PhoneNumber,
+                CreatedAt = u.CreatedAt,
+                MachineCount = machineCounts.TryGetValue(u.Id ?? "", out var count) ? count : 0
+            });
         }
 
         public async Task<(bool Success, string Message)> UpdateProfileAsync(string userId, UserProfileUpdateDto model)

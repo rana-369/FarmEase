@@ -47,40 +47,35 @@ namespace FarmEase.Controllers
         [Authorize(Roles = "owner,OWNER,Owner")]
         public async Task<IActionResult> AddEquipment([FromForm] string name, [FromForm] string category, [FromForm] int pricePerHour, [FromForm] string? location, [FromForm] string? description, IFormFile? image)
         {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-                
-                Console.WriteLine($"\n=== ADD EQUIPMENT DEBUG ===");
-                Console.WriteLine($"UserId: {userId}");
-                Console.WriteLine($"UserRole: {userRole}");
-                Console.WriteLine($"Name: {name}");
-                Console.WriteLine($"Category: {category}");
-                Console.WriteLine($"PricePerHour: {pricePerHour}");
-                Console.WriteLine($"Location: {location}");
-                Console.WriteLine($"Description: {description}");
-                Console.WriteLine($"Image: {(image != null ? image.FileName : "null")}");
-                Console.WriteLine($"===========================\n");
-                
-                if (userId == null) return Unauthorized();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
 
-                var (success, message) = await _machineService.AddEquipmentAsync(name, category, pricePerHour, userId, image, location, description);
-                if (!success)
-                {
-                    Console.WriteLine($"!!! FAILED: {message}");
-                    return BadRequest(new { Message = message });
-                }
+            // Input validation
+            if (string.IsNullOrWhiteSpace(name) || name.Length > 100)
+                return BadRequest(new { Message = "Name must be 1-100 characters." });
+            
+            if (string.IsNullOrWhiteSpace(category) || category.Length > 50)
+                return BadRequest(new { Message = "Category must be 1-50 characters." });
+            
+            if (pricePerHour < 1 || pricePerHour > 1000000)
+                return BadRequest(new { Message = "Price per hour must be between 1 and 1,000,000." });
 
-                Console.WriteLine($"SUCCESS: {message}");
-                return Ok(new { Message = message });
-            }
-            catch (Exception ex)
+            // File upload security validation
+            if (image != null)
             {
-                Console.WriteLine($"\n!!! EXCEPTION in AddEquipment: {ex.Message}");
-                Console.WriteLine($"Stack: {ex.StackTrace}");
-                return BadRequest(new { Message = ex.Message });
+                var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/webp" };
+                if (!allowedTypes.Contains(image.ContentType.ToLower()))
+                    return BadRequest(new { Message = "Only JPEG, PNG, and WebP images are allowed." });
+                
+                if (image.Length > 5 * 1024 * 1024) // 5MB limit
+                    return BadRequest(new { Message = "Image size must not exceed 5MB." });
             }
+
+            var (success, message) = await _machineService.AddEquipmentAsync(name, category, pricePerHour, userId, image, location, description);
+            if (!success)
+                return BadRequest(new { Message = message });
+
+            return Ok(new { Message = message });
         }
     }
 }

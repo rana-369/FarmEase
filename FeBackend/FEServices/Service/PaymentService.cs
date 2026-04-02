@@ -4,7 +4,10 @@ using FEDomain;
 using FEDomain.Interfaces;
 using FEDTO.DTOs;
 using FEServices.Interface;
+using FECommon.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Razorpay.Api;
 using PaymentEntity = FEDomain.Payment;
 
@@ -14,11 +17,13 @@ namespace FEServices.Service
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<PaymentService> _logger;
 
-        public PaymentService(IUnitOfWork unitOfWork, IConfiguration configuration)
+        public PaymentService(IUnitOfWork unitOfWork, IConfiguration configuration, ILogger<PaymentService> logger)
         {
             _unitOfWork = unitOfWork;
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<(bool Success, string Message, object? OrderData)> CreateOrderAsync(int bookingId)
@@ -28,7 +33,7 @@ namespace FEServices.Service
             if (booking == null)
                 return (false, "Booking not found.", null);
 
-            if (booking.Status != "Accepted" && booking.Status != "Confirmed")
+            if (booking.Status != BookingStatus.Accepted && booking.Status != BookingStatus.Confirmed)
                 return (false, "Booking must be accepted before payment.", null);
 
             int amountInPaise = (int)(booking.TotalAmount * 100);
@@ -38,12 +43,7 @@ namespace FEServices.Service
                 string keyId = _configuration["Razorpay:Key"] ?? throw new Exception("Razorpay Key is missing");
                 string keySecret = _configuration["Razorpay:Secret"] ?? throw new Exception("Razorpay Secret is missing");
 
-                Console.WriteLine($"\n=== RAZORPAY DEBUG ===");
-                Console.WriteLine($"KeyId: {keyId}");
-                Console.WriteLine($"KeySecret: {keySecret.Substring(0, 4)}..."); // Only show first 4 chars
-                Console.WriteLine($"Amount: {amountInPaise} paise");
-                Console.WriteLine($"BookingId: {bookingId}");
-                Console.WriteLine($"======================\n");
+                _logger.LogInformation("Creating Razorpay order for BookingId: {BookingId}, Amount: {Amount}", bookingId, amountInPaise);
 
                 var client = new RazorpayClient(keyId, keySecret);
 
@@ -57,7 +57,7 @@ namespace FEServices.Service
                 Order order = client.Order.Create(options);
                 string orderId = order["id"].ToString();
 
-                Console.WriteLine($"Order created successfully: {orderId}");
+                _logger.LogInformation("Order created successfully: {OrderId}", orderId);
 
                 return (true, "Order created.", new
                 {
@@ -69,42 +69,35 @@ namespace FEServices.Service
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"\n!!! RAZORPAY ERROR: {ex.Message}");
-                Console.WriteLine($"Inner Exception: {ex.InnerException?.Message}");
-                Console.WriteLine($"Stack: {ex.StackTrace}\n");
+                _logger.LogError(ex, "Failed to initiate payment gateway for BookingId: {BookingId}", bookingId);
                 return (false, $"Failed to initiate payment gateway. Error: {ex.Message}", null);
             }
         }
 
         public async Task<(bool Success, string Message)> VerifyPaymentAsync(VerifyPaymentDto model)
         {
-            Console.WriteLine($"\n=== VERIFY PAYMENT DEBUG ===");
-            Console.WriteLine($"BookingId: {model.BookingId}");
-            Console.WriteLine($"RazorpayOrderId: {model.RazorpayOrderId}");
-            Console.WriteLine($"RazorpayPaymentId: {model.RazorpayPaymentId}");
-            Console.WriteLine($"RazorpaySignature: {model.RazorpaySignature}");
+            _logger.LogInformation("Verifying payment for BookingId: {BookingId}", model.BookingId);
             
             string secret = _configuration["Razorpay:Secret"] ?? "";
 
             string generatedSignature = GenerateRazorpaySignature(model.RazorpayOrderId, model.RazorpayPaymentId, secret);
             
-            Console.WriteLine($"Generated Signature: {generatedSignature}");
-            Console.WriteLine($"Match: {generatedSignature == model.RazorpaySignature}");
+            _logger.LogDebug("Signature match: {Match}", generatedSignature == model.RazorpaySignature);
 
             if (generatedSignature != model.RazorpaySignature)
             {
-                Console.WriteLine("!!! Signature mismatch!");
+                _logger.LogWarning("Payment signature mismatch for BookingId: {BookingId}", model.BookingId);
                 return (false, "Payment verification failed. Invalid signature detected.");
             }
 
             var booking = await _unitOfWork.Bookings.GetByIdAsync(model.BookingId);
             if (booking == null)
             {
-                Console.WriteLine("!!! Booking not found!");
+                _logger.LogWarning("Booking not found for payment verification: {BookingId}", model.BookingId);
                 return (false, "Booking not found.");
             }
 
-            Console.WriteLine($"Booking found: {booking.Id}, Status: {booking.Status}");
+            _logger.LogDebug("Booking found: {BookingId}, Status: {Status}", booking.Id, booking.Status);
             
             // Save payment details
             var payment = new PaymentEntity
@@ -120,14 +113,14 @@ namespace FEServices.Service
             };
             await _unitOfWork.Payments.AddAsync(payment);
             
-            booking.Status = "Active";
+            booking.Status = BookingStatus.Active;
             _unitOfWork.Bookings.Update(booking);
 
             var notification = new Notification
             {
                 UserId = booking.OwnerId,
                 Title = "Payment Received",
-                Message = $"Payment successful! The rental for {booking.MachineName} is now ACTIVE.",
+                Message = $"Payment successful! The rental for {booking.Machine?.Name ?? "the machine"} is now ACTIVE.",
                 Type = "success",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
@@ -136,48 +129,45 @@ namespace FEServices.Service
             await _unitOfWork.Notifications.AddAsync(notification);
             var saveResult = await _unitOfWork.SaveChangesAsync();
             
-            Console.WriteLine($"SaveChanges result: {saveResult}");
-            Console.WriteLine($"Booking status after save: {booking.Status}");
-            Console.WriteLine($"Payment saved with ID: {payment.Id}");
-            Console.WriteLine($"=============================\n");
+            _logger.LogInformation("Payment verified successfully for BookingId: {BookingId}", booking.Id);
 
             return (true, "Payment successful! Booking is now Active.");
         }
 
         public async Task<(bool Success, string Message, object? RefundData)> RefundAsync(int bookingId, string? reason = null)
         {
-            Console.WriteLine($"\n=== REFUND DEBUG ===");
-            Console.WriteLine($"BookingId: {bookingId}");
-            Console.WriteLine($"Reason: {reason}");
+            _logger.LogInformation("Refunding payment for BookingId: {BookingId}, Reason: {Reason}", bookingId, reason);
             
-            var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId);
+            var booking = await _unitOfWork.Bookings.Query()
+                .Include(b => b.Machine)
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
             if (booking == null)
             {
-                Console.WriteLine("!!! Booking not found!");
+                _logger.LogWarning("Booking not found for refund: {BookingId}", bookingId);
                 return (false, "Booking not found.", null);
             }
 
-            // Find the payment for this booking
-            var payments = await _unitOfWork.Payments.GetAllAsync();
-            var payment = payments.FirstOrDefault(p => p.BookingId == bookingId && p.Status == "Captured");
+            // Find the payment for this booking using Query (not GetAllAsync)
+            var payment = await _unitOfWork.Payments.Query()
+                .FirstOrDefaultAsync(p => p.BookingId == bookingId && p.Status == "Captured");
             
             if (payment == null)
             {
-                Console.WriteLine("!!! No captured payment found for this booking.");
+                _logger.LogWarning("No captured payment found for booking: {BookingId}", bookingId);
                 return (false, "No payment found for refund.", null);
             }
 
             // Check if already refunded
             if (payment.Status == "Refunded")
             {
-                Console.WriteLine("!!! Payment already refunded.");
+                _logger.LogWarning("Payment already refunded for booking: {BookingId}", bookingId);
                 return (false, "Payment already refunded.", null);
             }
 
             // Validate booking status for refund
-            if (booking.Status != "Active" && booking.Status != "Accepted")
+            if (booking.Status != BookingStatus.Active && booking.Status != BookingStatus.Accepted)
             {
-                Console.WriteLine($"!!! Cannot refund booking with status: {booking.Status}");
+                _logger.LogWarning("Cannot refund booking with status: {Status}", booking.Status);
                 return (false, $"Cannot refund booking with status '{booking.Status}'. Only Active or Accepted bookings can be refunded.", null);
             }
 
@@ -198,7 +188,7 @@ namespace FEServices.Service
                 var refund = client.Payment.Fetch(payment.RazorpayPaymentId).Refund(refundOptions);
                 string refundId = refund["id"].ToString();
 
-                Console.WriteLine($"Refund created successfully: {refundId}");
+                _logger.LogInformation("Refund created successfully: {RefundId}", refundId);
 
                 // Update payment record
                 payment.Status = "Refunded";
@@ -209,7 +199,7 @@ namespace FEServices.Service
                 _unitOfWork.Payments.Update(payment);
 
                 // Update booking status
-                booking.Status = "Cancelled";
+                booking.Status = BookingStatus.Cancelled;
                 _unitOfWork.Bookings.Update(booking);
 
                 // Create notifications for both parties
@@ -217,7 +207,7 @@ namespace FEServices.Service
                 {
                     UserId = booking.FarmerId,
                     Title = "Refund Processed",
-                    Message = $"Your payment of ₹{payment.Amount} for {booking.MachineName} has been refunded.",
+                    Message = $"Your payment of ₹{payment.Amount} for {booking.Machine?.Name ?? "the machine"} has been refunded.",
                     Type = "info",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -227,7 +217,7 @@ namespace FEServices.Service
                 {
                     UserId = booking.OwnerId,
                     Title = "Booking Cancelled & Refunded",
-                    Message = $"Booking for {booking.MachineName} has been cancelled. Payment refunded to farmer.",
+                    Message = $"Booking for {booking.Machine?.Name ?? "the machine"} has been cancelled. Payment refunded to farmer.",
                     Type = "info",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -237,8 +227,7 @@ namespace FEServices.Service
                 await _unitOfWork.Notifications.AddAsync(ownerNotification);
                 await _unitOfWork.SaveChangesAsync();
 
-                Console.WriteLine($"Refund processed successfully for booking {bookingId}");
-                Console.WriteLine($"=============================\n");
+                _logger.LogInformation("Refund processed successfully for booking {BookingId}", bookingId);
 
                 return (true, "Refund processed successfully.", new
                 {
@@ -250,9 +239,7 @@ namespace FEServices.Service
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"\n!!! REFUND ERROR: {ex.Message}");
-                Console.WriteLine($"Inner Exception: {ex.InnerException?.Message}");
-                Console.WriteLine($"Stack: {ex.StackTrace}\n");
+                _logger.LogError(ex, "Failed to process refund for BookingId: {BookingId}", bookingId);
                 return (false, $"Failed to process refund. Error: {ex.Message}", null);
             }
         }

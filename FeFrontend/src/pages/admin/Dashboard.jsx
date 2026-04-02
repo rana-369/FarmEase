@@ -39,18 +39,18 @@ const AdminDashboard = () => {
         }
         
         if (dashboardData) {
-          const statsObj = dashboardData.stats || dashboardData.Stats || {};
+          // Backend returns AdminDashboardStatsDto directly (not nested under stats)
           const bookingsArr = dashboardData.recentBookings || dashboardData.RecentBookings || [];
 
           setStats({
-            totalUsers: statsObj.totalUsers || statsObj.TotalUsers || 0,
-            totalFarmers: statsObj.farmers || statsObj.Farmers || 0,
-            totalOwners: statsObj.owners || statsObj.Owners || 0,
-            totalMachines: statsObj.totalMachines || statsObj.TotalMachines || 0,
-            totalBookings: statsObj.totalBookings || statsObj.TotalBookings || 0,
-            totalRevenue: statsObj.revenue || statsObj.Revenue || 0,
-            pendingApprovals: statsObj.pendingApprovals || statsObj.PendingApprovals || 0,
-            activeRentals: 0
+            totalUsers: dashboardData.totalUsers || dashboardData.TotalUsers || 0,
+            totalFarmers: dashboardData.totalFarmers || dashboardData.TotalFarmers || 0,
+            totalOwners: dashboardData.totalOwners || dashboardData.TotalOwners || 0,
+            totalMachines: dashboardData.totalMachines || dashboardData.TotalMachines || 0,
+            totalBookings: dashboardData.totalBookings || dashboardData.TotalBookings || 0,
+            totalRevenue: dashboardData.platformRevenue || dashboardData.PlatformRevenue || 0,
+            pendingApprovals: dashboardData.pendingApprovals || dashboardData.PendingApprovals || 0,
+            activeRentals: dashboardData.activeBookings || dashboardData.ActiveBookings || 0
           });
 
           const transformedActivity = bookingsArr.map(booking => ({
@@ -239,19 +239,19 @@ const AdminDashboard = () => {
             
             <div className="space-y-4">
               {revenueData.map((data, index) => (
-                <div key={data.month} className="flex items-center gap-4">
+                <div key={data.month || index} className="flex items-center gap-4">
                   <span className="text-sm w-12" style={{ color: '#888888' }}>{data.month}</span>
                   <div className="flex-1 h-2 rounded-full" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${(data.revenue / maxRevenue) * 100}%` }}
+                      animate={{ width: `${((data.revenue || data.Revenue || 0) / maxRevenue) * 100}%` }}
                       transition={{ duration: 0.8, delay: index * 0.1 }}
                       className="h-2 rounded-full"
                       style={{ background: 'linear-gradient(90deg, #22c55e 0%, #16a34a 100%)' }}
                     />
                   </div>
                   <span className="text-sm font-semibold w-16 text-right" style={{ color: '#ffffff' }}>
-                    ₹{(data.revenue / 1000).toFixed(0)}K
+                    ₹{((data.revenue || data.Revenue || 0) / 1000).toFixed(0)}K
                   </span>
                 </div>
               ))}

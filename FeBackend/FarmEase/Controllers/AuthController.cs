@@ -3,11 +3,13 @@ using FEDTO.DTOs;
 using FEServices.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace FarmEase.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [EnableRateLimiting("ApiPolicy")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -18,6 +20,7 @@ namespace FarmEase.Controllers
         }
 
         [HttpPost("register")]
+        [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
             var (success, message, _, _, _) = await _authService.RegisterAsync(model);
@@ -28,6 +31,7 @@ namespace FarmEase.Controllers
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
             var (success, message, token, role, userId, requires2FA, twoFAMethod) = await _authService.LoginAsync(model);
@@ -50,6 +54,7 @@ namespace FarmEase.Controllers
         }
 
         [HttpPost("forgot-password")]
+        [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
         {
             var (success, message) = await _authService.ForgotPasswordAsync(model);
@@ -57,6 +62,7 @@ namespace FarmEase.Controllers
         }
 
         [HttpPost("reset-password")]
+        [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
         {
             var (success, message) = await _authService.ResetPasswordAsync(model);
@@ -64,24 +70,6 @@ namespace FarmEase.Controllers
                 return BadRequest(new { Message = message });
 
             return Ok(new { Message = message });
-        }
-
-        [HttpGet("debug/me")]
-        [Authorize]
-        public IActionResult GetCurrentUser()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                      ?? User.FindFirstValue(ClaimTypes.Name)
-                      ?? User.FindFirstValue("uid");
-
-            if (string.IsNullOrEmpty(userId))
-                return BadRequest(new { Message = "Could not identify user from token." });
-
-            return Ok(new
-            {
-                UserId = userId,
-                Claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList()
-            });
         }
 
         #region Two-Factor Authentication Endpoints

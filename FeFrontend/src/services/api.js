@@ -1,9 +1,9 @@
-// API Configuration - Updated for port 7284
+// API Configuration - Uses environment variable for security
 import axios from 'axios';
 
-// Create axios instance with base URL pointing to .NET backend
+// Create axios instance with base URL from environment variable
 const api = axios.create({
-  baseURL: 'https://localhost:7284/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -14,17 +14,8 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (import.meta.env.DEV) {
-      console.log('API Request:', config.method?.toUpperCase(), config.url);
-      console.log('Token exists:', !!token);
-      console.log('Token length:', token?.length);
-    }
-    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      if (import.meta.env.DEV) {
-        console.log('Authorization header set');
-      }
     }
     return config;
   },
@@ -33,20 +24,18 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - debug authentication issues
+// Response interceptor - handle authentication errors
 api.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
     if (error.response?.status === 401) {
-      if (import.meta.env.DEV) {
-        console.error('401 Unauthorized Error:');
-        console.error('URL:', error.config?.url);
-        console.error('Method:', error.config?.method?.toUpperCase());
-        console.error('Headers:', error.config?.headers);
-        console.error('Response:', error.response?.data);
-      }
+      // Clear invalid token and redirect to login
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      localStorage.removeItem('userId');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
