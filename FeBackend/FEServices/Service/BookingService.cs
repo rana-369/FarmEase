@@ -6,6 +6,7 @@ using FECommon.DTO;
 using FECommon.Exceptions;
 using FECommon.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace FEServices.Service
 {
@@ -13,22 +14,27 @@ namespace FEServices.Service
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPaymentService _paymentService;
+        private readonly IConfiguration _configuration;
+        private readonly decimal _commissionRate;
 
-        public BookingService(IUnitOfWork unitOfWork, IPaymentService paymentService)
+        public BookingService(IUnitOfWork unitOfWork, IPaymentService paymentService, IConfiguration configuration)
         {
             _unitOfWork = unitOfWork;
             _paymentService = paymentService;
+            _configuration = configuration;
+            
+            // Get commission rate from config, default to 0.10 (10%)
+            var commissionStr = configuration["PlatformSettings:CommissionRate"];
+            _commissionRate = !string.IsNullOrEmpty(commissionStr) && decimal.TryParse(commissionStr, out var rate) ? rate : 0.10m;
         }
 
         public async Task<IEnumerable<BookingSummaryDto>> GetAllBookingsAsync()
         {
             try
             {
+                // Database has no FK relationships - use denormalized data directly
                 var bookings = await _unitOfWork.Bookings.Query()
                     .AsNoTracking()
-                    .Include(b => b.Machine)
-                    .Include(b => b.Farmer)
-                    .Include(b => b.Owner)
                     .OrderByDescending(b => b.CreatedAt)
                     .ToListAsync();
 
@@ -43,17 +49,17 @@ namespace FEServices.Service
                     {
                         Id = b.Id,
                         MachineId = b.MachineId,
-                        MachineName = b.Machine?.Name ?? "Unknown",
+                        MachineName = b.MachineName,
                         FarmerId = b.FarmerId,
-                        FarmerName = b.Farmer?.FullName ?? "Unknown",
+                        FarmerName = b.FarmerName,
                         OwnerId = b.OwnerId,
-                        OwnerName = b.Owner?.FullName ?? "Unknown",
-                        Location = b.Machine?.Location ?? b.Owner?.Location ?? "",
+                        OwnerName = "Owner",
+                        Location = "",
                         Hours = b.Hours,
                         BaseAmount = b.BaseAmount,
                         PlatformFee = b.PlatformFee,
                         TotalAmount = b.TotalAmount,
-                        Status = b.Status.ToDisplayString(),
+                        Status = b.Status,
                         CreatedAt = b.CreatedAt,
                         IsRefunded = payment?.RefundAmount > 0
                     };
@@ -69,32 +75,29 @@ namespace FEServices.Service
         {
             try
             {
+                // Database has no FK relationships - use denormalized data directly
                 IQueryable<Booking> query = _unitOfWork.Bookings.Query()
-                    .Include(b => b.Machine)
-                    .Include(b => b.Farmer)
-                    .Include(b => b.Owner);
+                    .AsNoTracking();
 
-                // Apply status filter at DB level - parse string to enum
-                BookingStatus? statusEnum = null;
+                // Apply status filter at DB level - compare as string
                 if (!string.IsNullOrEmpty(status) && status.ToLower() != "all")
                 {
-                    statusEnum = BookingStatusExtensions.FromString(status);
-                    query = query.Where(b => b.Status == statusEnum.Value);
+                    query = query.Where(b => b.Status.ToLower() == status.ToLower());
                 }
 
-                // Apply search filter at DB level BEFORE pagination - now using navigation properties
+                // Apply search filter at DB level BEFORE pagination - use denormalized fields
                 if (!string.IsNullOrEmpty(search))
                 {
                     query = query.Where(b => 
-                        (b.Machine != null && b.Machine.Name != null && b.Machine.Name.Contains(search)) ||
-                        (b.Farmer != null && b.Farmer.FullName != null && b.Farmer.FullName.Contains(search)) ||
+                        (b.MachineName != null && b.MachineName.Contains(search)) ||
+                        (b.FarmerName != null && b.FarmerName.Contains(search)) ||
                         (b.OwnerId != null && b.OwnerId.Contains(search)));
                 }
 
                 // Total count AFTER all filters
                 var totalItems = await query.CountAsync(cancellationToken);
 
-                // Get paged bookings with navigation properties already loaded
+                // Get paged bookings
                 var bookings = await query
                     .OrderByDescending(b => b.CreatedAt)
                     .Skip((page - 1) * limit)
@@ -103,6 +106,7 @@ namespace FEServices.Service
 
                 var bookingIds = bookings.Select(b => b.Id).ToList();
                 var payments = await _unitOfWork.Payments.Query()
+                    .AsNoTracking()
                     .Where(p => bookingIds.Contains(p.BookingId))
                     .ToListAsync(cancellationToken);
 
@@ -111,7 +115,7 @@ namespace FEServices.Service
                     .Select(p => p.BookingId)
                     .ToHashSet();
 
-                // Map data to DTO using navigation properties
+                // Map data to DTO using denormalized fields
                 var result = bookings.Select(b =>
                 {
                     var isRefunded = refundedBookingIds.Contains(b.Id);
@@ -120,17 +124,17 @@ namespace FEServices.Service
                     {
                         Id = b.Id,
                         MachineId = b.MachineId,
-                        MachineName = b.Machine?.Name ?? "Unknown",
+                        MachineName = b.MachineName,
                         FarmerId = b.FarmerId,
-                        FarmerName = b.Farmer?.FullName ?? "Unknown",
+                        FarmerName = b.FarmerName,
                         OwnerId = b.OwnerId,
-                        OwnerName = b.Owner?.FullName ?? "Unknown",
-                        Location = b.Machine?.Location ?? b.Owner?.Location ?? "",
+                        OwnerName = "Owner",
+                        Location = "",
                         Hours = b.Hours,
                         BaseAmount = b.BaseAmount,
                         PlatformFee = b.PlatformFee,
                         TotalAmount = b.TotalAmount,
-                        Status = b.Status.ToDisplayString(),
+                        Status = b.Status,
                         CreatedAt = b.CreatedAt,
                         IsRefunded = isRefunded
                     };
@@ -141,9 +145,9 @@ namespace FEServices.Service
                     .GroupBy(b => 1)
                     .Select(g => new
                     {
-                        ActiveCount = g.Count(b => b.Status == BookingStatus.Active),
-                        CompletedCount = g.Count(b => b.Status == BookingStatus.Completed),
-                        TotalRevenue = g.Where(b => b.Status == BookingStatus.Completed).Sum(b => b.PlatformFee)
+                        ActiveCount = g.Count(b => b.Status == "Active"),
+                        CompletedCount = g.Count(b => b.Status == "Completed"),
+                        TotalRevenue = g.Where(b => b.Status == "Completed").Sum(b => b.PlatformFee)
                     })
                     .FirstOrDefaultAsync(cancellationToken);
 
@@ -167,11 +171,9 @@ namespace FEServices.Service
         {
             try
             {
+                // Database has no FK relationships - use denormalized data directly
                 var bookings = await _unitOfWork.Bookings.Query()
                     .AsNoTracking()
-                    .Include(b => b.Machine)
-                    .Include(b => b.Farmer)
-                    .Include(b => b.Owner)
                     .Where(b => b.OwnerId == ownerId)
                     .OrderByDescending(b => b.CreatedAt)
                     .ToListAsync();
@@ -187,17 +189,17 @@ namespace FEServices.Service
                     {
                         Id = b.Id,
                         MachineId = b.MachineId,
-                        MachineName = b.Machine?.Name ?? "Unknown",
+                        MachineName = b.MachineName,
                         FarmerId = b.FarmerId,
-                        FarmerName = b.Farmer?.FullName ?? "Unknown",
+                        FarmerName = b.FarmerName,
                         OwnerId = b.OwnerId,
-                        OwnerName = b.Owner?.FullName ?? "Unknown",
-                        Location = b.Machine?.Location ?? b.Owner?.Location ?? "",
+                        OwnerName = "Owner",
+                        Location = "",
                         Hours = b.Hours,
                         BaseAmount = b.BaseAmount,
                         PlatformFee = b.PlatformFee,
                         TotalAmount = b.TotalAmount,
-                        Status = b.Status.ToDisplayString(),
+                        Status = b.Status,
                         CreatedAt = b.CreatedAt,
                         IsRefunded = payment?.RefundAmount > 0
                     };
@@ -213,10 +215,9 @@ namespace FEServices.Service
         {
             try
             {
+                // Database has no FK relationships - use denormalized data directly
                 var farmerBookings = await _unitOfWork.Bookings.Query()
                     .AsNoTracking()
-                    .Include(b => b.Machine)
-                    .Include(b => b.Owner)
                     .Where(b => b.FarmerId == farmerId)
                     .OrderByDescending(b => b.CreatedAt)
                     .ToListAsync();
@@ -226,31 +227,44 @@ namespace FEServices.Service
                     ? await _unitOfWork.Payments.Query().AsNoTracking().Where(p => bookingIds.Contains(p.BookingId)).ToListAsync()
                     : new List<Payment>();
                 
-                return farmerBookings.Select(b => {
-                    var payment = payments.FirstOrDefault(p => p.BookingId == b.Id);
-                    return new BookingSummaryDto
+                var result = new List<BookingSummaryDto>();
+                foreach (var b in farmerBookings)
+                {
+                    try
                     {
-                        Id = b.Id,
-                        MachineId = b.MachineId,
-                        MachineName = b.Machine?.Name ?? "Unknown",
-                        FarmerId = b.FarmerId,
-                        FarmerName = b.Farmer?.FullName ?? "Unknown",
-                        OwnerId = b.OwnerId,
-                        OwnerName = b.Owner?.FullName ?? "Unknown",
-                        Location = b.Machine?.Location ?? b.Owner?.Location ?? "",
-                        Hours = b.Hours,
-                        BaseAmount = b.BaseAmount,
-                        PlatformFee = b.PlatformFee,
-                        TotalAmount = b.TotalAmount,
-                        Status = b.Status.ToDisplayString(),
-                        CreatedAt = b.CreatedAt,
-                        IsRefunded = payment?.RefundAmount > 0
-                    };
-                });
+                        var payment = payments.FirstOrDefault(p => p.BookingId == b.Id);
+                        result.Add(new BookingSummaryDto
+                        {
+                            Id = b.Id,
+                            MachineId = b.MachineId,
+                            MachineName = b.MachineName ?? "Unknown",
+                            FarmerId = b.FarmerId,
+                            FarmerName = b.FarmerName ?? "Unknown",
+                            OwnerId = b.OwnerId,
+                            OwnerName = "Owner",
+                            Location = "",
+                            Hours = b.Hours,
+                            BaseAmount = b.BaseAmount,
+                            PlatformFee = b.PlatformFee,
+                            TotalAmount = b.TotalAmount,
+                            Status = b.Status,
+                            CreatedAt = b.CreatedAt,
+                            IsRefunded = payment?.RefundAmount > 0
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log individual booking mapping error
+                        System.Diagnostics.Debug.WriteLine($"Error mapping booking {b.Id}: {ex.Message}");
+                        throw new AppException($"Error mapping booking {b.Id}: {ex.Message}", ex);
+                    }
+                }
+                return result;
             }
             catch (Exception ex)
             {
-                throw new AppException("Failed to retrieve farmer bookings", ex);
+                System.Diagnostics.Debug.WriteLine($"GetFarmerBookingsAsync error: {ex}");
+                throw new AppException($"Failed to retrieve farmer bookings: {ex.Message}", ex);
             }
         }
 
@@ -270,8 +284,9 @@ namespace FEServices.Service
         {
             try
             {
+                // Database has no FK relationships - query Machine directly
                 var machine = await _unitOfWork.Machines.Query()
-                    .Include(m => m.Owner)
+                    .AsNoTracking()
                     .FirstOrDefaultAsync(m => m.Id == request.MachineId);
 
                 if (machine == null || machine.Status != "Active")
@@ -283,15 +298,25 @@ namespace FEServices.Service
                 var booking = new Booking
                 {
                     MachineId = machine.Id,
+                    MachineName = machine.Name,
                     FarmerId = farmerId,
+                    FarmerName = farmerName,
                     OwnerId = machine.OwnerId,
                     Hours = safeHours,
                     BaseAmount = rate * safeHours,
-                    PlatformFee = (rate * safeHours) * 0.10m,
-                    TotalAmount = (rate * safeHours) * 1.10m,
-                    Status = BookingStatus.Pending,
+                    PlatformFee = (rate * safeHours) * _commissionRate,
+                    TotalAmount = (rate * safeHours) * (1 + _commissionRate),
+                    Status = "Pending", // Explicitly set status
                     CreatedAt = DateTime.UtcNow
                 };
+                
+                // Ensure Status is set
+                if (string.IsNullOrEmpty(booking.Status))
+                {
+                    booking.Status = "Pending";
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"[CreateAsync] Booking Status before add: '{booking.Status}'");
 
                 await _unitOfWork.Bookings.AddAsync(booking);
 
@@ -312,7 +337,13 @@ namespace FEServices.Service
             }
             catch (Exception ex)
             {
-                throw new AppException("Failed to create booking", ex);
+                var innerEx = ex.InnerException;
+                while (innerEx != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"INNER EXCEPTION: {innerEx.Message}");
+                    innerEx = innerEx.InnerException;
+                }
+                throw new AppException($"Failed to create booking: {ex.InnerException?.Message ?? ex.Message}", ex);
             }
         }
 
@@ -324,14 +355,14 @@ namespace FEServices.Service
                 if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
                     return (false, "Unauthorized or booking not found.");
 
-                booking.Status = BookingStatus.Accepted;
+                booking.Status = "Accepted";
                 _unitOfWork.Bookings.Update(booking);
 
                 var notification = new Notification
                 {
                     UserId = booking.FarmerId,
                     Title = "Booking Accepted",
-                    Message = $"Your request for {booking.Machine?.Name ?? "the machine"} was ACCEPTED!",
+                    Message = $"Your request for {booking.MachineName} was ACCEPTED!",
                     Type = "success",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -356,7 +387,7 @@ namespace FEServices.Service
                 if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
                     return (false, "Unauthorized or booking not found.");
 
-                booking.Status = BookingStatus.Rejected;
+                booking.Status = "Rejected";
                 _unitOfWork.Bookings.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
 
@@ -376,14 +407,14 @@ namespace FEServices.Service
                 if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
                     return (false, "Unauthorized or booking not found.");
 
-                booking.Status = BookingStatus.Completed;
+                booking.Status = "Completed";
                 _unitOfWork.Bookings.Update(booking);
 
                 var notification = new Notification
                 {
                     UserId = booking.FarmerId,
                     Title = "Booking Completed",
-                    Message = $"The job for {booking.Machine?.Name ?? "the machine"} has been marked as COMPLETED.",
+                    Message = $"The job for {booking.MachineName} has been marked as COMPLETED.",
                     Type = "success",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -409,7 +440,7 @@ namespace FEServices.Service
                     return (false, "Unauthorized or booking not found.");
 
                 // Handle pending bookings - just delete
-                if (booking.Status == BookingStatus.Pending)
+                if (booking.Status == "Pending")
                 {
                     _unitOfWork.Bookings.Delete(booking);
                     await _unitOfWork.SaveChangesAsync();
@@ -417,7 +448,7 @@ namespace FEServices.Service
                 }
 
                 // Handle active bookings - process refund
-                if (booking.Status == BookingStatus.Active)
+                if (booking.Status == "Active")
                 {
                     var (success, message, _) = await _paymentService.RefundAsync(id, "Cancelled by farmer");
                     if (!success)
@@ -427,7 +458,7 @@ namespace FEServices.Service
                 }
 
                 // Handle accepted bookings - check if payment exists
-                if (booking.Status == BookingStatus.Accepted)
+                if (booking.Status == "Accepted")
                 {
                     var payment = await _unitOfWork.Payments.Query()
                         .FirstOrDefaultAsync(p => p.BookingId == id && p.Status == "Captured");
@@ -443,14 +474,14 @@ namespace FEServices.Service
                     }
                     
                     // No payment, just update status
-                    booking.Status = BookingStatus.Cancelled;
+                    booking.Status = "Cancelled";
                     _unitOfWork.Bookings.Update(booking);
                     
                     var notification = new Notification
                     {
                         UserId = booking.OwnerId,
                         Title = "Booking Cancelled",
-                        Message = $"Booking for {booking.Machine?.Name ?? "the machine"} has been cancelled by the farmer.",
+                        Message = $"Booking for {booking.MachineName} has been cancelled by the farmer.",
                         Type = "info",
                         IsRead = false,
                         CreatedAt = DateTime.UtcNow
@@ -461,7 +492,7 @@ namespace FEServices.Service
                     return (true, "Booking cancelled.");
                 }
 
-                return (false, $"Cannot cancel booking with status '{booking.Status.ToDisplayString()}'.");
+                return (false, $"Cannot cancel booking with status '{booking.Status}'.");
             }
             catch (Exception ex)
             {
@@ -477,17 +508,17 @@ namespace FEServices.Service
                 if (booking == null || !string.Equals(booking.FarmerId?.Trim(), farmerId?.Trim(), StringComparison.OrdinalIgnoreCase))
                     return (false, "Unauthorized or booking not found.");
 
-                if (booking.Status != BookingStatus.Accepted)
+                if (booking.Status != "Accepted")
                     return (false, "Only accepted bookings can be paid for.");
 
-                booking.Status = BookingStatus.Active;
+                booking.Status = "Active";
                 _unitOfWork.Bookings.Update(booking);
 
                 var notification = new Notification
                 {
                     UserId = booking.OwnerId,
                     Title = "Payment Received",
-                    Message = $"Payment successful! The rental for {booking.Machine?.Name ?? "the machine"} is now ACTIVE.",
+                    Message = $"Payment successful! The rental for {booking.MachineName} is now ACTIVE.",
                     Type = "success",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -516,23 +547,23 @@ namespace FEServices.Service
                 var totalMachines = machineIds.Count;
 
                 var activeCount = await _unitOfWork.Bookings.Query()
-                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == BookingStatus.Active)
+                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Active")
                     .CountAsync();
 
                 var completedCount = await _unitOfWork.Bookings.Query()
-                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == BookingStatus.Completed)
+                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Completed")
                     .CountAsync();
 
                 var pendingCount = await _unitOfWork.Bookings.Query()
-                    .Where(b => machineIds.Contains(b.MachineId) && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.PendingOwnerApproval))
+                    .Where(b => machineIds.Contains(b.MachineId) && (b.Status == "Pending" || b.Status == "PendingOwnerApproval"))
                     .CountAsync();
 
                 var totalRevenue = await _unitOfWork.Bookings.Query()
-                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == BookingStatus.Completed)
+                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Completed")
                     .SumAsync(b => b.TotalAmount);
 
                 var platformFees = await _unitOfWork.Bookings.Query()
-                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == BookingStatus.Completed)
+                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Completed")
                     .SumAsync(b => b.PlatformFee);
 
                 return new OwnerDashboardStatsDto
@@ -559,16 +590,16 @@ namespace FEServices.Service
                     .Where(b => b.FarmerId == farmerId)
                     .CountAsync();
                 var activeBookings = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.FarmerId == farmerId && (b.Status == BookingStatus.Accepted || b.Status == BookingStatus.Pending))
+                    .Where(b => b.FarmerId == farmerId && (b.Status == "Accepted" || b.Status == "Pending"))
                     .CountAsync();
                 var completedBookings = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.FarmerId == farmerId && b.Status == BookingStatus.Completed)
+                    .Where(b => b.FarmerId == farmerId && b.Status == "Completed")
                     .CountAsync();
                 var pendingBookings = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.FarmerId == farmerId && b.Status == BookingStatus.Pending)
+                    .Where(b => b.FarmerId == farmerId && b.Status == "Pending")
                     .CountAsync();
                 var totalSpent = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.FarmerId == farmerId && b.Status == BookingStatus.Completed)
+                    .Where(b => b.FarmerId == farmerId && b.Status == "Completed")
                     .SumAsync(b => b.TotalAmount);
 
                 return new FarmerDashboardStatsDto
@@ -598,22 +629,21 @@ namespace FEServices.Service
 
                 var totalBookings = await _unitOfWork.Bookings.Query().CountAsync(cancellationToken);
                 var activeBookings = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.Status == BookingStatus.Active)
+                    .Where(b => b.Status == "Active")
                     .CountAsync(cancellationToken);
                 var completedBookings = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.Status == BookingStatus.Completed)
+                    .Where(b => b.Status == "Completed")
                     .CountAsync(cancellationToken);
 
                 var totalRevenue = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.Status == BookingStatus.Completed)
+                    .Where(b => b.Status == "Completed")
                     .SumAsync(b => b.TotalAmount, cancellationToken);
                 var platformRevenue = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.Status == BookingStatus.Completed)
+                    .Where(b => b.Status == "Completed")
                     .SumAsync(b => b.PlatformFee, cancellationToken);
 
                 var recentBookingsData = await _unitOfWork.Bookings.Query()
-                    .Include(b => b.Machine)
-                    .Include(b => b.Farmer)
+                    .AsNoTracking()
                     .OrderByDescending(b => b.CreatedAt)
                     .Take(5)
                     .ToListAsync(cancellationToken);
@@ -621,10 +651,10 @@ namespace FEServices.Service
                 var recentBookings = recentBookingsData.Select(b => new RecentBookingDto
                 {
                     Id = b.Id,
-                    MachineName = b.Machine != null ? b.Machine.Name : "Unknown",
-                    FarmerName = b.Farmer != null ? b.Farmer.FullName : "Unknown",
+                    MachineName = b.MachineName,
+                    FarmerName = b.FarmerName,
                     OwnerName = "",
-                    Status = b.Status.ToDisplayString(),
+                    Status = b.Status,
                     TotalAmount = b.TotalAmount,
                     CreatedAt = b.CreatedAt
                 }).ToList();
@@ -656,7 +686,7 @@ namespace FEServices.Service
                 var sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
 
                 var rawData = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.Status == BookingStatus.Completed && b.CreatedAt >= sixMonthsAgo)
+                    .Where(b => b.Status == "Completed" && b.CreatedAt >= sixMonthsAgo)
                     .GroupBy(b => new { b.CreatedAt.Year, b.CreatedAt.Month })
                     .Select(g => new
                     {

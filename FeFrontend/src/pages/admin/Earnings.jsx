@@ -74,8 +74,22 @@ const EarningsPage = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { label: 'Total Transaction Volume', value: `₹${((stats.totalTransactionValue || 0) / 1000).toFixed(1)}K`, icon: RupeeIcon, color: '#22c55e' },
-            { label: 'Platform Profit (10%)', value: `₹${((stats.platformProfit || 0) / 1000).toFixed(1)}K`, icon: FiTrendingUp, color: '#3b82f6' },
+            { 
+              label: 'Total Transaction Volume', 
+              value: (stats.totalTransactionValue || 0) >= 1000 
+                ? `₹${((stats.totalTransactionValue || 0) / 1000).toFixed(1)}K` 
+                : `₹${(stats.totalTransactionValue || 0).toFixed(0)}`, 
+              icon: RupeeIcon, 
+              color: '#22c55e' 
+            },
+            { 
+              label: 'Platform Profit (10%)', 
+              value: (stats.platformProfit || 0) >= 1000 
+                ? `₹${((stats.platformProfit || 0) / 1000).toFixed(1)}K` 
+                : `₹${(stats.platformProfit || 0).toFixed(0)}`, 
+              icon: FiTrendingUp, 
+              color: '#3b82f6' 
+            },
             { label: 'Total Transactions', value: stats.totalBookings, icon: FiCalendar, color: '#a855f7' },
           ].map((item, i) => (
             <motion.div

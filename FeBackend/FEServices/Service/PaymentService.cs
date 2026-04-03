@@ -33,7 +33,7 @@ namespace FEServices.Service
             if (booking == null)
                 return (false, "Booking not found.", null);
 
-            if (booking.Status != BookingStatus.Accepted && booking.Status != BookingStatus.Confirmed)
+            if (booking.Status != "Accepted" && booking.Status != "Confirmed")
                 return (false, "Booking must be accepted before payment.", null);
 
             int amountInPaise = (int)(booking.TotalAmount * 100);
@@ -113,14 +113,14 @@ namespace FEServices.Service
             };
             await _unitOfWork.Payments.AddAsync(payment);
             
-            booking.Status = BookingStatus.Active;
+            booking.Status = "Active";
             _unitOfWork.Bookings.Update(booking);
 
             var notification = new Notification
             {
                 UserId = booking.OwnerId,
                 Title = "Payment Received",
-                Message = $"Payment successful! The rental for {booking.Machine?.Name ?? "the machine"} is now ACTIVE.",
+                Message = $"Payment successful! The rental for {booking.MachineName} is now ACTIVE.",
                 Type = "success",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
@@ -139,7 +139,7 @@ namespace FEServices.Service
             _logger.LogInformation("Refunding payment for BookingId: {BookingId}, Reason: {Reason}", bookingId, reason);
             
             var booking = await _unitOfWork.Bookings.Query()
-                .Include(b => b.Machine)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
             if (booking == null)
             {
@@ -165,7 +165,7 @@ namespace FEServices.Service
             }
 
             // Validate booking status for refund
-            if (booking.Status != BookingStatus.Active && booking.Status != BookingStatus.Accepted)
+            if (booking.Status != "Active" && booking.Status != "Accepted")
             {
                 _logger.LogWarning("Cannot refund booking with status: {Status}", booking.Status);
                 return (false, $"Cannot refund booking with status '{booking.Status}'. Only Active or Accepted bookings can be refunded.", null);
@@ -199,7 +199,7 @@ namespace FEServices.Service
                 _unitOfWork.Payments.Update(payment);
 
                 // Update booking status
-                booking.Status = BookingStatus.Cancelled;
+                booking.Status = "Cancelled";
                 _unitOfWork.Bookings.Update(booking);
 
                 // Create notifications for both parties
@@ -207,7 +207,7 @@ namespace FEServices.Service
                 {
                     UserId = booking.FarmerId,
                     Title = "Refund Processed",
-                    Message = $"Your payment of ₹{payment.Amount} for {booking.Machine?.Name ?? "the machine"} has been refunded.",
+                    Message = $"Your payment of ₹{payment.Amount} for {booking.MachineName} has been refunded.",
                     Type = "info",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -217,7 +217,7 @@ namespace FEServices.Service
                 {
                     UserId = booking.OwnerId,
                     Title = "Booking Cancelled & Refunded",
-                    Message = $"Booking for {booking.Machine?.Name ?? "the machine"} has been cancelled. Payment refunded to farmer.",
+                    Message = $"Booking for {booking.MachineName} has been cancelled. Payment refunded to farmer.",
                     Type = "info",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow

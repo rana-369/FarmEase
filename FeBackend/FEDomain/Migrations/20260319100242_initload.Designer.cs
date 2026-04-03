@@ -13,7 +13,7 @@ namespace FEDomain.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20260319100242_initload")]
-    partial class initload
+    partial class Initload
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -262,6 +262,7 @@ const OwnerDashboard = () => {
               <h2 className="text-lg font-semibold" style={{ color: '#ffffff' }}>Recent Activity</h2>
             </div>
             <button 
+              onClick={() => navigate('/owner/requests')}
               className="text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-white/5" 
               style={{ color: '#22c55e' }}
             >

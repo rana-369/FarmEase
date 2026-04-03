@@ -21,40 +21,91 @@ namespace FarmEase.Controllers
         [Authorize(Roles = "Farmer,farmer")]
         public async Task<IActionResult> CreateBooking([FromBody] CreateBookingDto request)
         {
-            var farmerId = GetUserId();
-            if (farmerId == null) return Unauthorized(new { Message = "Could not identify user from token." });
+            try
+            {
+                var farmerId = GetUserId();
+                if (farmerId == null) return Unauthorized(new { Message = "Could not identify user from token." });
 
-            var farmerName = User.FindFirstValue("FullName") ?? "Farmer";
+                var farmerName = User.FindFirstValue("FullName") ?? "Farmer";
 
-            var (success, message, booking) = await _bookingService.CreateAsync(request, farmerId, farmerName);
-            if (!success)
-                return BadRequest(new { Message = message });
+                var (success, message, booking) = await _bookingService.CreateAsync(request, farmerId, farmerName);
+                if (!success)
+                    return BadRequest(new { Message = message });
 
-            return Ok(new { Message = message, Booking = booking });
+                return Ok(new { Message = message, Booking = booking });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? "No inner exception";
+                System.Diagnostics.Debug.WriteLine($"CreateBooking ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Inner: {innerMessage}");
+                System.Diagnostics.Debug.WriteLine($"Stack: {ex.StackTrace}");
+                
+                return StatusCode(500, new { 
+                    Message = ex.Message, 
+                    InnerException = innerMessage,
+                    StackTrace = ex.StackTrace
+                });
+            }
         }
 
         [HttpGet("owner")]
         [Authorize(Roles = "Owner,owner")]
         public async Task<IActionResult> GetOwnerBookings()
         {
-            var userId = GetUserId();
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized(new { Message = "Could not identify user from token." });
+            try
+            {
+                var userId = GetUserId();
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized(new { Message = "Could not identify user from token." });
 
-            var bookings = await _bookingService.GetOwnerBookingsAsync(userId);
-            return Ok(bookings);
+                var bookings = await _bookingService.GetOwnerBookingsAsync(userId);
+                return Ok(bookings);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? "No inner exception";
+                var stackTrace = ex.StackTrace;
+                System.Diagnostics.Debug.WriteLine($"GetOwnerBookings ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Inner: {innerMessage}");
+                System.Diagnostics.Debug.WriteLine($"Stack: {stackTrace}");
+                
+                return StatusCode(500, new { 
+                    Message = ex.Message, 
+                    InnerException = innerMessage,
+                    StackTrace = stackTrace
+                });
+            }
         }
 
         [HttpGet("farmer")]
         [Authorize(Roles = "farmer")]
         public async Task<IActionResult> GetFarmerBookings()
         {
-            var userId = GetUserId();
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized(new { Message = "Could not identify user from token." });
+            try
+            {
+                var userId = GetUserId();
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized(new { Message = "Could not identify user from token." });
 
-            var bookings = await _bookingService.GetFarmerBookingsAsync(userId);
-            return Ok(bookings);
+                var bookings = await _bookingService.GetFarmerBookingsAsync(userId);
+                return Ok(bookings);
+            }
+            catch (Exception ex)
+            {
+                // Log the full exception details
+                var innerMessage = ex.InnerException?.Message ?? "No inner exception";
+                var stackTrace = ex.StackTrace;
+                System.Diagnostics.Debug.WriteLine($"GetFarmerBookings ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Inner: {innerMessage}");
+                System.Diagnostics.Debug.WriteLine($"Stack: {stackTrace}");
+                
+                return StatusCode(500, new { 
+                    Message = ex.Message, 
+                    InnerException = innerMessage,
+                    StackTrace = stackTrace
+                });
+            }
         }
 
         [HttpPut("{id}/accept")]

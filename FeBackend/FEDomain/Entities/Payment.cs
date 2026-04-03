@@ -11,9 +11,6 @@ namespace FEDomain
 
         public int BookingId { get; set; }
 
-        [ForeignKey("BookingId")]
-        public Booking? Booking { get; set; }
-
         public string RazorpayOrderId { get; set; } = string.Empty;
 
         public string RazorpayPaymentId { get; set; } = string.Empty;

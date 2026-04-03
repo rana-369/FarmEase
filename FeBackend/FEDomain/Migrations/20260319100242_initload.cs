@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FEDomain.Migrations
 {
     /// <inheritdoc />
-    public partial class initload : Migration
+    public partial class Initload : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

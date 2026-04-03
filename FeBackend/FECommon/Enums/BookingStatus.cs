@@ -44,12 +44,22 @@ namespace FECommon.Enums
                 return BookingStatus.Pending;
 
             // Remove spaces efficiently and parse ignoring case (no extra string allocations)
-            var cleanString = statusString.Replace(" ", "");
+            var cleanString = statusString.Replace(" ", "").Trim();
             
-            if (Enum.TryParse<BookingStatus>(cleanString, true, out var status))
-                return status;
-
-            return BookingStatus.Pending; // Default fallback
+            // Handle common variations
+            return cleanString.ToLower() switch
+            {
+                "pending" => BookingStatus.Pending,
+                "pendingownerapproval" => BookingStatus.PendingOwnerApproval,
+                "accepted" => BookingStatus.Accepted,
+                "confirmed" => BookingStatus.Confirmed,
+                "inprogress" => BookingStatus.InProgress,
+                "active" => BookingStatus.Active,
+                "completed" => BookingStatus.Completed,
+                "cancelled" => BookingStatus.Cancelled,
+                "rejected" => BookingStatus.Rejected,
+                _ => BookingStatus.Pending // Default fallback for unknown values
+            };
         }
     }
 }

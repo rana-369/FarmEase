@@ -48,7 +48,7 @@ namespace FarmEase.Controllers
         }
 
         [HttpGet("farmers")]
-        [AllowAnonymous]
+        [Authorize] // Any authenticated user can view farmers
         public async Task<IActionResult> GetFarmers()
         {
             var farmers = await _userService.GetFarmersAsync();
@@ -56,7 +56,7 @@ namespace FarmEase.Controllers
         }
 
         [HttpGet("owners")]
-        [AllowAnonymous]
+        [Authorize] // Any authenticated user can view owners
         public async Task<IActionResult> GetOwners()
         {
             var owners = await _userService.GetOwnersAsync();

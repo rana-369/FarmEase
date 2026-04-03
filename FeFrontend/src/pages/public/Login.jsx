@@ -256,7 +256,7 @@ const Login = () => {
         >
           {/* Back Button */}
           <motion.button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/', { replace: true })}
             whileHover={{ x: -4 }}
             className="flex items-center gap-2 mb-8 text-sm font-medium transition-colors"
             style={{ color: '#666666' }}

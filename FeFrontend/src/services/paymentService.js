@@ -75,6 +75,12 @@ export const processRefund = async (bookingId, reason = null) => {
  */
 export const openRazorpayCheckout = (options) => {
   return new Promise((resolve, reject) => {
+    // Validate keyId before opening checkout
+    if (!options.keyId) {
+      reject(new Error('Razorpay key ID is missing. Please check your configuration.'));
+      return;
+    }
+
     const checkoutOptions = {
       key: options.keyId,
       amount: options.amount * 100, // Convert rupees to paise
@@ -125,16 +131,29 @@ export const processPayment = async (bookingId, machineName) => {
     const order = await createOrder(bookingId);
     console.log('Order created:', order);
 
-    // Step 2: Open Razorpay checkout
-    console.log('Step 2: Opening Razorpay checkout...');
-    console.log('KeyId:', order.keyId || order.KeyId);
-    console.log('Amount:', order.amount || order.Amount);
-    console.log('OrderId:', order.orderId || order.OrderId);
+    // Extract keyId with fallback for different case formats
+    const keyId = order.keyId || order.KeyId;
+    const amount = order.amount || order.Amount;
+    const orderId = order.orderId || order.OrderId;
     
+    console.log('Step 2: Opening Razorpay checkout...');
+    console.log('KeyId:', keyId);
+    console.log('Amount:', amount);
+    console.log('OrderId:', orderId);
+    
+    // Validate keyId exists
+    if (!keyId) {
+      console.error('!!! ERROR: KeyId is undefined or null');
+      return { 
+        success: false, 
+        message: 'Payment configuration error. Razorpay key is missing. Please contact support.' 
+      };
+    }
+
     const paymentResponse = await openRazorpayCheckout({
-      keyId: order.keyId || order.KeyId,
-      amount: order.amount || order.Amount,
-      orderId: order.orderId || order.OrderId,
+      keyId: keyId,
+      amount: amount,
+      orderId: orderId,
       description: `Payment for ${machineName}`,
       prefill: {
         name: localStorage.getItem('userName') || '',

@@ -332,6 +332,7 @@ const FarmerDashboard = () => {
             <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
+              onClick={() => alert('Agricultural Insights feature coming soon! This will include weather forecasts, crop health monitoring, and market price trends.')}
               className="w-full p-4 rounded-xl font-medium"
               style={{ 
                 backgroundColor: 'rgba(59, 130, 246, 0.15)',

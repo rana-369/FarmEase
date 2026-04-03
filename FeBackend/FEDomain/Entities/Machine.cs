@@ -18,9 +18,6 @@ namespace FEDomain
         public string ImageUrl { get; set; } = string.Empty;
         public string OwnerId { get; set; } = string.Empty;
         
-        [ForeignKey("OwnerId")]
-        public virtual ApplicationUser Owner { get; set; } = null!;
-        
         public string? Location { get; set; }
         public string? Description { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -251,7 +251,10 @@ const FarmerMachines = () => {
                 </div>
 
                 <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                  <p className="text-lg font-bold" style={{ color: '#22c55e' }}>₹{machine.rate}<span className="text-xs font-normal" style={{ color: '#666666' }}>/hr</span></p>
+                  <div>
+                    <p className="text-lg font-bold" style={{ color: '#22c55e' }}>₹{Math.round(machine.rate * 1.1)}<span className="text-xs font-normal" style={{ color: '#666666' }}>/hr</span></p>
+                    <p className="text-xs" style={{ color: '#666666' }}>incl. platform fee</p>
+                  </div>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -353,12 +356,20 @@ const FarmerMachines = () => {
                   </div>
 
                   <div className="mb-6 p-4 rounded-xl" style={{ backgroundColor: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs" style={{ color: '#888888' }}>Total Amount</span>
-                      <span className="text-xl font-bold" style={{ color: '#22c55e' }}>₹{(bookingModal.machine?.rate || 0) * bookingModal.hours}</span>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs" style={{ color: '#888888' }}>Base Amount</span>
+                      <span className="text-sm" style={{ color: '#ffffff' }}>₹{(bookingModal.machine?.rate || 0) * bookingModal.hours}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs" style={{ color: '#888888' }}>Platform Fee (10%)</span>
+                      <span className="text-sm" style={{ color: '#ffffff' }}>₹{Math.round((bookingModal.machine?.rate || 0) * bookingModal.hours * 0.1)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                      <span className="text-xs font-medium" style={{ color: '#888888' }}>Total Amount</span>
+                      <span className="text-xl font-bold" style={{ color: '#22c55e' }}>₹{Math.round((bookingModal.machine?.rate || 0) * bookingModal.hours * 1.1)}</span>
                     </div>
                     <p className="text-xs mt-1 text-right" style={{ color: '#666666' }}>
-                      ₹{bookingModal.machine?.rate} × {bookingModal.hours} hr{bookingModal.hours > 1 ? 's' : ''}
+                      ₹{Math.round(bookingModal.machine?.rate * 1.1)}/hr × {bookingModal.hours} hr{bookingModal.hours > 1 ? 's' : ''}
                     </p>
                   </div>
 

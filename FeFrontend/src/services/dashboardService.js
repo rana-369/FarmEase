@@ -196,22 +196,12 @@ export const getPlatformAnalytics = async () => {
 // Get public platform statistics
 export const getPublicStats = async () => {
   try {
-    const [machinesResponse, farmersResponse, ownersResponse] = await Promise.all([
-      api.get('machines').catch(() => ({ data: [] })),
-      api.get('users/farmers').catch(() => ({ data: [] })),
-      api.get('users/owners').catch(() => ({ data: [] }))
-    ]);
+    const baseURL = import.meta.env.VITE_API_BASE_URL;
+    const response = await fetch(`${baseURL}/public/stats`);
     
-    const machines = machinesResponse.data || [];
-    const farmers = farmersResponse.data || [];
-    const owners = ownersResponse.data || [];
+    if (!response.ok) return null;
     
-    return {
-      totalUsers: farmers.length + owners.length,
-      totalMachines: machines.length,
-      totalBookings: 0,
-      averageRating: 4.5
-    };
+    return await response.json();
   } catch {
     return null;
   }
@@ -220,19 +210,20 @@ export const getPublicStats = async () => {
 // Get featured equipment (uses public machines endpoint)
 export const getFeaturedEquipment = async () => {
   try {
-    const response = await api.get('machines');
-    const machines = response.data || [];
+    const baseURL = import.meta.env.VITE_API_BASE_URL;
+    const response = await fetch(`${baseURL}/public/featured-machines`);
     
-    return machines
-      .filter(m => m.status === 'Active' || m.status === 'Verified')
-      .slice(0, 3)
-      .map(m => ({
-        id: m.id,
-        name: m.name,
-        location: m.location || 'Location not specified',
-        pricePerHour: m.rate || m.pricePerHour,
-        isAvailable: true
-      }));
+    if (!response.ok) return [];
+    
+    const machines = await response.json();
+    
+    return machines.slice(0, 3).map(m => ({
+      id: m.id,
+      name: m.name,
+      location: m.location || 'Location not specified',
+      pricePerHour: m.rate,
+      isAvailable: true
+    }));
   } catch {
     return [];
   }

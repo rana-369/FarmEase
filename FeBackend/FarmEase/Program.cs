@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using FEDomain.Interfaces;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 // --- ARCHITECTURE NAMESPACES ---
 using FEDomain;
 using FERepositories;
@@ -30,6 +31,28 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // --- 1.1. RESPONSE CACHING ---
 builder.Services.AddResponseCaching();
 builder.Services.AddMemoryCache();
+
+// --- 1.2. RESPONSE COMPRESSION ---
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<GzipCompressionProvider>();
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "application/json",
+        "text/json",
+        "application/ld+json"
+    });
+});
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = System.IO.Compression.CompressionLevel.Optimal;
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = System.IO.Compression.CompressionLevel.Optimal;
+});
 
 // --- 1.5. UNIT OF WORK & REPOSITORY REGISTRATIONS ---
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -190,11 +213,50 @@ using (var scope = app.Services.CreateScope())
         context.Database.Migrate();
         Console.WriteLine("[Startup] Database migrations applied successfully!");
         
-        // Ensure Payments table exists (direct SQL fallback)
+        // Ensure MachineName and FarmerName columns exist in Bookings table
         var connection = context.Database.GetDbConnection();
         await connection.OpenAsync();
         using (var command = connection.CreateCommand())
         {
+            // Add MachineName column if missing
+            command.CommandText = @"
+                IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Bookings' AND COLUMN_NAME = 'MachineName')
+                BEGIN
+                    ALTER TABLE Bookings ADD MachineName NVARCHAR(MAX) NULL;
+                    PRINT 'MachineName column added';
+                END";
+            await command.ExecuteNonQueryAsync();
+            
+            // Add FarmerName column if missing
+            command.CommandText = @"
+                IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Bookings' AND COLUMN_NAME = 'FarmerName')
+                BEGIN
+                    ALTER TABLE Bookings ADD FarmerName NVARCHAR(MAX) NULL;
+                    PRINT 'FarmerName column added';
+                END";
+            await command.ExecuteNonQueryAsync();
+            
+            // Populate MachineName from Machines table
+            command.CommandText = @"
+                UPDATE b
+                SET b.MachineName = m.Name
+                FROM Bookings b
+                INNER JOIN Machines m ON b.MachineId = m.Id
+                WHERE b.MachineName IS NULL";
+            await command.ExecuteNonQueryAsync();
+            
+            // Populate FarmerName from AspNetUsers table
+            command.CommandText = @"
+                UPDATE b
+                SET b.FarmerName = u.FullName
+                FROM Bookings b
+                INNER JOIN AspNetUsers u ON b.FarmerId = u.Id
+                WHERE b.FarmerName IS NULL";
+            await command.ExecuteNonQueryAsync();
+            
+            Console.WriteLine("[Startup] Booking columns verified/populated.");
+            
+            // Ensure Payments table exists
             command.CommandText = @"
                 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Payments')
                 BEGIN
@@ -276,6 +338,7 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseCors("FarmEasePolicy");
 app.UseRateLimiter();
+app.UseResponseCompression();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

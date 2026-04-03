@@ -111,12 +111,14 @@ const AdminDashboard = () => {
     },
     {
       title: 'Platform Profit',
-      value: `₹${((stats.totalRevenue || 0) / 1000).toFixed(1)}K`,
+      value: stats.totalRevenue >= 1000 
+        ? `₹${((stats.totalRevenue || 0) / 1000).toFixed(1)}K` 
+        : `₹${(stats.totalRevenue || 0).toFixed(0)}`,
       icon: FiTrendingUp,
       color: '#f59e0b',
       bgGradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       change: '+28%',
-      breakdown: '10% commission from bookings'
+      breakdown: '10% commission from completed bookings'
     }
   ];
 

@@ -2,6 +2,7 @@ using FEServices.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using FECommon.DTO;
+using FECommon.Exceptions;
 
 namespace FarmEase.Controllers
 {
@@ -24,42 +25,79 @@ namespace FarmEase.Controllers
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboardStats()
         {
-            var stats = await _bookingService.GetAdminStatsAsync();
-            return Ok(stats);
+            try
+            {
+                var stats = await _bookingService.GetAdminStatsAsync();
+                return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? "No inner exception";
+                System.Diagnostics.Debug.WriteLine($"AdminDashboard ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Inner: {innerMessage}");
+                System.Diagnostics.Debug.WriteLine($"Stack: {ex.StackTrace}");
+                
+                return StatusCode(500, new { 
+                    Message = ex.Message, 
+                    InnerException = innerMessage,
+                    StackTrace = ex.StackTrace
+                });
+            }
         }
 
         [HttpGet("test-db")]
         public async Task<IActionResult> TestDatabase()
         {
-            var users = await _userService.GetAllUsersAsync();
-            return Ok(new { Count = users.Count(), Users = users.Select(u => new { u.Id, u.Email, u.FullName, u.Role }) });
+            try
+            {
+                var users = await _userService.GetAllUsersAsync();
+                return Ok(new { Count = users.Count(), Users = users.Select(u => new { u.Id, u.Email, u.FullName, u.Role }) });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = ex.Message, InnerException = ex.InnerException?.Message });
+            }
         }
 
         [HttpGet("bookings")]
         public async Task<IActionResult> GetAllBookings([FromQuery] int page = 1, [FromQuery] int limit = 10, [FromQuery] string? search = null, [FromQuery] string? status = null)
         {
-            var result = await _bookingService.GetAllBookingsPagedAsync(page, limit, search, status);
-            return Ok(new
+            try
             {
-                items = result.Items,
-                totalItems = result.TotalItems,
-                totalPages = result.TotalPages,
-                currentPage = result.CurrentPage,
-                summary = result.Summary
-            });
+                var result = await _bookingService.GetAllBookingsPagedAsync(page, limit, search, status);
+                return Ok(new
+                {
+                    items = result.Items,
+                    totalItems = result.TotalItems,
+                    totalPages = result.TotalPages,
+                    currentPage = result.CurrentPage,
+                    summary = result.Summary
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = ex.Message, InnerException = ex.InnerException?.Message, StackTrace = ex.StackTrace });
+            }
         }
 
         [HttpGet("machines")]
         public async Task<IActionResult> GetAllMachines([FromQuery] int page = 1, [FromQuery] int limit = 10, [FromQuery] string? search = null, [FromQuery] string? status = null)
         {
-            var result = await _machineService.GetAllMachinesPagedAsync(page, limit, search, status);
-            return Ok(new
+            try
             {
-                machines = result.Items,
-                totalItems = result.TotalItems,
-                totalPages = result.TotalPages,
-                currentPage = result.CurrentPage
-            });
+                var result = await _machineService.GetAllMachinesPagedAsync(page, limit, search, status);
+                return Ok(new
+                {
+                    machines = result.Items,
+                    totalItems = result.TotalItems,
+                    totalPages = result.TotalPages,
+                    currentPage = result.CurrentPage
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = ex.Message, InnerException = ex.InnerException?.Message });
+            }
         }
 
         [HttpPost("machines/{id}/approve")]
@@ -85,21 +123,35 @@ namespace FarmEase.Controllers
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers([FromQuery] int page = 1, [FromQuery] int limit = 10, [FromQuery] string? search = null, [FromQuery] string? role = null)
         {
-            var result = await _userService.GetAllUsersPagedAsync(page, limit, search, role);
-            return Ok(new
+            try
             {
-                users = result.Items,
-                totalItems = result.TotalItems,
-                totalPages = result.TotalPages,
-                currentPage = result.CurrentPage
-            });
+                var result = await _userService.GetAllUsersPagedAsync(page, limit, search, role);
+                return Ok(new
+                {
+                    users = result.Items,
+                    totalItems = result.TotalItems,
+                    totalPages = result.TotalPages,
+                    currentPage = result.CurrentPage
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = ex.Message, InnerException = ex.InnerException?.Message });
+            }
         }
 
         [HttpGet("revenue")]
         public async Task<IActionResult> GetRevenueByMonth()
         {
-            var revenue = await _bookingService.GetRevenueByMonthAsync();
-            return Ok(revenue);
+            try
+            {
+                var revenue = await _bookingService.GetRevenueByMonthAsync();
+                return Ok(revenue);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = ex.Message, InnerException = ex.InnerException?.Message, StackTrace = ex.StackTrace });
+            }
         }
     }
 }

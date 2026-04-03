@@ -149,11 +149,17 @@ namespace FEDomain.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("FarmerName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Hours")
                         .HasColumnType("int");
 
                     b.Property<int>("MachineId")
                         .HasColumnType("int");
+
+                    b.Property<string>("MachineName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerId")
                         .IsRequired()
@@ -164,7 +170,8 @@ namespace FEDomain.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");

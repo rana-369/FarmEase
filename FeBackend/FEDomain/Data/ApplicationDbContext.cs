@@ -1,6 +1,8 @@
 ﻿using FEDomain;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using FECommon.Enums;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace FERepositories
 {
@@ -18,11 +20,19 @@ namespace FERepositories
         {
             base.OnModelCreating(modelBuilder);
 
-            // Booking indexes and enum conversion
+            // Booking indexes and enum conversion - store as string
             modelBuilder.Entity<Booking>()
                 .Property(b => b.Status)
-                .HasConversion<string>()
-                .HasDefaultValue(FECommon.Enums.BookingStatus.Pending);
+                .IsRequired()
+                .HasMaxLength(50);
+            
+            modelBuilder.Entity<Booking>()
+                .Property(b => b.MachineName)
+                .IsRequired(false);
+            
+            modelBuilder.Entity<Booking>()
+                .Property(b => b.FarmerName)
+                .IsRequired(false);
             
             modelBuilder.Entity<Booking>()
                 .HasIndex(b => b.Status)
@@ -83,6 +93,26 @@ namespace FERepositories
             modelBuilder.Entity<ApplicationUser>()
                 .HasIndex(u => u.Role)
                 .HasDatabaseName("IX_Users_Role");
+        }
+
+        private static BookingStatus ParseBookingStatusSafe(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return BookingStatus.Pending;
+
+            return value.Trim().ToLower() switch
+            {
+                "pending" => BookingStatus.Pending,
+                "pendingownerapproval" => BookingStatus.PendingOwnerApproval,
+                "accepted" => BookingStatus.Accepted,
+                "confirmed" => BookingStatus.Confirmed,
+                "inprogress" => BookingStatus.InProgress,
+                "active" => BookingStatus.Active,
+                "completed" => BookingStatus.Completed,
+                "cancelled" => BookingStatus.Cancelled,
+                "rejected" => BookingStatus.Rejected,
+                _ => BookingStatus.Pending // Fallback for unknown values
+            };
         }
     }
 }

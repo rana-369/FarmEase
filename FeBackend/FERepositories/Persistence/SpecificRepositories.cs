@@ -50,13 +50,13 @@ namespace FERepositories
             => await _dbSet.Where(b => b.FarmerId == farmerId).OrderByDescending(b => b.CreatedAt).ToListAsync();
 
         public async Task<IEnumerable<Booking>> GetCompletedAsync()
-            => await _dbSet.Where(b => b.Status == BookingStatus.Completed).ToListAsync();
+            => await _dbSet.Where(b => b.Status == "Completed").ToListAsync();
 
         public async Task<IEnumerable<Booking>> GetActiveAsync()
-            => await _dbSet.Where(b => b.Status == BookingStatus.Active).ToListAsync();
+            => await _dbSet.Where(b => b.Status == "Active").ToListAsync();
 
         public async Task<IEnumerable<Booking>> GetPendingAsync()
-            => await _dbSet.Where(b => b.Status == BookingStatus.Pending || b.Status == BookingStatus.PendingOwnerApproval).ToListAsync();
+            => await _dbSet.Where(b => b.Status == "Pending" || b.Status == "PendingOwnerApproval").ToListAsync();
 
         public async Task<IEnumerable<Booking>> GetByMachineIdAsync(int machineId)
             => await _dbSet.Where(b => b.MachineId == machineId).ToListAsync();
