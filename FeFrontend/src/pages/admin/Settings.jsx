@@ -93,8 +93,11 @@ const SettingsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64" style={{ backgroundColor: '#0a0a0a' }}>
-        <div className="w-12 h-12 border-2 rounded-full animate-spin" style={{ borderColor: '#22c55e', borderTopColor: 'transparent' }}></div>
+      <div className="flex items-center justify-center h-64" style={{ backgroundColor: '#050505' }}>
+        <div className="relative">
+          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }} />
+          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }} />
+        </div>
       </div>
     );
   }
@@ -106,7 +109,7 @@ const SettingsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#0a0a0a' }}>
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -115,45 +118,61 @@ const SettingsPage = () => {
           className="mb-8"
         >
           <div className="flex items-center gap-4 mb-2">
-            <div 
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
+            <motion.div 
+              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+              whileHover={{ scale: 1.05 }}
               style={{ 
-                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
               }}
             >
-              <FiSettings className="text-xl text-white" />
-            </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              <FiSettings className="text-xl text-white relative z-10" />
+            </motion.div>
             <div>
-              <h1 className="text-2xl font-bold" style={{ color: '#ffffff' }}>System Settings</h1>
-              <p className="text-sm" style={{ color: '#666666' }}>Configure platform parameters and security policies</p>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>System Settings</h1>
+              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Configure platform parameters and security policies</p>
             </div>
           </div>
         </motion.div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {tabs.map(tab => (
+        <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
+          {tabs.map((tab, index) => (
             <motion.button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-3 px-5 py-3 rounded-xl transition-all flex-shrink-0"
+              whileHover={{ scale: 1.03, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="flex items-center gap-3 px-6 py-4 rounded-2xl transition-all flex-shrink-0 relative overflow-hidden group"
               style={{ 
                 background: activeTab === tab.id 
-                  ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%)'
-                  : 'rgba(255, 255, 255, 0.03)',
+                  ? `linear-gradient(135deg, ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.2)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(16, 185, 129, 0.2)'} 0%, ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.05)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.05)' : 'rgba(16, 185, 129, 0.05)'} 100%)`
+                  : 'linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
                 border: activeTab === tab.id 
-                  ? '1px solid rgba(34, 197, 94, 0.3)'
-                  : '1px solid rgba(255, 255, 255, 0.06)',
-                color: activeTab === tab.id ? '#22c55e' : '#888888'
+                  ? `1px solid ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.4)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(16, 185, 129, 0.4)'}`
+                  : '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: activeTab === tab.id 
+                  ? `0 4px 20px ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.2)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`
+                  : 'none',
+                color: activeTab === tab.id 
+                  ? (tab.id === 'general' ? '#60a5fa' : tab.id === 'security' ? '#c084fc' : '#34d399') 
+                  : 'rgba(255,255,255,0.5)'
               }}
             >
-              <tab.icon className="text-lg" />
-              <div className="text-left">
-                <div className="font-semibold text-sm">{tab.label}</div>
-                <div className="text-xs opacity-70">{tab.description}</div>
+              <div 
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  background: `radial-gradient(circle at 50% 0%, ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.15)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.15)' : 'rgba(16, 185, 129, 0.15)'} 0%, transparent 70%)`
+                }}
+              />
+              <tab.icon className="text-lg relative z-10" />
+              <div className="text-left relative z-10">
+                <div className="font-bold text-sm">{tab.label}</div>
+                <div className="text-xs opacity-60">{tab.description}</div>
               </div>
             </motion.button>
           ))}
@@ -164,19 +183,31 @@ const SettingsPage = () => {
           key={activeTab}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl overflow-hidden"
+          className="rounded-3xl overflow-hidden relative"
           style={{ 
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.06)'
+            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
+            backdropFilter: 'blur(10px)'
           }}
         >
+          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)' }} />
           {activeTab === 'general' && (
-            <div className="p-6 lg:p-8">
+            <div className="p-6 lg:p-8 relative">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Platform Name */}
-                <div className="space-y-2">
-                  <label htmlFor="siteName" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
-                    <FiGlobe className="text-green-500" />
+                <motion.div 
+                  className="space-y-2"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <label htmlFor="siteName" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                    <div 
+                      className="w-6 h-6 rounded-lg flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.1) 100%)' }}
+                    >
+                      <FiGlobe className="text-xs" style={{ color: '#60a5fa' }} />
+                    </div>
                     Platform Name
                   </label>
                   <input
@@ -184,18 +215,28 @@ const SettingsPage = () => {
                     type="text"
                     value={settings.general.siteName}
                     onChange={(e) => handleChange('general', 'siteName', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                    className="w-full px-4 py-3.5 rounded-xl text-white outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-blue-500/30"
                     style={{ 
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                      background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%)', 
+                      border: '1px solid rgba(59, 130, 246, 0.2)'
                     }}
                   />
-                </div>
+                </motion.div>
 
                 {/* Support Email */}
-                <div className="space-y-2">
-                  <label htmlFor="supportEmail" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
-                    <FiBell className="text-blue-500" />
+                <motion.div 
+                  className="space-y-2"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  <label htmlFor="supportEmail" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                    <div 
+                      className="w-6 h-6 rounded-lg flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(168, 85, 247, 0.1) 100%)' }}
+                    >
+                      <FiBell className="text-xs" style={{ color: '#c084fc' }} />
+                    </div>
                     Support Email
                   </label>
                   <input
@@ -203,18 +244,28 @@ const SettingsPage = () => {
                     type="email"
                     value={settings.general.supportEmail}
                     onChange={(e) => handleChange('general', 'supportEmail', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                    className="w-full px-4 py-3.5 rounded-xl text-white outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-purple-500/30"
                     style={{ 
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                      background: 'linear-gradient(180deg, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0.02) 100%)', 
+                      border: '1px solid rgba(168, 85, 247, 0.2)'
                     }}
                   />
-                </div>
+                </motion.div>
 
                 {/* Platform Fee */}
-                <div className="space-y-2">
-                  <label htmlFor="platformFee" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
-                    <FiDatabase className="text-yellow-500" />
+                <motion.div 
+                  className="space-y-2"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <label htmlFor="platformFee" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                    <div 
+                      className="w-6 h-6 rounded-lg flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(245, 158, 11, 0.1) 100%)' }}
+                    >
+                      <FiDatabase className="text-xs" style={{ color: '#fbbf24' }} />
+                    </div>
                     Platform Fee (%)
                   </label>
                   <input
@@ -222,40 +273,50 @@ const SettingsPage = () => {
                     type="number"
                     value={settings.general.platformFee}
                     onChange={(e) => handleChange('general', 'platformFee', parseInt(e.target.value))}
-                    className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                    className="w-full px-4 py-3.5 rounded-xl text-white outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-amber-500/30"
                     style={{ 
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                      background: 'linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.02) 100%)', 
+                      border: '1px solid rgba(245, 158, 11, 0.2)'
                     }}
                   />
-                </div>
+                </motion.div>
 
                 {/* Maintenance Mode */}
-                <div 
-                  className="p-4 rounded-xl flex items-center justify-between"
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 }}
+                  className="p-5 rounded-2xl flex items-center justify-between relative overflow-hidden group"
                   style={{ 
                     background: settings.general.maintenanceMode 
-                      ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)'
-                      : 'rgba(255, 255, 255, 0.03)',
+                      ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%)'
+                      : 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
                     border: settings.general.maintenanceMode 
-                      ? '1px solid rgba(239, 68, 68, 0.2)'
-                      : '1px solid rgba(255, 255, 255, 0.06)'
+                      ? '1px solid rgba(239, 68, 68, 0.3)'
+                      : '1px solid rgba(255, 255, 255, 0.08)'
                   }}
                 >
-                  <div className="flex items-center gap-3">
+                  <div 
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{ background: 'radial-gradient(circle at 50% 0%, rgba(239, 68, 68, 0.1) 0%, transparent 70%)' }}
+                  />
+                  <div className="flex items-center gap-3 relative z-10">
                     <div 
-                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      className="w-11 h-11 rounded-xl flex items-center justify-center"
                       style={{ 
-                        backgroundColor: settings.general.maintenanceMode 
-                          ? 'rgba(239, 68, 68, 0.15)'
-                          : 'rgba(255, 255, 255, 0.05)'
+                        background: settings.general.maintenanceMode 
+                          ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%)'
+                          : 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)',
+                        border: settings.general.maintenanceMode 
+                          ? '1px solid rgba(239, 68, 68, 0.3)'
+                          : '1px solid rgba(255, 255, 255, 0.08)'
                       }}
                     >
-                      <FiSettings style={{ color: settings.general.maintenanceMode ? '#ef4444' : '#666666' }} />
+                      <FiSettings style={{ color: settings.general.maintenanceMode ? '#f87171' : 'rgba(255,255,255,0.8)' }} />
                     </div>
                     <div>
-                      <p className="font-medium text-sm" style={{ color: '#ffffff' }}>Maintenance Mode</p>
-                      <p className="text-xs" style={{ color: '#666666' }}>Disable platform for users</p>
+                      <p className="font-bold text-sm" style={{ color: '#ffffff' }}>Maintenance Mode</p>
+                      <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Disable platform for users</p>
                     </div>
                   </div>
                   <button
@@ -264,8 +325,8 @@ const SettingsPage = () => {
                     style={{ 
                       background: settings.general.maintenanceMode 
                         ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
-                        : 'rgba(255, 255, 255, 0.1)',
-                      boxShadow: settings.general.maintenanceMode ? '0 2px 8px rgba(239, 68, 68, 0.3)' : 'none'
+                        : 'linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                      boxShadow: settings.general.maintenanceMode ? '0 4px 16px rgba(239, 68, 68, 0.4)' : 'none'
                     }}
                   >
                     <motion.div
@@ -274,18 +335,28 @@ const SettingsPage = () => {
                       className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-md"
                     />
                   </button>
-                </div>
+                </motion.div>
               </div>
             </div>
           )}
 
           {activeTab === 'security' && (
-            <div className="p-6 lg:p-8">
+            <div className="p-6 lg:p-8 relative">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Session Timeout */}
-                <div className="space-y-2">
-                  <label htmlFor="sessionTimeout" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
-                    <FiShield className="text-purple-500" />
+                <motion.div 
+                  className="space-y-2"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <label htmlFor="sessionTimeout" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                    <div 
+                      className="w-6 h-6 rounded-lg flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(168, 85, 247, 0.1) 100%)' }}
+                    >
+                      <FiShield className="text-xs" style={{ color: '#c084fc' }} />
+                    </div>
                     Session Timeout (minutes)
                   </label>
                   <input
@@ -293,18 +364,28 @@ const SettingsPage = () => {
                     type="number"
                     value={settings.security.sessionTimeout}
                     onChange={(e) => handleChange('security', 'sessionTimeout', parseInt(e.target.value))}
-                    className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                    className="w-full px-4 py-3.5 rounded-xl text-white outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-purple-500/30"
                     style={{ 
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                      background: 'linear-gradient(180deg, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0.02) 100%)', 
+                      border: '1px solid rgba(168, 85, 247, 0.2)'
                     }}
                   />
-                </div>
+                </motion.div>
 
                 {/* Min Password Length */}
-                <div className="space-y-2">
-                  <label htmlFor="minPasswordLength" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
-                    <FiShield className="text-orange-500" />
+                <motion.div 
+                  className="space-y-2"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  <label htmlFor="minPasswordLength" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                    <div 
+                      className="w-6 h-6 rounded-lg flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(249, 115, 22, 0.1) 100%)' }}
+                    >
+                      <FiShield className="text-xs" style={{ color: '#fb923c' }} />
+                    </div>
                     Min Password Length
                   </label>
                   <input
@@ -312,47 +393,47 @@ const SettingsPage = () => {
                     type="number"
                     value={settings.security.minPasswordLength}
                     onChange={(e) => handleChange('security', 'minPasswordLength', parseInt(e.target.value))}
-                    className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all duration-200"
+                    className="w-full px-4 py-3.5 rounded-xl text-white outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-orange-500/30"
                     style={{ 
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                      background: 'linear-gradient(180deg, rgba(249, 115, 22, 0.08) 0%, rgba(249, 115, 22, 0.02) 100%)', 
+                      border: '1px solid rgba(249, 115, 22, 0.2)'
                     }}
                   />
-                </div>
+                </motion.div>
               </div>
             </div>
           )}
 
           {activeTab === 'account' && (
-            <div className="p-6 lg:p-8">
+            <div className="p-6 lg:p-8 relative">
               {message.text && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
                     message.type === 'success' 
-                      ? 'bg-green-500/10 border border-green-500/20 text-green-500' 
-                      : 'bg-red-500/10 border border-red-500/20 text-red-500'
+                      ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' 
+                      : 'bg-red-500/10 border border-red-500/20 text-red-400'
                   }`}
                 >
                   <FiCheck />
-                  <span className="text-sm font-medium">{message.text}</span>
+                  <span className="text-sm font-semibold">{message.text}</span>
                 </motion.div>
               )}
               <div>
                 <div className="flex items-center gap-3 mb-4">
                   <div 
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    className="w-11 h-11 rounded-xl flex items-center justify-center"
                     style={{ 
-                      background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%)',
-                      border: '1px solid rgba(34, 197, 94, 0.3)'
+                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0.1) 100%)',
+                      border: '1px solid rgba(16, 185, 129, 0.3)'
                     }}
                   >
-                    <FiShield className="text-lg" style={{ color: '#22c55e' }} />
+                    <FiShield className="text-lg" style={{ color: '#34d399' }} />
                   </div>
                   <div>
-                    <h3 className="font-semibold" style={{ color: '#ffffff' }}>Two-Factor Authentication</h3>
-                    <p className="text-xs" style={{ color: '#666666' }}>Add an extra layer of security</p>
+                    <h3 className="font-bold" style={{ color: '#ffffff' }}>Two-Factor Authentication</h3>
+                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Add an extra layer of security</p>
                   </div>
                 </div>
                 <TwoFactorSetup 
@@ -366,39 +447,44 @@ const SettingsPage = () => {
           {/* Action Buttons */}
           {activeTab !== 'account' && (
             <div 
-              className="px-6 lg:px-8 py-4 flex justify-end gap-3"
+              className="px-6 lg:px-8 py-5 flex justify-end gap-4 relative"
               style={{ 
                 borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-                backgroundColor: 'rgba(255, 255, 255, 0.02)'
+                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)'
               }}
             >
               <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all"
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                className="px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all relative overflow-hidden group"
                 style={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)', 
                   border: '1px solid rgba(255, 255, 255, 0.1)', 
-                  color: '#a1a1a1' 
+                  color: 'rgba(255,255,255,0.7)'
                 }}
               >
-                <FiRefreshCw className={saving ? 'animate-spin' : ''} />
-                <span>Reset</span>
+                <div 
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: 'radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.1) 0%, transparent 70%)' }}
+                />
+                <FiRefreshCw className={`relative z-10 ${saving ? 'animate-spin' : ''}`} />
+                <span className="relative z-10">Reset</span>
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={handleSave}
                 disabled={saving}
-                className="px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all"
+                className="px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all relative overflow-hidden"
                 style={{ 
-                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
                   color: '#ffffff',
-                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                  boxShadow: '0 8px 24px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
                 }}
               >
-                {saving ? <FiRefreshCw className="animate-spin" /> : <FiSave />}
-                <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                {saving ? <FiRefreshCw className="animate-spin relative z-10" /> : <FiSave className="relative z-10" />}
+                <span className="relative z-10">{saving ? 'Saving...' : 'Save Changes'}</span>
               </motion.button>
             </div>
           )}

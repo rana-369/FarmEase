@@ -91,14 +91,17 @@ const FarmerDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
-        <div className="w-12 h-12 border-2 rounded-full animate-spin" style={{ borderColor: '#22c55e', borderTopColor: 'transparent' }}></div>
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
+        <div className="relative">
+          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }} />
+          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }} />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#0a0a0a' }}>
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -107,24 +110,26 @@ const FarmerDashboard = () => {
           className="mb-8"
         >
           <div className="flex items-center gap-4">
-            <div 
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
+            <motion.div 
+              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+              whileHover={{ scale: 1.05 }}
               style={{ 
-                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
               }}
             >
-              <FiSun className="text-xl text-white" />
-            </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              <FiSun className="text-xl text-white relative z-10" />
+            </motion.div>
             <div>
-              <h1 className="text-2xl font-bold" style={{ color: '#ffffff' }}>Farmer Dashboard</h1>
-              <p className="text-sm" style={{ color: '#666666' }}>Manage your equipment rentals</p>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Farmer Dashboard</h1>
+              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Manage your equipment rentals</p>
             </div>
           </div>
         </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           {statCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -133,29 +138,39 @@ const FarmerDashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
-                className="p-5 rounded-2xl cursor-pointer"
+                whileHover={{ scale: 1.02, y: -4 }}
+                className="p-6 rounded-3xl cursor-pointer group relative overflow-hidden"
                 style={{ 
-                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)'
+                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  backdropFilter: 'blur(10px)'
                 }}
               >
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}10 0%, transparent 60%)` }} />
                 <div className="flex items-center justify-between mb-4">
                   <div 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: `${stat.color}15` }}
+                    className="w-12 h-12 rounded-xl flex items-center justify-center relative transition-transform duration-300 group-hover:scale-110"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${stat.color}25 0%, ${stat.color}15 100%)`,
+                      border: `1px solid ${stat.color}30`,
+                      boxShadow: `0 4px 20px ${stat.color}20`
+                    }}
                   >
-                    <Icon className="text-lg" style={{ color: stat.color }} />
+                    <Icon className="text-lg relative z-10" style={{ color: stat.color }} />
                   </div>
                   <span 
-                    className="text-xs font-semibold px-2 py-1 rounded-lg"
-                    style={{ backgroundColor: `${stat.color}15`, color: stat.color }}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-full"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`,
+                      border: `1px solid ${stat.color}30`,
+                      color: stat.color 
+                    }}
                   >
                     {stat.change}
                   </span>
                 </div>
-                <h3 className="text-2xl font-bold mb-1" style={{ color: '#ffffff' }}>{stat.value}</h3>
-                <p className="text-sm" style={{ color: '#888888' }}>{stat.title}</p>
+                <h3 className="text-3xl font-bold mb-1" style={{ color: '#ffffff' }}>{stat.value}</h3>
+                <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>{stat.title}</p>
               </motion.div>
             );
           })}
@@ -166,91 +181,115 @@ const FarmerDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="p-6 rounded-2xl mb-8"
+          className="p-6 rounded-3xl mb-8 relative overflow-hidden"
           style={{ 
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.06)'
+            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
+            backdropFilter: 'blur(10px)'
           }}
         >
-          <div className="flex items-center justify-between mb-6">
+          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)' }} />
+          <div className="flex items-center justify-between mb-6 relative">
             <div className="flex items-center gap-3">
               <div 
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)' }}
+                className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
+                style={{ 
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%)',
+                  border: '1px solid rgba(16, 185, 129, 0.25)'
+                }}
               >
-                <FiPackage className="text-lg" style={{ color: '#22c55e' }} />
+                <FiPackage className="text-lg" style={{ color: '#10b981' }} />
               </div>
               <h2 className="text-lg font-semibold" style={{ color: '#ffffff' }}>Recent Rentals</h2>
             </div>
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigate('/farmer/bookings')}
-              className="text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-white/5" 
-              style={{ color: '#22c55e' }}
+              className="text-sm font-semibold px-4 py-2 rounded-xl transition-all animated-underline" 
+              style={{ color: '#10b981' }}
             >
               View All →
-            </button>
+            </motion.button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 relative">
             {recentBookings.length > 0 ? recentBookings.map((booking, index) => (
               <motion.div
                 key={booking.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 + index * 0.05 }}
-                className="flex items-center justify-between p-4 rounded-xl"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}
+                whileHover={{ scale: 1.01, x: 4 }}
+                className="flex items-center justify-between p-4 rounded-2xl transition-all group"
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.04)'
+                }}
               >
                 <div className="flex items-center gap-4">
                   <div 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)' }}
+                    className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden transition-transform duration-300 group-hover:scale-105"
+                    style={{ 
+                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)',
+                      border: '1px solid rgba(16, 185, 129, 0.2)'
+                    }}
                   >
-                    <FiTruck className="text-lg" style={{ color: '#22c55e' }} />
+                    <FiTruck className="text-lg" style={{ color: '#10b981' }} />
                   </div>
                   <div>
-                    <h3 className="font-medium" style={{ color: '#ffffff' }}>{booking.machineName}</h3>
-                    <p className="text-xs" style={{ color: '#666666' }}>{booking.ownerName}</p>
+                    <h3 className="font-semibold" style={{ color: '#ffffff' }}>{booking.machineName}</h3>
+                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>{booking.ownerName}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2 text-sm" style={{ color: '#888888' }}>
+                  <div className="flex items-center gap-2 text-sm font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
                     <FiCalendar className="text-sm" />
                     <span>{booking.startDate}</span>
                   </div>
                   <span 
-                    className="px-3 py-1 rounded-lg text-xs font-medium"
+                    className="px-3 py-1.5 rounded-full text-xs font-semibold"
                     style={{ 
-                      backgroundColor: booking.status.toLowerCase() === 'active' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(168, 85, 247, 0.15)',
-                      color: booking.status.toLowerCase() === 'active' ? '#22c55e' : '#a855f7'
+                      background: booking.status.toLowerCase() === 'active' 
+                        ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%)'
+                        : 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(139, 92, 246, 0.15) 100%)',
+                      border: booking.status.toLowerCase() === 'active' 
+                        ? '1px solid rgba(16, 185, 129, 0.3)'
+                        : '1px solid rgba(168, 85, 247, 0.3)',
+                      color: booking.status.toLowerCase() === 'active' ? '#10b981' : '#a855f7'
                     }}
                   >
                     {booking.status}
                   </span>
-                  <span className="font-semibold" style={{ color: '#22c55e' }}>₹{booking.totalCost.toLocaleString()}</span>
+                  <span className="font-bold text-lg" style={{ color: '#10b981' }}>₹{booking.totalCost.toLocaleString()}</span>
                 </div>
               </motion.div>
             )) : (
               <div className="text-center py-12">
                 <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-                >
-                  <FiPackage className="text-3xl" style={{ color: '#333333' }} />
-                </div>
-                <p className="mb-4" style={{ color: '#666666' }}>No rentals yet</p>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => navigate('/farmer/machines')}
-                  className="px-6 py-3 rounded-xl font-medium"
+                  className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden"
                   style={{ 
-                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                    color: '#ffffff'
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.06)'
                   }}
                 >
-                  Browse Equipment
+                  <FiPackage className="text-3xl" style={{ color: 'rgba(255,255,255,0.6)' }} />
+                </div>
+                <p className="mb-6 font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>No rentals yet</p>
+                <motion.button
+                  whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(16, 185, 129, 0.5)' }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate('/farmer/machines')}
+                  className="px-6 py-3.5 rounded-2xl font-semibold relative overflow-hidden"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                    color: '#ffffff',
+                    boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35)'
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                  <span className="relative z-10">Browse Equipment</span>
                 </motion.button>
               </div>
             )}
@@ -263,46 +302,49 @@ const FarmerDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="p-6 rounded-2xl"
+            className="p-6 rounded-3xl relative overflow-hidden"
             style={{ 
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.06)'
+              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              backdropFilter: 'blur(10px)'
             }}
           >
             <h3 className="text-lg font-semibold mb-4" style={{ color: '#ffffff' }}>Quick Actions</h3>
             <div className="space-y-3">
               <motion.button
-                whileHover={{ scale: 1.01 }}
+                whileHover={{ scale: 1.01, boxShadow: '0 12px 40px rgba(16, 185, 129, 0.5)' }}
                 whileTap={{ scale: 0.99 }}
                 onClick={() => navigate('/farmer/machines')}
-                className="w-full flex items-center justify-between p-4 rounded-xl"
+                className="w-full flex items-center justify-between p-4 rounded-2xl relative overflow-hidden group"
                 style={{ 
-                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                  color: '#ffffff'
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                  color: '#ffffff',
+                  boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35)'
                 }}
               >
-                <div className="flex items-center gap-3">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                <div className="flex items-center gap-3 relative z-10">
                   <FiTruck className="text-lg" />
-                  <span className="font-medium">Browse Equipment</span>
+                  <span className="font-semibold">Browse Equipment</span>
                 </div>
-                <FiArrowUpRight />
+                <FiArrowUpRight className="relative z-10" />
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
                 onClick={() => navigate('/farmer/bookings')}
-                className="w-full flex items-center justify-between p-4 rounded-xl"
+                className="w-full flex items-center justify-between p-4 rounded-2xl transition-all group"
                 style={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                  background: 'rgba(255, 255, 255, 0.03)',
                   color: '#ffffff',
                   border: '1px solid rgba(255, 255, 255, 0.06)'
                 }}
               >
                 <div className="flex items-center gap-3">
-                  <FiPackage className="text-lg" />
-                  <span className="font-medium">My Bookings</span>
+                  <FiPackage className="text-lg" style={{ color: '#10b981' }} />
+                  <span className="font-semibold">My Bookings</span>
                 </div>
-                <FiArrowUpRight />
+                <FiArrowUpRight style={{ color: 'rgba(255,255,255,0.8)' }} />
               </motion.button>
             </div>
           </motion.div>
@@ -311,33 +353,38 @@ const FarmerDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="p-6 rounded-2xl"
+            className="p-6 rounded-3xl relative overflow-hidden"
             style={{ 
-              background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%)',
-              border: '1px solid rgba(59, 130, 246, 0.2)'
+              background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.02) 100%)',
+              border: '1px solid rgba(59, 130, 246, 0.15)',
+              backdropFilter: 'blur(10px)'
             }}
           >
-            <div className="flex items-center gap-3 mb-4">
+            <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.1) 0%, transparent 60%)' }} />
+            <div className="flex items-center gap-3 mb-4 relative">
               <div 
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)' }}
+                className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
+                style={{ 
+                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%)',
+                  border: '1px solid rgba(59, 130, 246, 0.25)'
+                }}
               >
                 <FiTrendingUp className="text-lg" style={{ color: '#3b82f6' }} />
               </div>
               <h3 className="text-lg font-semibold" style={{ color: '#ffffff' }}>Agricultural Insights</h3>
             </div>
-            <p className="text-sm mb-4" style={{ color: '#888888', lineHeight: '1.6' }}>
+            <p className="text-sm mb-4 font-medium relative" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: '1.7' }}>
               Access weather forecasts, crop health monitoring, and market price trends for your area.
             </p>
             <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               onClick={() => alert('Agricultural Insights feature coming soon! This will include weather forecasts, crop health monitoring, and market price trends.')}
-              className="w-full p-4 rounded-xl font-medium"
+              className="w-full p-4 rounded-2xl font-semibold relative overflow-hidden"
               style={{ 
-                backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%)',
                 color: '#3b82f6',
-                border: '1px solid rgba(59, 130, 246, 0.2)'
+                border: '1px solid rgba(59, 130, 246, 0.25)'
               }}
             >
               View Insights

@@ -42,8 +42,11 @@ const EarningsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64" style={{ backgroundColor: '#0a0a0a' }}>
-        <div className="w-12 h-12 border-2 rounded-full animate-spin" style={{ borderColor: '#22c55e', borderTopColor: 'transparent' }}></div>
+      <div className="flex items-center justify-center h-64" style={{ backgroundColor: '#050505' }}>
+        <div className="relative">
+          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }} />
+          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }} />
+        </div>
       </div>
     );
   }
@@ -51,7 +54,7 @@ const EarningsPage = () => {
   const maxRevenue = Math.max(...revenueData.map(d => d.revenue), 1);
 
   return (
-    <div className="min-h-screen p-8" style={{ backgroundColor: '#0a0a0a' }}>
+    <div className="min-h-screen p-8" style={{ backgroundColor: '#050505' }}>
       <div className="max-w-7xl mx-auto space-y-12">
         {/* Header */}
         <motion.div
@@ -59,16 +62,16 @@ const EarningsPage = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="mb-4">
-            <span className="px-4 py-2 rounded-full text-sm font-semibold" style={{ 
-              backgroundColor: 'rgba(22, 163, 74, 0.1)', 
-              color: '#22c55e',
-              border: '1px solid rgba(22, 163, 74, 0.2)'
+            <span className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ 
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)', 
+              color: '#10b981',
+              border: '1px solid rgba(16, 185, 129, 0.25)'
             }}>
               Financial Overview
             </span>
           </div>
-          <h1 className="text-4xl font-bold mb-2" style={{ color: '#ffffff' }}>Earnings Analytics</h1>
-          <p className="text-lg" style={{ color: '#a1a1a1' }}>Track and analyze platform revenue and commissions</p>
+          <h1 className="text-4xl font-bold tracking-tight mb-2" style={{ color: '#ffffff' }}>Earnings Analytics</h1>
+          <p className="text-lg font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Track and analyze platform revenue and commissions</p>
         </motion.div>
 
         {/* Stats Grid */}
@@ -80,7 +83,7 @@ const EarningsPage = () => {
                 ? `₹${((stats.totalTransactionValue || 0) / 1000).toFixed(1)}K` 
                 : `₹${(stats.totalTransactionValue || 0).toFixed(0)}`, 
               icon: RupeeIcon, 
-              color: '#22c55e' 
+              color: '#10b981' 
             },
             { 
               label: 'Platform Profit (10%)', 
@@ -97,21 +100,23 @@ const EarningsPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="p-8 rounded-2xl"
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="p-8 rounded-3xl relative overflow-hidden group"
               style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: `linear-gradient(135deg, ${item.color}10 0%, ${item.color}05 100%)`,
+                border: `1px solid ${item.color}20`,
                 backdropFilter: 'blur(10px)'
               }}
             >
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style={{ 
-                backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                border: '1px solid rgba(34, 197, 94, 0.2)'
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${item.color}15 0%, transparent 60%)` }} />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 relative" style={{ 
+                background: `linear-gradient(135deg, ${item.color}20 0%, ${item.color}15 100%)`,
+                border: `1px solid ${item.color}30`
               }}>
                 <item.icon className="text-xl" style={{ color: item.color }} />
               </div>
-              <p className="text-sm mb-2" style={{ color: '#a1a1a1' }}>{item.label}</p>
-              <h3 className="text-3xl font-bold" style={{ color: '#ffffff' }}>{item.value}</h3>
+              <p className="text-sm font-medium mb-2 relative" style={{ color: 'rgba(255,255,255,0.8)' }}>{item.label}</p>
+              <h3 className="text-3xl font-bold relative" style={{ color: '#ffffff' }}>{item.value}</h3>
             </motion.div>
           ))}
         </div>
@@ -121,36 +126,61 @@ const EarningsPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="p-8 rounded-2xl"
+          className="p-8 rounded-3xl relative overflow-hidden"
           style={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
             backdropFilter: 'blur(10px)'
           }}
         >
-          <div className="flex items-center justify-between mb-10">
+          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)' }} />
+          <div className="flex items-center justify-between mb-10 relative">
             <h2 className="text-2xl font-bold" style={{ color: '#ffffff' }}>Monthly Revenue Breakdown</h2>
             <div className="flex gap-3">
-              <button className="p-3 rounded-xl transition-all" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#a1a1a1' }}><FiFilter /></button>
-              <button className="p-3 rounded-xl transition-all" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#a1a1a1' }}><FiDownload /></button>
+              <motion.button 
+                whileHover={{ scale: 1.05 }} 
+                whileTap={{ scale: 0.95 }}
+                className="p-3 rounded-xl transition-all" 
+                style={{ 
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)', 
+                  border: '1px solid rgba(255, 255, 255, 0.08)', 
+                  color: 'rgba(255,255,255,0.6)' 
+                }}
+              >
+                <FiFilter />
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.05 }} 
+                whileTap={{ scale: 0.95 }}
+                className="p-3 rounded-xl transition-all" 
+                style={{ 
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)', 
+                  border: '1px solid rgba(255, 255, 255, 0.08)', 
+                  color: 'rgba(255,255,255,0.6)' 
+                }}
+              >
+                <FiDownload />
+              </motion.button>
             </div>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-8 relative">
             {revenueData.map((data, index) => (
               <div key={data.month || index} className="group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-medium" style={{ color: '#a1a1a1' }}>{data.month}</span>
+                  <span className="font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>{data.month}</span>
                   <span className="font-bold text-lg" style={{ color: '#ffffff' }}>₹{(data.revenue || data.Revenue || 0).toLocaleString()}</span>
                 </div>
-                <div className="w-full rounded-full h-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
+                <div className="w-full rounded-full h-3" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)' }}>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${((data.revenue || data.Revenue || 0) / maxRevenue) * 100}%` }}
                     transition={{ duration: 1, ease: "easeOut" }}
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: '#22c55e' }}
-                  />
+                    className="h-full rounded-full relative overflow-hidden"
+                    style={{ background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)' }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
+                  </motion.div>
                 </div>
               </div>
             ))}

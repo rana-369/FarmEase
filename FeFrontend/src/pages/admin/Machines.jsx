@@ -102,8 +102,11 @@ const MachineApproval = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
-        <div className="w-12 h-12 border-2 rounded-full animate-spin" style={{ borderColor: '#22c55e', borderTopColor: 'transparent' }}></div>
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
+        <div className="relative">
+          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(168, 85, 247, 0.2)', borderTopColor: '#a855f7' }} />
+          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%)' }} />
+        </div>
       </div>
     );
   }
@@ -112,7 +115,7 @@ const MachineApproval = () => {
   const verifiedCount = machines.filter(m => m.status?.toLowerCase() === 'verified' || m.status?.toLowerCase() === 'active').length;
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#0a0a0a' }}>
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -121,18 +124,20 @@ const MachineApproval = () => {
           className="flex items-center justify-between mb-8"
         >
           <div className="flex items-center gap-4">
-            <div 
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
+            <motion.div 
+              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+              whileHover={{ scale: 1.05 }}
               style={{ 
-                background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
-                boxShadow: '0 4px 12px rgba(168, 85, 247, 0.3)'
+                background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 50%, #7c3aed 100%)',
+                boxShadow: '0 8px 32px rgba(168, 85, 247, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
               }}
             >
-              <FiTool className="text-xl text-white" />
-            </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              <FiTool className="text-xl text-white relative z-10" />
+            </motion.div>
             <div>
-              <h1 className="text-2xl font-bold" style={{ color: '#ffffff' }}>Machine Approval</h1>
-              <p className="text-sm" style={{ color: '#666666' }}>Review equipment submissions</p>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Machine Approval</h1>
+              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Review equipment submissions</p>
             </div>
           </div>
         </motion.div>
@@ -140,29 +145,47 @@ const MachineApproval = () => {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { label: 'Pending', value: pendingCount, color: '#facc15', icon: FiClock },
-            { label: 'Verified', value: verifiedCount, color: '#22c55e', icon: FiCheck },
+            { label: 'Pending', value: pendingCount, color: '#f59e0b', icon: FiClock },
+            { label: 'Verified', value: verifiedCount, color: '#10b981', icon: FiCheck },
             { label: 'Total', value: totalItems, color: '#3b82f6', icon: FiTool }
-          ].map((stat) => {
+          ].map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div 
+              <motion.div 
                 key={stat.label}
-                className="p-4 rounded-xl"
-                style={{ backgroundColor: `${stat.color}10`, border: `1px solid ${stat.color}20` }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.02, y: -4 }}
+                className="p-5 rounded-2xl relative overflow-hidden group"
+                style={{ 
+                  background: `linear-gradient(135deg, ${stat.color}10 0%, ${stat.color}05 100%)`,
+                  border: `1px solid ${stat.color}20`
+                }}
               >
-                <Icon className="text-lg mb-2" style={{ color: stat.color }} />
-                <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
-                <p className="text-xs" style={{ color: '#888888' }}>{stat.label}</p>
-              </div>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}15 0%, transparent 60%)` }} />
+                <div className="flex items-center justify-between mb-2 relative">
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}15 100%)`,
+                      border: `1px solid ${stat.color}30`
+                    }}
+                  >
+                    <Icon className="text-lg" style={{ color: stat.color }} />
+                  </div>
+                </div>
+                <p className="text-2xl font-bold relative" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-xs font-medium relative" style={{ color: 'rgba(255,255,255,0.8)' }}>{stat.label}</p>
+              </motion.div>
             );
           })}
         </div>
 
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-            <FiSearch style={{ color: '#666666' }} />
+          <div className="flex-1 flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all focus-within:border-purple-500/30" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            <FiSearch style={{ color: 'rgba(255,255,255,0.8)' }} />
             <input
               id="machine-search"
               name="machine-search"
@@ -170,27 +193,27 @@ const MachineApproval = () => {
               placeholder="Search machines..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 bg-transparent outline-none text-sm"
+              className="flex-1 bg-transparent outline-none text-sm font-medium"
               autoComplete="off"
               style={{ color: '#ffffff' }}
             />
           </div>
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-            <FiFilter style={{ color: '#666666' }} />
+          <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            <FiFilter style={{ color: 'rgba(255,255,255,0.8)' }} />
             <select
               id="status-filter"
               name="status-filter"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               autoComplete="off"
-              className="bg-transparent outline-none cursor-pointer text-sm"
+              className="bg-transparent outline-none cursor-pointer text-sm font-medium"
               style={{ color: '#ffffff' }}
             >
-              <option value="all" style={{ backgroundColor: '#1a1a1a' }}>All Status</option>
-              <option value="pending verification" style={{ backgroundColor: '#1a1a1a' }}>Pending</option>
-              <option value="verified" style={{ backgroundColor: '#1a1a1a' }}>Verified</option>
-              <option value="rejected" style={{ backgroundColor: '#1a1a1a' }}>Rejected</option>
-              <option value="active" style={{ backgroundColor: '#1a1a1a' }}>Active</option>
+              <option value="all" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>All Status</option>
+              <option value="pending verification" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Pending</option>
+              <option value="verified" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Verified</option>
+              <option value="rejected" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Rejected</option>
+              <option value="active" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Active</option>
             </select>
           </div>
         </div>
@@ -207,52 +230,63 @@ const MachineApproval = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.03 }}
-                className="rounded-xl p-4"
+                whileHover={{ scale: 1.02, y: -4 }}
+                className="rounded-2xl p-5 relative overflow-hidden group"
                 style={{
-                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)'
+                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  backdropFilter: 'blur(10px)'
                 }}
               >
-                <div className="flex items-start justify-between mb-3">
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${config.text}10 0%, transparent 60%)` }} />
+                <div className="flex items-start justify-between mb-3 relative">
                   <div className="flex-1">
-                    <h3 className="font-medium text-sm mb-1" style={{ color: '#ffffff' }}>
+                    <h3 className="font-semibold text-sm mb-1" style={{ color: '#ffffff' }}>
                       {machine.name || 'Unnamed Machine'}
                     </h3>
-                    <p className="text-xs" style={{ color: '#666666' }}>
+                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>
                       {machine.ownerName || 'Unknown'}
                     </p>
                   </div>
                   <span 
-                    className="px-2 py-1 rounded-lg text-xs font-medium inline-flex items-center gap-1"
-                    style={{ backgroundColor: config.bg, color: config.text }}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${config.bg} 0%, ${config.bg} 100%)`,
+                      border: `1px solid ${config.text}25`,
+                      color: config.text 
+                    }}
                   >
                     <Icon className="w-3 h-3" />
                     {machine.status || 'Unknown'}
                   </span>
                 </div>
 
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-xs" style={{ color: '#888888' }}>
-                    <FiMapPin className="mr-2 w-3 h-3" style={{ color: '#22c55e' }} />
+                <div className="space-y-2 mb-4 relative">
+                  <div className="flex items-center text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    <FiMapPin className="mr-2 w-3 h-3" style={{ color: '#10b981' }} />
                     {machine.ownerLocation || 'No location'}
                   </div>
-                  <div className="flex items-center text-xs" style={{ color: '#888888' }}>
-                    <span className="text-sm mr-2" style={{ color: '#22c55e' }}>₹</span>
+                  <div className="flex items-center text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    <span className="text-sm mr-2 font-bold" style={{ color: '#10b981' }}>₹</span>
                     {machine.rate || 0}/hour
                   </div>
-                  <div className="flex items-center text-xs" style={{ color: '#888888' }}>
+                  <div className="flex items-center text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
                     <FiCalendar className="mr-2 w-3 h-3" />
                     {formatDate(machine.createdAt || machine.created_at)}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 relative">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setSelectedMachine(machine)}
-                    className="flex-1 py-2 px-3 rounded-lg text-xs font-medium"
-                    style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}
+                    className="flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold"
+                    style={{ 
+                      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%)',
+                      border: '1px solid rgba(59, 130, 246, 0.25)',
+                      color: '#3b82f6' 
+                    }}
                   >
                     <FiEye className="inline mr-1 w-3 h-3" />
                     View
@@ -265,11 +299,16 @@ const MachineApproval = () => {
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleApprove(machine.id)}
                         disabled={actionLoading === machine.id}
-                        className="flex-1 py-2 px-3 rounded-lg text-xs font-medium"
-                        style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', opacity: actionLoading === machine.id ? 0.5 : 1 }}
+                        className="flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold"
+                        style={{ 
+                          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)',
+                          border: '1px solid rgba(16, 185, 129, 0.25)',
+                          color: '#10b981', 
+                          opacity: actionLoading === machine.id ? 0.5 : 1 
+                        }}
                       >
                         {actionLoading === machine.id ? (
-                          <div className="w-3 h-3 border-2 rounded-full animate-spin mx-auto" style={{ borderColor: '#22c55e', borderTopColor: 'transparent' }}></div>
+                          <div className="w-3 h-3 border-2 rounded-full animate-spin mx-auto" style={{ borderColor: '#10b981', borderTopColor: 'transparent' }}></div>
                         ) : (
                           <>
                             <FiCheck className="inline mr-1 w-3 h-3" />
@@ -282,11 +321,16 @@ const MachineApproval = () => {
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleReject(machine.id)}
                         disabled={actionLoading === machine.id}
-                        className="flex-1 py-2 px-3 rounded-lg text-xs font-medium"
-                        style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', opacity: actionLoading === machine.id ? 0.5 : 1 }}
+                        className="flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold"
+                        style={{ 
+                          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%)',
+                          border: '1px solid rgba(239, 68, 68, 0.25)',
+                          color: '#f87171', 
+                          opacity: actionLoading === machine.id ? 0.5 : 1 
+                        }}
                       >
                         {actionLoading === machine.id ? (
-                          <div className="w-3 h-3 border-2 rounded-full animate-spin mx-auto" style={{ borderColor: '#ef4444', borderTopColor: 'transparent' }}></div>
+                          <div className="w-3 h-3 border-2 rounded-full animate-spin mx-auto" style={{ borderColor: '#f87171', borderTopColor: 'transparent' }}></div>
                         ) : (
                           <>
                             <FiX className="inline mr-1 w-3 h-3" />
@@ -303,12 +347,18 @@ const MachineApproval = () => {
         </div>
 
         {machines.length === 0 && (
-          <div className="text-center py-12 rounded-2xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
-              <FiTruck className="text-3xl" style={{ color: '#333333' }} />
+          <div className="text-center py-12 rounded-3xl relative overflow-hidden" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            <div 
+              className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden"
+              style={{ 
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.06)'
+              }}
+            >
+              <FiTruck className="text-4xl" style={{ color: 'rgba(255,255,255,0.6)' }} />
             </div>
-            <p className="text-sm mb-1" style={{ color: '#ffffff' }}>No machines found</p>
-            <p className="text-xs" style={{ color: '#666666' }}>Try adjusting your search or filters</p>
+            <p className="text-sm font-semibold mb-1" style={{ color: '#ffffff' }}>No machines found</p>
+            <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Try adjusting your search or filters</p>
           </div>
         )}
         
@@ -335,54 +385,67 @@ const MachineApproval = () => {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             onClick={(e) => e.stopPropagation()}
-            className="rounded-2xl p-6 max-w-lg w-full"
-            style={{ backgroundColor: '#141414', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+            className="rounded-3xl p-6 max-w-lg w-full relative overflow-hidden"
+            style={{ 
+              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(20px)'
+            }}
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.1) 0%, transparent 60%)' }} />
+            <div className="flex items-center justify-between mb-6 relative">
               <h3 className="text-lg font-bold" style={{ color: '#ffffff' }}>Machine Details</h3>
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setSelectedMachine(null)}
-                className="p-2 rounded-lg"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#888888' }}
+                className="p-2 rounded-xl"
+                style={{ 
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: 'rgba(255,255,255,0.6)' 
+                }}
               >
                 <FiX className="w-4 h-4" />
               </motion.button>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 relative">
               <div>
-                <p className="text-xs mb-1" style={{ color: '#888888' }}>Name</p>
-                <p className="text-sm font-medium" style={{ color: '#ffffff' }}>{selectedMachine.name || 'N/A'}</p>
+                <p className="text-xs font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>Name</p>
+                <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>{selectedMachine.name || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-xs mb-1" style={{ color: '#888888' }}>Type</p>
-                <p className="text-sm font-medium" style={{ color: '#ffffff' }}>{selectedMachine.type || 'N/A'}</p>
+                <p className="text-xs font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>Type</p>
+                <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>{selectedMachine.type || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-xs mb-1" style={{ color: '#888888' }}>Owner</p>
-                <p className="text-sm font-medium" style={{ color: '#ffffff' }}>{selectedMachine.ownerName || 'N/A'}</p>
+                <p className="text-xs font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>Owner</p>
+                <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>{selectedMachine.ownerName || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-xs mb-1" style={{ color: '#888888' }}>Location</p>
-                <p className="text-sm font-medium" style={{ color: '#ffffff' }}>{selectedMachine.ownerLocation || 'N/A'}</p>
+                <p className="text-xs font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>Location</p>
+                <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>{selectedMachine.ownerLocation || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-xs mb-1" style={{ color: '#888888' }}>Rate</p>
-                <p className="text-sm font-medium" style={{ color: '#22c55e' }}>₹{selectedMachine.rate || 0}/hour</p>
+                <p className="text-xs font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>Rate</p>
+                <p className="text-sm font-bold" style={{ color: '#10b981' }}>₹{selectedMachine.rate || 0}/hour</p>
               </div>
               <div>
-                <p className="text-xs mb-1" style={{ color: '#888888' }}>Status</p>
+                <p className="text-xs font-medium mb-2" style={{ color: 'rgba(255,255,255,0.8)' }}>Status</p>
                 <span 
-                  className="px-2 py-1 rounded-lg text-xs font-medium"
-                  style={{ backgroundColor: getStatusConfig(selectedMachine.status).bg, color: getStatusConfig(selectedMachine.status).text }}
+                  className="px-3 py-1.5 rounded-xl text-xs font-semibold"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${getStatusConfig(selectedMachine.status).bg} 0%, ${getStatusConfig(selectedMachine.status).bg} 100%)`,
+                    border: `1px solid ${getStatusConfig(selectedMachine.status).text}25`,
+                    color: getStatusConfig(selectedMachine.status).text 
+                  }}
                 >
                   {selectedMachine.status || 'Unknown'}
                 </span>
               </div>
               <div className="col-span-2">
-                <p className="text-xs mb-1" style={{ color: '#888888' }}>Added</p>
-                <p className="text-sm font-medium" style={{ color: '#ffffff' }}>
+                <p className="text-xs font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>Added</p>
+                <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>
                   {formatDate(selectedMachine.createdAt || selectedMachine.created_at)}
                 </p>
               </div>

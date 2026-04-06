@@ -65,8 +65,11 @@ const OwnerEarnings = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
-        <div className="w-12 h-12 border-2 rounded-full animate-spin" style={{ borderColor: '#22c55e', borderTopColor: 'transparent' }}></div>
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
+        <div className="relative">
+          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }} />
+          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }} />
+        </div>
       </div>
     );
   }
@@ -76,7 +79,7 @@ const OwnerEarnings = () => {
     .reduce((sum, a) => sum + (a.amount || 0), 0);
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#0a0a0a' }}>
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -85,18 +88,20 @@ const OwnerEarnings = () => {
           className="flex items-center justify-between mb-8"
         >
           <div className="flex items-center gap-4">
-            <div 
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
+            <motion.div 
+              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+              whileHover={{ scale: 1.05 }}
               style={{ 
-                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
               }}
             >
-              <FiTrendingUp className="text-xl text-white" />
-            </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              <FiTrendingUp className="text-xl text-white relative z-10" />
+            </motion.div>
             <div>
-              <h1 className="text-2xl font-bold" style={{ color: '#ffffff' }}>Earnings</h1>
-              <p className="text-sm" style={{ color: '#666666' }}>Track your rental income</p>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Earnings</h1>
+              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Track your rental income</p>
             </div>
           </div>
         </motion.div>
@@ -104,74 +109,124 @@ const OwnerEarnings = () => {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { label: 'Total Earnings', value: `₹${(stats.totalEarnings || 0).toLocaleString()}`, color: '#22c55e', icon: FiTrendingUp },
+            { label: 'Total Earnings', value: `₹${(stats.totalEarnings || 0).toLocaleString()}`, color: '#10b981', icon: FiTrendingUp },
             { label: 'Active Rentals', value: stats.activeRentals || 0, color: '#3b82f6', icon: FiTruck },
             { label: 'Fleet Size', value: stats.totalMachines || 0, color: '#a855f7', icon: FiTrendingUp }
-          ].map((stat) => {
+          ].map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div 
+              <motion.div 
                 key={stat.label}
-                className="p-4 rounded-xl"
-                style={{ backgroundColor: `${stat.color}10`, border: `1px solid ${stat.color}20` }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.02, y: -4 }}
+                className="p-5 rounded-2xl relative overflow-hidden group"
+                style={{ 
+                  background: `linear-gradient(135deg, ${stat.color}10 0%, ${stat.color}05 100%)`,
+                  border: `1px solid ${stat.color}20`
+                }}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <Icon className="text-lg" style={{ color: stat.color }} />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}15 0%, transparent 60%)` }} />
+                <div className="flex items-center justify-between mb-2 relative">
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}15 100%)`,
+                      border: `1px solid ${stat.color}30`
+                    }}
+                  >
+                    <Icon className="text-lg" style={{ color: stat.color }} />
+                  </div>
                 </div>
-                <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
-                <p className="text-xs" style={{ color: '#888888' }}>{stat.label}</p>
-              </div>
+                <p className="text-2xl font-bold relative" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-xs font-medium relative" style={{ color: 'rgba(255,255,255,0.8)' }}>{stat.label}</p>
+              </motion.div>
             );
           })}
         </div>
 
         {/* Transactions */}
-        <div className="rounded-2xl p-6" style={{ 
-          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-          border: '1px solid rgba(255, 255, 255, 0.06)'
-        }}>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Recent Transactions</h2>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="rounded-3xl p-6 relative overflow-hidden" 
+          style={{ 
+            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
+            backdropFilter: 'blur(10px)'
+          }}
+        >
+          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)' }} />
+          <div className="flex items-center justify-between mb-6 relative">
+            <div className="flex items-center gap-3">
+              <div 
+                className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
+                style={{ 
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)',
+                  border: '1px solid rgba(16, 185, 129, 0.25)'
+                }}
+              >
+                <FiTrendingUp className="text-lg" style={{ color: '#10b981' }} />
+              </div>
+              <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Recent Transactions</h2>
+            </div>
             <div className="flex gap-2">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-lg"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#888888' }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="p-2.5 rounded-xl"
+                style={{ 
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: 'rgba(255,255,255,0.6)'
+                }}
               >
                 <FiFilter className="w-4 h-4" />
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-lg"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#888888' }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="p-2.5 rounded-xl"
+                style={{ 
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: 'rgba(255,255,255,0.6)'
+                }}
               >
                 <FiDownload className="w-4 h-4" />
               </motion.button>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 relative">
             {activity.filter(a => a.status === 'completed' || a.status === 'active').map((item, index) => (
               <motion.div 
                 key={item.id} 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.03 }}
-                className="p-4 rounded-xl flex items-center justify-between"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.04)' }}
+                whileHover={{ scale: 1.01, x: 4 }}
+                className="p-4 rounded-2xl flex items-center justify-between transition-all group"
+                style={{ 
+                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.04)'
+                }}
               >
                 <div className="flex items-center gap-3">
                   <div 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
+                    className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden transition-transform duration-300 group-hover:scale-105"
+                    style={{ 
+                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)',
+                      border: '1px solid rgba(16, 185, 129, 0.25)'
+                    }}
                   >
-                    <FiTrendingUp className="text-lg" style={{ color: '#22c55e' }} />
+                    <FiTrendingUp className="text-lg" style={{ color: '#10b981' }} />
                   </div>
                   <div>
-                    <p className="font-medium text-sm" style={{ color: '#ffffff' }}>{item.machineName}</p>
-                    <div className="flex items-center gap-2 text-xs" style={{ color: '#666666' }}>
+                    <p className="font-semibold text-sm" style={{ color: '#ffffff' }}>{item.machineName}</p>
+                    <div className="flex items-center gap-2 text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>
                       <FiCalendar className="w-3 h-3" />
                       <span>{new Date(item.time).toLocaleDateString()}</span>
                       <span>•</span>
@@ -180,10 +235,14 @@ const OwnerEarnings = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold" style={{ color: '#22c55e' }}>+₹{(item.amount || 0).toLocaleString()}</p>
+                  <p className="text-lg font-bold" style={{ color: '#10b981' }}>+₹{(item.amount || 0).toLocaleString()}</p>
                   <span 
-                    className="text-xs px-2 py-0.5 rounded"
-                    style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}
+                    className="text-xs font-semibold px-3 py-1 rounded-full"
+                    style={{ 
+                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)',
+                      border: '1px solid rgba(16, 185, 129, 0.25)',
+                      color: '#10b981'
+                    }}
                   >
                     {item.status}
                   </span>
@@ -194,17 +253,20 @@ const OwnerEarnings = () => {
             {activity.filter(a => a.status === 'completed' || a.status === 'active').length === 0 && (
               <div className="text-center py-12">
                 <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                  className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden"
+                  style={{ 
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.06)'
+                  }}
                 >
-                  <FiTrendingUp className="text-3xl" style={{ color: '#333333' }} />
+                  <FiTrendingUp className="text-3xl" style={{ color: 'rgba(255,255,255,0.6)' }} />
                 </div>
-                <p className="text-sm mb-1" style={{ color: '#ffffff' }}>No transactions yet</p>
-                <p className="text-xs" style={{ color: '#666666' }}>Earnings will appear here after rentals</p>
+                <p className="text-sm mb-1 font-semibold" style={{ color: '#ffffff' }}>No transactions yet</p>
+                <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Earnings will appear here after rentals</p>
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

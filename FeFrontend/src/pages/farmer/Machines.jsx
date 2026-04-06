@@ -107,8 +107,11 @@ const FarmerMachines = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
-        <div className="w-12 h-12 border-2 rounded-full animate-spin" style={{ borderColor: '#22c55e', borderTopColor: 'transparent' }}></div>
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
+        <div className="relative">
+          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }} />
+          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }} />
+        </div>
       </div>
     );
   }
@@ -116,7 +119,7 @@ const FarmerMachines = () => {
   const availableCount = machines.filter(m => m.available).length;
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#0a0a0a' }}>
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -125,18 +128,20 @@ const FarmerMachines = () => {
           className="flex items-center justify-between mb-8"
         >
           <div className="flex items-center gap-4">
-            <div 
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
+            <motion.div 
+              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+              whileHover={{ scale: 1.05 }}
               style={{ 
-                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
               }}
             >
-              <FiTool className="text-xl text-white" />
-            </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              <FiTool className="text-xl text-white relative z-10" />
+            </motion.div>
             <div>
-              <h1 className="text-2xl font-bold" style={{ color: '#ffffff' }}>Browse Equipment</h1>
-              <p className="text-sm" style={{ color: '#666666' }}>Find and rent agricultural machinery</p>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Browse Equipment</h1>
+              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Find and rent agricultural machinery</p>
             </div>
           </div>
         </motion.div>
@@ -144,29 +149,36 @@ const FarmerMachines = () => {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { label: 'Available', value: availableCount, color: '#22c55e', icon: FiCheckCircle },
+            { label: 'Available', value: availableCount, color: '#10b981', icon: FiCheckCircle },
             { label: 'Total', value: machines.length, color: '#3b82f6', icon: FiTool },
             { label: 'Categories', value: categories.length - 1, color: '#a855f7', icon: FiFilter }
-          ].map((stat) => {
+          ].map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div 
+              <motion.div 
                 key={stat.label}
-                className="p-4 rounded-xl"
-                style={{ backgroundColor: `${stat.color}10`, border: `1px solid ${stat.color}20` }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="p-5 rounded-2xl relative overflow-hidden group"
+                style={{ 
+                  background: `linear-gradient(135deg, ${stat.color}10 0%, ${stat.color}05 100%)`,
+                  border: `1px solid ${stat.color}20`
+                }}
               >
-                <Icon className="text-lg mb-2" style={{ color: stat.color }} />
-                <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
-                <p className="text-xs" style={{ color: '#888888' }}>{stat.label}</p>
-              </div>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}15 0%, transparent 60%)` }} />
+                <Icon className="text-lg mb-2 relative" style={{ color: stat.color }} />
+                <p className="text-2xl font-bold relative" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-xs font-medium relative" style={{ color: 'rgba(255,255,255,0.8)' }}>{stat.label}</p>
+              </motion.div>
             );
           })}
         </div>
 
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-            <FiSearch style={{ color: '#666666' }} />
+          <div className="flex-1 flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all focus-within:border-green-500/30" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            <FiSearch style={{ color: 'rgba(255,255,255,0.8)' }} />
             <input
               id="marketplace-search"
               name="marketplace-search"
@@ -174,20 +186,20 @@ const FarmerMachines = () => {
               placeholder="Search equipment, locations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 bg-transparent outline-none text-sm"
+              className="flex-1 bg-transparent outline-none text-sm font-medium"
               autoComplete="off"
               style={{ color: '#ffffff' }}
             />
           </div>
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-            <FiFilter style={{ color: '#666666' }} />
+          <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            <FiFilter style={{ color: 'rgba(255,255,255,0.8)' }} />
             <select
               id="category-filter"
               name="category-filter"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               autoComplete="off"
-              className="bg-transparent outline-none cursor-pointer text-sm"
+              className="bg-transparent outline-none cursor-pointer text-sm font-medium"
               style={{ color: '#ffffff' }}
             >
               {categories.map(category => (
@@ -198,76 +210,81 @@ const FarmerMachines = () => {
         </div>
 
         {/* Results Count */}
-        <p className="text-xs mb-4" style={{ color: '#888888' }}>
-          Showing <span style={{ color: '#ffffff' }}>{filteredMachines.length}</span> equipment
+        <p className="text-xs mb-4 font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>
+          Showing <span className="font-semibold" style={{ color: '#ffffff' }}>{filteredMachines.length}</span> equipment
         </p>
 
         {/* Machines Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredMachines.map((machine, index) => (
             <motion.div
               key={machine.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.03 }}
-              className="rounded-xl overflow-hidden"
+              whileHover={{ y: -4 }}
+              className="rounded-3xl overflow-hidden group"
               style={{ 
-                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.06)'
+                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                backdropFilter: 'blur(10px)'
               }}
             >
-              <div className="h-36 overflow-hidden relative" style={{ backgroundColor: '#1a1a1a' }}>
+              <div className="h-40 overflow-hidden relative" style={{ backgroundColor: '#0a0a0a' }}>
                 <img
                   src={machine.image}
                   alt={machine.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
                 {!machine.available && (
-                  <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}>
-                    <span className="px-3 py-1 rounded-lg text-xs font-medium" style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
+                  <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(4px)' }}>
+                    <span className="px-4 py-2 rounded-full text-xs font-semibold" style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.15) 100%)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#f87171' }}>
                       Unavailable
                     </span>
                   </div>
                 )}
                 <div className="absolute top-3 left-3">
-                  <span className="px-2 py-1 rounded-lg text-xs font-medium" style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}>
+                  <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#10b981' }}>
                     {machine.category}
                   </span>
                 </div>
-                <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium" style={{ backgroundColor: 'rgba(250, 204, 21, 0.15)', color: '#facc15' }}>
+                <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold" style={{ background: 'linear-gradient(135deg, rgba(250, 204, 21, 0.2) 0%, rgba(245, 158, 11, 0.15) 100%)', border: '1px solid rgba(250, 204, 21, 0.25)', color: '#facc15' }}>
                   <FiStar className="w-3 h-3" />
                   <span>{machine.rating}</span>
                 </div>
               </div>
 
-              <div className="p-4">
-                <h3 className="font-medium text-sm mb-1 truncate" style={{ color: '#ffffff' }}>{machine.name}</h3>
-                <p className="text-xs mb-3 line-clamp-1" style={{ color: '#666666' }}>{machine.description}</p>
+              <div className="p-5">
+                <h3 className="font-semibold text-sm mb-1 truncate" style={{ color: '#ffffff' }}>{machine.name}</h3>
+                <p className="text-xs mb-3 line-clamp-1 font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>{machine.description}</p>
                 
-                <div className="flex items-center gap-2 text-xs mb-3" style={{ color: '#888888' }}>
-                  <FiMapPin className="w-3 h-3" style={{ color: '#22c55e' }} />
+                <div className="flex items-center gap-2 text-xs mb-4 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  <FiMapPin className="w-3 h-3" style={{ color: '#10b981' }} />
                   <span className="truncate">{machine.location}</span>
                 </div>
 
-                <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <div className="flex items-center justify-between pt-4" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
                   <div>
-                    <p className="text-lg font-bold" style={{ color: '#22c55e' }}>₹{Math.round(machine.rate * 1.1)}<span className="text-xs font-normal" style={{ color: '#666666' }}>/hr</span></p>
-                    <p className="text-xs" style={{ color: '#666666' }}>incl. platform fee</p>
+                    <p className="text-xl font-bold" style={{ color: '#10b981' }}>₹{Math.round(machine.rate * 1.1)}<span className="text-xs font-normal" style={{ color: 'rgba(255,255,255,0.8)' }}>/hr</span></p>
+                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>incl. platform fee</p>
                   </div>
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: 1.05, boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleBookNow(machine)}
                     disabled={!machine.available}
-                    className="px-4 py-2 rounded-lg text-xs font-medium"
+                    className="px-5 py-2.5 rounded-xl text-xs font-semibold relative overflow-hidden"
                     style={{ 
-                      backgroundColor: machine.available ? '#22c55e' : 'rgba(255, 255, 255, 0.05)',
-                      color: machine.available ? '#000000' : '#666666',
+                      background: machine.available 
+                        ? 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                      color: machine.available ? '#ffffff' : 'rgba(255,255,255,0.7)',
                       cursor: machine.available ? 'pointer' : 'not-allowed'
                     }}
                   >
-                    {machine.available ? 'Book' : 'Unavailable'}
+                    {machine.available && <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />}
+                    <span className="relative z-10">{machine.available ? 'Book' : 'Unavailable'}</span>
                   </motion.button>
                 </div>
               </div>
@@ -276,40 +293,52 @@ const FarmerMachines = () => {
         </div>
 
         {filteredMachines.length === 0 && (
-          <div className="text-center py-12 rounded-2xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
-              <FiTruck className="text-3xl" style={{ color: '#333333' }} />
+          <div className="text-center py-12 rounded-3xl" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden" style={{ 
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.06)'
+            }}>
+              <FiTruck className="text-3xl" style={{ color: 'rgba(255,255,255,0.6)' }} />
             </div>
-            <p className="text-sm mb-1" style={{ color: '#ffffff' }}>No equipment found</p>
-            <p className="text-xs mb-4" style={{ color: '#666666' }}>Try adjusting your search or filters</p>
+            <p className="text-sm mb-1 font-semibold" style={{ color: '#ffffff' }}>No equipment found</p>
+            <p className="text-xs mb-6 font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Try adjusting your search or filters</p>
             <motion.button
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}
               whileTap={{ scale: 0.98 }}
               onClick={() => { setSearchTerm(''); setSelectedCategory('All'); }}
-              className="px-4 py-2 rounded-lg text-xs font-medium"
-              style={{ backgroundColor: '#22c55e', color: '#000000' }}
+              className="px-6 py-3 rounded-xl text-xs font-semibold relative overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)', color: '#ffffff' }}
             >
-              Clear Filters
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              <span className="relative z-10">Clear Filters</span>
             </motion.button>
           </div>
         )}
 
         {/* Booking Modal */}
         {bookingModal.open && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(8px)' }}>
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(12px)' }}>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="p-6 rounded-2xl max-w-md w-full"
-              style={{ backgroundColor: '#141414', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+              className="p-6 rounded-3xl max-w-md w-full relative overflow-hidden"
+              style={{ 
+                background: 'linear-gradient(180deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)',
+                boxShadow: '0 40px 80px rgba(0, 0, 0, 0.5)'
+              }}
             >
               {bookingSuccess ? (
-                <div className="text-center py-4">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)' }}>
-                    <FiCheckCircle className="text-3xl" style={{ color: '#22c55e' }} />
+                <div className="text-center py-6">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden" style={{ 
+                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%)',
+                    border: '1px solid rgba(16, 185, 129, 0.25)'
+                  }}>
+                    <FiCheckCircle className="text-3xl" style={{ color: '#10b981' }} />
                   </div>
-                  <h3 className="text-lg font-bold mb-2" style={{ color: '#22c55e' }}>Booking Created!</h3>
-                  <p className="text-xs" style={{ color: '#888888' }}>Your request has been sent to the owner.</p>
+                  <h3 className="text-lg font-bold mb-2" style={{ color: '#10b981' }}>Booking Created!</h3>
+                  <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Your request has been sent to the owner.</p>
                 </div>
               ) : (
                 <>
@@ -319,29 +348,32 @@ const FarmerMachines = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={closeBookingModal}
-                      className="p-2 rounded-lg"
-                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#888888' }}
+                      className="p-2.5 rounded-xl transition-colors"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: 'rgba(255,255,255,0.8)' }}
                     >
                       <FiX className="w-4 h-4" />
                     </motion.button>
                   </div>
 
-                  <div className="mb-6 p-4 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                  <div className="mb-6 p-4 rounded-2xl" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)', border: '1px solid rgba(255, 255, 255, 0.04)' }}>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}>
-                        <FiTool className="text-lg" style={{ color: '#22c55e' }} />
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden" style={{ 
+                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)',
+                        border: '1px solid rgba(16, 185, 129, 0.2)'
+                      }}>
+                        <FiTool className="text-lg" style={{ color: '#10b981' }} />
                       </div>
                       <div>
-                        <p className="font-medium text-sm" style={{ color: '#ffffff' }}>{bookingModal.machine?.name}</p>
-                        <p className="text-xs" style={{ color: '#666666' }}>{bookingModal.machine?.location}</p>
+                        <p className="font-semibold text-sm" style={{ color: '#ffffff' }}>{bookingModal.machine?.name}</p>
+                        <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>{bookingModal.machine?.location}</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="mb-6">
-                    <label className="text-xs font-medium block mb-2" style={{ color: '#888888' }}>Number of Hours</label>
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                      <FiClock style={{ color: '#666666' }} />
+                    <label className="text-xs font-semibold block mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>Number of Hours</label>
+                    <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                      <FiClock style={{ color: 'rgba(255,255,255,0.8)' }} />
                       <input
                         id="booking-hours"
                         type="number"
@@ -349,32 +381,33 @@ const FarmerMachines = () => {
                         max="24"
                         value={bookingModal.hours}
                         onChange={(e) => setBookingModal({ ...bookingModal, hours: e.target.value })}
-                        className="flex-1 bg-transparent outline-none text-sm"
+                        className="flex-1 bg-transparent outline-none text-sm font-semibold"
                         style={{ color: '#ffffff' }}
                       />
                     </div>
                   </div>
 
-                  <div className="mb-6 p-4 rounded-xl" style={{ backgroundColor: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs" style={{ color: '#888888' }}>Base Amount</span>
-                      <span className="text-sm" style={{ color: '#ffffff' }}>₹{(bookingModal.machine?.rate || 0) * bookingModal.hours}</span>
+                  <div className="mb-6 p-4 rounded-2xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                    <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.1) 0%, transparent 60%)' }} />
+                    <div className="flex justify-between items-center mb-2 relative">
+                      <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Base Amount</span>
+                      <span className="text-sm font-semibold" style={{ color: '#ffffff' }}>₹{(bookingModal.machine?.rate || 0) * bookingModal.hours}</span>
                     </div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs" style={{ color: '#888888' }}>Platform Fee (10%)</span>
-                      <span className="text-sm" style={{ color: '#ffffff' }}>₹{Math.round((bookingModal.machine?.rate || 0) * bookingModal.hours * 0.1)}</span>
+                    <div className="flex justify-between items-center mb-2 relative">
+                      <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Platform Fee (10%)</span>
+                      <span className="text-sm font-semibold" style={{ color: '#ffffff' }}>₹{Math.round((bookingModal.machine?.rate || 0) * bookingModal.hours * 0.1)}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-2" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                      <span className="text-xs font-medium" style={{ color: '#888888' }}>Total Amount</span>
-                      <span className="text-xl font-bold" style={{ color: '#22c55e' }}>₹{Math.round((bookingModal.machine?.rate || 0) * bookingModal.hours * 1.1)}</span>
+                    <div className="flex justify-between items-center pt-2 relative" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                      <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>Total Amount</span>
+                      <span className="text-2xl font-bold" style={{ color: '#10b981' }}>₹{Math.round((bookingModal.machine?.rate || 0) * bookingModal.hours * 1.1)}</span>
                     </div>
-                    <p className="text-xs mt-1 text-right" style={{ color: '#666666' }}>
+                    <p className="text-xs mt-1 text-right font-medium relative" style={{ color: 'rgba(255,255,255,0.75)' }}>
                       ₹{Math.round(bookingModal.machine?.rate * 1.1)}/hr × {bookingModal.hours} hr{bookingModal.hours > 1 ? 's' : ''}
                     </p>
                   </div>
 
                   {bookingError && (
-                    <div className="mb-4 p-3 rounded-xl text-center text-xs" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+                    <div className="mb-4 p-4 rounded-2xl text-center text-xs font-medium" style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%)', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#f87171' }}>
                       {bookingError}
                     </div>
                   )}
@@ -384,20 +417,21 @@ const FarmerMachines = () => {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={closeBookingModal}
-                      className="flex-1 px-4 py-3 rounded-lg text-sm"
-                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#888888' }}
+                      className="flex-1 px-4 py-3.5 rounded-xl text-sm font-semibold"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: 'rgba(255,255,255,0.5)' }}
                     >
                       Cancel
                     </motion.button>
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}
                       whileTap={{ scale: 0.98 }}
                       onClick={handleBookingSubmit}
                       disabled={bookingLoading}
-                      className="flex-1 px-4 py-3 rounded-lg text-sm font-medium"
-                      style={{ backgroundColor: '#22c55e', color: '#000000' }}
+                      className="flex-1 px-4 py-3.5 rounded-xl text-sm font-semibold relative overflow-hidden"
+                      style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)', color: '#ffffff' }}
                     >
-                      {bookingLoading ? 'Processing...' : 'Confirm'}
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                      <span className="relative z-10">{bookingLoading ? 'Processing...' : 'Confirm'}</span>
                     </motion.button>
                   </div>
                 </>

@@ -42,15 +42,16 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ 
-        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #16a34a 100%)',
-        position: 'relative'
+    <div className="min-h-screen" style={{ backgroundColor: '#050505' }}>
+      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ 
+        background: 'linear-gradient(135deg, #050505 0%, #080808 50%, #050505 100%)'
       }}>
         <div className="absolute inset-0" style={{ 
-          backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(22, 163, 74, 0.1) 0%, transparent 50%)', 
-          backgroundSize: '100% 100%'
-        }}></div>
+          backgroundImage: `
+            radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+            radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.04) 0%, transparent 50%)
+          `
+        }} />
         
         <motion.div
           initial={{ opacity: 0, y: 50 }}
@@ -59,33 +60,35 @@ const ForgotPassword = () => {
           className="w-full max-w-md relative z-10"
         >
           {/* Back to Login Button */}
-          <div className="mb-6">
-            <motion.button
-              onClick={() => navigate('/login')}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all"
-              style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#a1a1a1'
-              }}
-            >
-              <FiArrowLeft />
-              <span>Back to Login</span>
-            </motion.button>
-          </div>
+          <motion.button
+            onClick={() => navigate('/login')}
+            whileHover={{ x: -4 }}
+            className="flex items-center gap-2 mb-6 text-sm font-semibold transition-colors px-4 py-2 rounded-xl"
+            style={{ 
+              color: '#10b981',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.2)'
+            }}
+          >
+            <FiArrowLeft />
+            <span>Back to Login</span>
+          </motion.button>
 
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ 
-              backgroundColor: '#22c55e',
-              boxShadow: '0 20px 40px rgba(34, 197, 94, 0.3)'
-            }}>
-              <FiTruck className="text-white text-3xl" />
-            </div>
-            <h1 className="text-3xl font-bold mb-2" style={{ color: '#ffffff' }}>Forgot Password</h1>
-            <p className="text-lg" style={{ color: '#a1a1a1' }}>Enter your email to receive a reset code</p>
+            <motion.div 
+              className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 relative overflow-hidden"
+              whileHover={{ scale: 1.05 }}
+              style={{ 
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              <FiTruck className="text-white text-3xl relative z-10" />
+            </motion.div>
+            <h1 className="text-3xl font-bold mb-2 tracking-tight" style={{ color: '#ffffff' }}>Forgot Password</h1>
+            <p className="text-base" style={{ color: 'rgba(255,255,255,0.5)' }}>Enter your email to receive a reset code</p>
           </div>
 
           {/* Form Card */}
@@ -93,40 +96,47 @@ const ForgotPassword = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="p-8 rounded-2xl"
+            className="p-8 rounded-3xl relative overflow-hidden"
             style={{ 
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(10px)'
+              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              backdropFilter: 'blur(20px)'
             }}
           >
             {success ? (
               <div className="text-center">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}>
-                  <FiCheck className="text-3xl" style={{ color: '#22c55e' }} />
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden" style={{ 
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                }}>
+                  <FiCheck className="text-3xl" style={{ color: '#10b981' }} />
                 </div>
                 <h3 className="text-xl font-bold mb-2" style={{ color: '#ffffff' }}>OTP Sent!</h3>
-                <p className="text-sm mb-4" style={{ color: '#a1a1a1' }}>
-                  We've sent a 6-digit code to <span style={{ color: '#22c55e' }}>{email}</span>. 
+                <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  We've sent a 6-digit code to <span className="font-semibold" style={{ color: '#10b981' }}>{email}</span>. 
                   The code is valid for 15 minutes.
                 </p>
-                <div className="mb-6 p-4 rounded-lg text-left" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                  <p className="text-sm font-medium" style={{ color: '#22c55e' }}>
+                <div className="mb-6 p-4 rounded-2xl text-left" style={{ 
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)', 
+                  border: '1px solid rgba(16, 185, 129, 0.2)' 
+                }}>
+                  <p className="text-sm font-medium" style={{ color: '#10b981' }}>
                     {otpMessage}
                   </p>
                 </div>
                 <motion.button
                   onClick={() => navigate(`/reset-password?email=${encodeURIComponent(email)}`)}
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(16, 185, 129, 0.5)' }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 text-lg font-semibold rounded-lg transition-all"
+                  className="w-full py-3.5 text-base font-semibold rounded-2xl transition-all relative overflow-hidden"
                   style={{ 
-                    backgroundColor: '#22c55e', 
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
                     color: '#ffffff',
-                    boxShadow: '0 10px 25px rgba(34, 197, 94, 0.3)'
+                    boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35)'
                   }}
                 >
-                  Enter Reset Code
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                  <span className="relative z-10">Enter Reset Code</span>
                 </motion.button>
               </div>
             ) : (
@@ -135,76 +145,67 @@ const ForgotPassword = () => {
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-6 p-4 rounded-lg flex items-center gap-3"
+                    className="mb-6 p-4 rounded-2xl flex items-center gap-3"
                     style={{ 
-                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                      border: '1px solid rgba(239, 68, 68, 0.2)',
-                      color: '#ef4444'
+                      background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%)',
+                      border: '1px solid rgba(239, 68, 68, 0.25)',
+                      color: '#f87171'
                     }}
                   >
                     <FiAlertCircle className="text-xl flex-shrink-0" />
-                    <span className="text-sm">{error}</span>
+                    <span className="text-sm font-medium">{error}</span>
                   </motion.div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
+                    <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                      <FiMail style={{ color: '#10b981' }} />
                       Email Address
                     </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FiMail style={{ color: '#a1a1a1' }} />
-                      </div>
-                      <input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        autoFocus
-                        className="w-full pl-10 pr-3 py-3 rounded-lg transition-all duration-200"
-                        style={{ 
-                          backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          color: '#ffffff',
-                          fontSize: '1rem'
-                        }}
-                        placeholder="Enter your registered email"
-                      />
-                    </div>
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      autoFocus
+                      className="modern-input"
+                      placeholder="Enter your registered email"
+                    />
                   </div>
 
                   <motion.button
                     type="submit"
                     disabled={loading}
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(16, 185, 129, 0.5)' }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full py-3 text-lg font-semibold rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-3.5 text-base font-semibold rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
                     style={{ 
-                      backgroundColor: '#22c55e', 
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
                       color: '#ffffff',
-                      boxShadow: '0 10px 25px rgba(34, 197, 94, 0.3)'
+                      boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35)'
                     }}
                   >
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
                     {loading ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Sending OTP...
-                      </div>
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin relative z-10" />
+                        <span className="relative z-10">Sending OTP...</span>
+                      </>
                     ) : (
-                      'Send Reset Code'
+                      <span className="relative z-10">Send Reset Code</span>
                     )}
                   </motion.button>
                 </form>
 
-                <div className="mt-6 text-center">
-                  <p style={{ color: '#a1a1a1' }}>
+                <div className="mt-6 text-center pt-6" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>
                     Remember your password?{' '}
                     <button
                       onClick={() => navigate('/login')}
-                      className="font-medium hover:text-green-400 transition-colors"
-                      style={{ color: '#22c55e' }}
+                      className="font-semibold animated-underline"
+                      style={{ color: '#10b981' }}
                     >
                       Back to Login
                     </button>

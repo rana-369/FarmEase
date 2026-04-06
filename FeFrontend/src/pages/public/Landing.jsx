@@ -76,45 +76,67 @@ const Landing = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: 'rgba(10, 10, 10, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+      <motion.nav 
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="fixed top-0 left-0 right-0 z-50" 
+        style={{ 
+          backgroundColor: 'rgba(5, 5, 5, 0.8)', 
+          backdropFilter: 'blur(20px)', 
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.04)'
+        }}
+      >
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <motion.div 
+              className="flex items-center gap-3"
+              whileHover={{ scale: 1.02 }}
+            >
               <div 
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                className="w-11 h-11 rounded-2xl flex items-center justify-center relative overflow-hidden"
                 style={{ 
-                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                  boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
                 }}
               >
-                <FiTruck className="text-white text-lg" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                <FiTruck className="text-white text-lg relative z-10" />
               </div>
-              <span className="text-xl font-bold" style={{ color: '#ffffff' }}>AgriConnect</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
+              <span className="text-xl font-bold tracking-tight" style={{ color: '#ffffff' }}>AgriConnect</span>
+            </motion.div>
+            <div className="flex items-center gap-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/login')}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:bg-white/5"
-                style={{ color: '#a1a1a1' }}
+                className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
+                style={{ 
+                  color: 'rgba(255,255,255,0.7)',
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)'
+                }}
               >
                 Login
-              </button>
+              </motion.button>
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.05, boxShadow: '0 12px 40px rgba(16, 185, 129, 0.5)' }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/register')}
-                className="px-5 py-2 rounded-lg text-sm font-semibold"
+                className="px-6 py-2.5 rounded-xl text-sm font-semibold relative overflow-hidden"
                 style={{ 
-                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                  color: '#ffffff'
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                  color: '#ffffff',
+                  boxShadow: '0 4px 20px rgba(16, 185, 129, 0.35)'
                 }}
               >
-                Get Started
+                <span className="relative z-10">Get Started</span>
               </motion.button>
             </div>
           </div>
         </div>
-      </nav>
+      </motion.nav>
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center pt-20" style={{ 
@@ -177,45 +199,47 @@ const Landing = () => {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full mb-6"
                 style={{ 
-                  backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                  border: '1px solid rgba(34, 197, 94, 0.2)'
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%)',
+                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                  boxShadow: '0 4px 20px rgba(16, 185, 129, 0.1)'
                 }}
               >
-                <FiSun style={{ color: '#22c55e' }} />
-                <span className="text-sm font-medium" style={{ color: '#22c55e' }}>Agricultural Equipment Rental</span>
+                <FiSun style={{ color: '#10b981' }} />
+                <span className="text-sm font-semibold" style={{ color: '#10b981' }}>Agricultural Equipment Rental</span>
               </motion.div>
 
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight" style={{ color: '#ffffff' }}>
                 Modern Farming<br />
-                <span style={{ color: '#22c55e' }}>Starts Here</span>
+                <span className="text-gradient">Starts Here</span>
               </h1>
 
-              <p className="text-lg mb-8 max-w-lg" style={{ color: '#888888', lineHeight: '1.7' }}>
+              <p className="text-lg mb-8 max-w-lg" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: '1.7' }}>
                 Connect with equipment owners in your area. Browse available machinery, compare rates, and book instantly. The smart way to farm.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(16, 185, 129, 0.5)' }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => navigate('/register')}
-                  className="px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2"
+                  className="px-8 py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 relative overflow-hidden"
                   style={{ 
-                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
                     color: '#ffffff',
-                    boxShadow: '0 8px 24px rgba(34, 197, 94, 0.3)'
+                    boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35)'
                   }}
                 >
-                  Get Started
-                  <FiArrowRight />
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                  <span className="relative z-10">Get Started</span>
+                  <FiArrowRight className="relative z-10" />
                 </motion.button>
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.5)' }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => navigate('/login')}
-                  className="px-8 py-4 rounded-xl font-semibold text-lg"
+                  className="px-8 py-4 rounded-2xl font-semibold text-lg"
                   style={{ 
                     backgroundColor: 'rgba(255, 255, 255, 0.05)', 
                     color: '#ffffff',
@@ -229,18 +253,19 @@ const Landing = () => {
               {/* Stats */}
               <div className="flex items-center gap-8">
                 {[
-                  { value: stats.totalUsers, label: 'Active Users' },
-                  { value: stats.totalMachines, label: 'Equipment' },
-                  { value: stats.totalBookings, label: 'Bookings' }
+                  { value: stats.totalUsers, label: 'Active Users', gradient: 'from-emerald-500 to-green-600' },
+                  { value: stats.totalMachines, label: 'Equipment', gradient: 'from-cyan-500 to-teal-600' },
+                  { value: stats.totalBookings, label: 'Bookings', gradient: 'from-violet-500 to-purple-600' }
                 ].map((stat, index) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 + index * 0.1 }}
+                    className="group"
                   >
                     <div className="text-2xl font-bold" style={{ color: '#ffffff' }}>{stat.value}</div>
-                    <div className="text-sm" style={{ color: '#666666' }}>{stat.label}</div>
+                    <div className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>{stat.label}</div>
                   </motion.div>
                 ))}
               </div>
@@ -331,23 +356,35 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-24" style={{ backgroundColor: '#0f0f0f' }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      <section className="py-24 relative" style={{ backgroundColor: '#050505' }}>
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)'
+        }} />
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-16"
           >
+            <motion.div 
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+              style={{ 
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)'
+              }}
+            >
+              <span className="text-sm font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>Features</span>
+            </motion.div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: '#ffffff' }}>
-              Why Choose AgriConnect
+              Why Choose <span className="text-gradient">AgriConnect</span>
             </h2>
-            <p className="text-lg max-w-2xl mx-auto" style={{ color: '#666666' }}>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: 'rgba(255,255,255,0.5)' }}>
               Everything you need to manage your agricultural equipment rental business
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
@@ -357,20 +394,33 @@ const Landing = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="p-6 rounded-2xl"
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  className="p-6 rounded-2xl card-hover group relative overflow-hidden"
                   style={{ 
-                    background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)'
+                    background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    backdropFilter: 'blur(10px)'
                   }}
                 >
+                  {/* Hover glow */}
                   <div 
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                    style={{ backgroundColor: `${feature.color}15` }}
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{
+                      background: `radial-gradient(circle at 50% 0%, ${feature.color}15 0%, transparent 60%)`
+                    }}
+                  />
+                  <div 
+                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 relative transition-all duration-300 group-hover:scale-110"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${feature.color}25 0%, ${feature.color}15 100%)`,
+                      border: `1px solid ${feature.color}30`,
+                      boxShadow: `0 4px 20px ${feature.color}20`
+                    }}
                   >
-                    <Icon className="text-xl" style={{ color: feature.color }} />
+                    <Icon className="text-xl relative z-10" style={{ color: feature.color }} />
                   </div>
                   <h3 className="text-lg font-semibold mb-2" style={{ color: '#ffffff' }}>{feature.title}</h3>
-                  <p className="text-sm" style={{ color: '#888888', lineHeight: '1.6' }}>{feature.description}</p>
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>{feature.description}</p>
                 </motion.div>
               );
             })}
@@ -379,54 +429,81 @@ const Landing = () => {
       </section>
 
       {/* User Roles Section */}
-      <section className="py-24" style={{ backgroundColor: '#0a0a0a' }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      <section className="py-24 relative" style={{ backgroundColor: '#080808' }}>
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(circle at 30% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 40%), radial-gradient(circle at 70% 50%, rgba(59, 130, 246, 0.04) 0%, transparent 40%)'
+        }} />
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-16"
           >
+            <motion.div 
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+              style={{ 
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)'
+              }}
+            >
+              <span className="text-sm font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>Join Us</span>
+            </motion.div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: '#ffffff' }}>
-              Join the Platform
+              Join the <span className="text-gradient">Platform</span>
             </h2>
-            <p className="text-lg" style={{ color: '#666666' }}>
+            <p className="text-lg" style={{ color: 'rgba(255,255,255,0.5)' }}>
               Choose your role and start today
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {/* Farmer Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              whileHover={{ scale: 1.02 }}
-              className="p-8 rounded-2xl cursor-pointer"
+              whileHover={{ scale: 1.02, y: -5 }}
+              className="p-8 rounded-3xl cursor-pointer group relative overflow-hidden"
               style={{ 
-                background: 'linear-gradient(180deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.02) 100%)',
-                border: '1px solid rgba(34, 197, 94, 0.2)'
+                background: 'linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.02) 100%)',
+                border: '1px solid rgba(16, 185, 129, 0.15)',
+                backdropFilter: 'blur(10px)'
               }}
               onClick={() => navigate('/register')}
             >
+              {/* Animated glow */}
               <div 
-                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style={{
+                  background: 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)'
+                }}
+              />
+              <div 
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 relative transition-transform duration-300 group-hover:scale-110"
                 style={{ 
-                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                  boxShadow: '0 4px 16px rgba(34, 197, 94, 0.3)'
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                  boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
                 }}
               >
-                <FiSun className="text-2xl text-white" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl" />
+                <FiSun className="text-2xl text-white relative z-10" />
               </div>
               <h3 className="text-2xl font-bold mb-3" style={{ color: '#ffffff' }}>Farmer</h3>
-              <p className="mb-6" style={{ color: '#888888', lineHeight: '1.7' }}>
+              <p className="mb-6" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: '1.7' }}>
                 Browse available equipment, compare rates, and book machinery for your farming needs.
               </p>
               <ul className="space-y-3">
                 {['Browse equipment listings', 'Check availability & rates', 'Book and manage rentals', 'Track booking history'].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm" style={{ color: '#a1a1a1' }}>
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)' }}>
-                      <FiCheck className="text-xs" style={{ color: '#22c55e' }} />
+                  <li key={i} className="flex items-center gap-3 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    <div 
+                      className="w-5 h-5 rounded-full flex items-center justify-center" 
+                      style={{ 
+                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)'
+                      }}
+                    >
+                      <FiCheck className="text-xs" style={{ color: '#10b981' }} />
                     </div>
                     {item}
                   </li>
@@ -440,31 +517,46 @@ const Landing = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              whileHover={{ scale: 1.02 }}
-              className="p-8 rounded-2xl cursor-pointer"
+              whileHover={{ scale: 1.02, y: -5 }}
+              className="p-8 rounded-3xl cursor-pointer group relative overflow-hidden"
               style={{ 
-                background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%)',
-                border: '1px solid rgba(59, 130, 246, 0.2)'
+                background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.02) 100%)',
+                border: '1px solid rgba(59, 130, 246, 0.15)',
+                backdropFilter: 'blur(10px)'
               }}
               onClick={() => navigate('/register')}
             >
+              {/* Animated glow */}
               <div 
-                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style={{
+                  background: 'radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 60%)'
+                }}
+              />
+              <div 
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 relative transition-transform duration-300 group-hover:scale-110"
                 style={{ 
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                  boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3)'
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)',
+                  boxShadow: '0 8px 32px rgba(59, 130, 246, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
                 }}
               >
-                <FiTool className="text-2xl text-white" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl" />
+                <FiTool className="text-2xl text-white relative z-10" />
               </div>
               <h3 className="text-2xl font-bold mb-3" style={{ color: '#ffffff' }}>Equipment Owner</h3>
-              <p className="mb-6" style={{ color: '#888888', lineHeight: '1.7' }}>
+              <p className="mb-6" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: '1.7' }}>
                 List your farming equipment for rent and earn income when your machinery is idle.
               </p>
               <ul className="space-y-3">
                 {['List your equipment', 'Set your own rates', 'Manage booking requests', 'Track your earnings'].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm" style={{ color: '#a1a1a1' }}>
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)' }}>
+                  <li key={i} className="flex items-center gap-3 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    <div 
+                      className="w-5 h-5 rounded-full flex items-center justify-center" 
+                      style={{ 
+                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%)',
+                        border: '1px solid rgba(59, 130, 246, 0.3)'
+                      }}
+                    >
                       <FiCheck className="text-xs" style={{ color: '#3b82f6' }} />
                     </div>
                     {item}
@@ -477,9 +569,12 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 relative overflow-hidden" style={{ backgroundColor: '#0f0f0f' }}>
+      <section className="py-24 relative overflow-hidden" style={{ backgroundColor: '#050505' }}>
         <div className="absolute inset-0" style={{
-          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, transparent 50%)'
+          background: 'radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 50%)'
+        }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-3xl opacity-20" style={{
+          background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #8b5cf6 100%)'
         }} />
         <div className="relative max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <motion.div
@@ -487,32 +582,42 @@ const Landing = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
+            <motion.div 
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+              style={{ 
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)'
+              }}
+            >
+              <span className="text-sm font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>Get Started</span>
+            </motion.div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: '#ffffff' }}>
-              Ready to Transform Your Farming?
+              Ready to <span className="text-gradient">Transform</span> Your Farming?
             </h2>
-            <p className="text-lg mb-8 max-w-2xl mx-auto" style={{ color: '#888888' }}>
+            <p className="text-lg mb-8 max-w-2xl mx-auto" style={{ color: 'rgba(255,255,255,0.5)' }}>
               Join thousands of farmers and equipment owners already using AgriConnect.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(16, 185, 129, 0.5)' }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/register')}
-                className="px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2"
+                className="px-8 py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 relative overflow-hidden"
                 style={{ 
-                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
                   color: '#ffffff',
-                  boxShadow: '0 8px 24px rgba(34, 197, 94, 0.3)'
+                  boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35)'
                 }}
               >
-                Create Account
-                <FiArrowRight />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                <span className="relative z-10">Create Account</span>
+                <FiArrowRight className="relative z-10" />
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.5)' }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/login')}
-                className="px-8 py-4 rounded-xl font-semibold text-lg"
+                className="px-8 py-4 rounded-2xl font-semibold text-lg"
                 style={{ 
                   backgroundColor: 'rgba(255, 255, 255, 0.05)', 
                   color: '#ffffff',

@@ -141,14 +141,17 @@ const FarmerProfile = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
-        <div className="w-12 h-12 border-2 rounded-full animate-spin" style={{ borderColor: '#22c55e', borderTopColor: 'transparent' }}></div>
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
+        <div className="relative">
+          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }} />
+          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }} />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#0a0a0a' }}>
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -157,35 +160,37 @@ const FarmerProfile = () => {
           className="flex items-center justify-between mb-8"
         >
           <div className="flex items-center gap-4">
-            <div 
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
+            <motion.div 
+              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+              whileHover={{ scale: 1.05 }}
               style={{ 
-                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
               }}
             >
-              <FiUser className="text-xl text-white" />
-            </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              <FiUser className="text-xl text-white relative z-10" />
+            </motion.div>
             <div>
-              <h1 className="text-2xl font-bold" style={{ color: '#ffffff' }}>Profile Settings</h1>
-              <p className="text-sm" style={{ color: '#666666' }}>Manage your personal information and farm details</p>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Profile Settings</h1>
+              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Manage your personal information and farm details</p>
             </div>
           </div>
           
           {!isEditing && (
             <motion.button
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setIsEditing(true)}
-              className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2"
+              className="px-5 py-3 rounded-xl font-semibold flex items-center gap-2 relative overflow-hidden"
               style={{ 
-                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                color: '#ffffff',
-                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                color: '#ffffff'
               }}
             >
-              <FiEdit2 className="w-4 h-4" />
-              Edit Profile
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              <FiEdit2 className="w-4 h-4 relative z-10" />
+              <span className="relative z-10">Edit Profile</span>
             </motion.button>
           )}
         </motion.div>
@@ -194,14 +199,19 @@ const FarmerProfile = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
-              message.type === 'success' 
-                ? 'bg-green-500/10 border border-green-500/20 text-green-500' 
-                : 'bg-red-500/10 border border-red-500/20 text-red-500'
-            }`}
+            className="mb-6 p-4 rounded-2xl flex items-center gap-3"
+            style={{ 
+              background: message.type === 'success' 
+                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)'
+                : 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%)',
+              border: message.type === 'success' 
+                ? '1px solid rgba(16, 185, 129, 0.25)'
+                : '1px solid rgba(239, 68, 68, 0.25)',
+              color: message.type === 'success' ? '#10b981' : '#f87171'
+            }}
           >
             {message.type === 'success' ? <FiCheck /> : <FiX />}
-            <span className="text-sm font-medium">{message.text}</span>
+            <span className="text-sm font-semibold">{message.text}</span>
           </motion.div>
         )}
 
@@ -213,19 +223,22 @@ const FarmerProfile = () => {
             className="lg:col-span-4"
           >
             <div 
-              className="p-6 rounded-2xl text-center"
+              className="p-6 rounded-3xl text-center relative overflow-hidden"
               style={{ 
-                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.06)'
+                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                backdropFilter: 'blur(10px)'
               }}
             >
+              <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 60%)' }} />
               {/* Avatar */}
               <div className="relative inline-block mb-4">
                 <div 
-                  className="w-28 h-28 rounded-2xl overflow-hidden flex items-center justify-center mx-auto"
+                  className="w-28 h-28 rounded-2xl overflow-hidden flex items-center justify-center mx-auto relative"
                   style={{ 
-                    background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%)',
-                    border: '2px solid rgba(34, 197, 94, 0.3)'
+                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%)',
+                    border: '2px solid rgba(16, 185, 129, 0.3)',
+                    boxShadow: '0 8px 32px rgba(16, 185, 129, 0.2)'
                   }}
                 >
                   {profile.profileImageUrl ? (
@@ -236,7 +249,7 @@ const FarmerProfile = () => {
                       onError={(e) => { e.target.style.display = 'none'; }}
                     />
                   ) : (
-                    <FiUser className="text-5xl" style={{ color: '#22c55e' }} />
+                    <FiUser className="text-5xl" style={{ color: '#10b981' }} />
                   )}
                 </div>
                 <motion.button 
@@ -244,17 +257,18 @@ const FarmerProfile = () => {
                   whileTap={{ scale: 0.9 }}
                   onClick={handleImageClick}
                   disabled={uploading}
-                  className="absolute -bottom-1 -right-1 w-9 h-9 rounded-xl flex items-center justify-center"
+                  className="absolute -bottom-1 -right-1 w-10 h-10 rounded-xl flex items-center justify-center relative overflow-hidden"
                   style={{ 
-                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.4)',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                    boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)',
                     opacity: uploading ? 0.7 : 1
                   }}
                 >
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
                   {uploading ? (
-                    <FiRefreshCw className="text-white text-sm animate-spin" />
+                    <FiRefreshCw className="text-white text-sm animate-spin relative z-10" />
                   ) : (
-                    <FiCamera className="text-white text-sm" />
+                    <FiCamera className="text-white text-sm relative z-10" />
                   )}
                 </motion.button>
                 <input
@@ -267,15 +281,15 @@ const FarmerProfile = () => {
               </div>
 
               {/* User Info */}
-              <h3 className="text-lg font-semibold mb-1" style={{ color: '#ffffff' }}>
+              <h3 className="text-lg font-bold mb-1 relative" style={{ color: '#ffffff' }}>
                 {profile.fullName || 'User Name'}
               </h3>
               <span 
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold relative"
                 style={{ 
-                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
-                  color: '#22c55e',
-                  border: '1px solid rgba(34, 197, 94, 0.3)'
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%)',
+                  color: '#10b981',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
                 }}
               >
                 <FiCheck className="text-xs" />
@@ -283,23 +297,29 @@ const FarmerProfile = () => {
               </span>
 
               {/* Quick Stats */}
-              <div className="mt-6 pt-4" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+              <div className="mt-6 pt-4 relative" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
                 <div className="grid grid-cols-2 gap-3">
                   <div 
-                    className="p-3 rounded-xl"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
+                    className="p-4 rounded-2xl"
+                    style={{ 
+                      background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                      border: '1px solid rgba(255, 255, 255, 0.04)'
+                    }}
                   >
-                    <p className="text-xs mb-1" style={{ color: '#666666' }}>Farm Size</p>
-                    <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>
+                    <p className="text-xs font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>Farm Size</p>
+                    <p className="text-sm font-bold" style={{ color: '#ffffff' }}>
                       {profile.farmSize || '0'} Acres
                     </p>
                   </div>
                   <div 
-                    className="p-3 rounded-xl"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
+                    className="p-4 rounded-2xl"
+                    style={{ 
+                      background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                      border: '1px solid rgba(255, 255, 255, 0.04)'
+                    }}
                   >
-                    <p className="text-xs mb-1" style={{ color: '#666666' }}>Location</p>
-                    <p className="text-sm font-semibold truncate" style={{ color: '#ffffff' }}>
+                    <p className="text-xs font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>Location</p>
+                    <p className="text-sm font-bold truncate" style={{ color: '#ffffff' }}>
                       {profile.location || 'N/A'}
                     </p>
                   </div>
@@ -315,18 +335,20 @@ const FarmerProfile = () => {
             className="lg:col-span-8"
           >
             <div 
-              className="rounded-2xl overflow-hidden"
+              className="rounded-3xl overflow-hidden relative"
               style={{ 
-                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.06)'
+                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                backdropFilter: 'blur(10px)'
               }}
             >
-              <form onSubmit={handleSave} className="p-6">
+              <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.03) 0%, transparent 50%)' }} />
+              <form onSubmit={handleSave} className="p-6 relative">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* Full Name */}
                   <div className="space-y-2">
-                    <label htmlFor="fullName" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
-                      <FiUser className="text-green-500" />
+                    <label htmlFor="fullName" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                      <FiUser style={{ color: '#10b981' }} />
                       Full Name
                     </label>
                     <input 
@@ -336,11 +358,13 @@ const FarmerProfile = () => {
                       onChange={handleChange}
                       disabled={!isEditing}
                       autoComplete="name"
-                      className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200"
+                      className="w-full px-4 py-3.5 rounded-2xl outline-none transition-all duration-200 font-medium"
                       style={{ 
-                        backgroundColor: isEditing ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)', 
+                        background: isEditing 
+                          ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)'
+                          : 'rgba(255, 255, 255, 0.02)', 
                         border: isEditing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.05)',
-                        color: isEditing ? '#ffffff' : '#a1a1a1',
+                        color: isEditing ? '#ffffff' : 'rgba(255,255,255,0.6)',
                         cursor: isEditing ? 'text' : 'default'
                       }}
                     />
@@ -348,8 +372,8 @@ const FarmerProfile = () => {
 
                   {/* Email */}
                   <div className="space-y-2">
-                    <label htmlFor="email" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
-                      <FiMail className="text-blue-500" />
+                    <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                      <FiMail style={{ color: '#3b82f6' }} />
                       Email Address
                     </label>
                     <input 
@@ -358,19 +382,19 @@ const FarmerProfile = () => {
                       disabled 
                       value={profile.email} 
                       autoComplete="email"
-                      className="w-full px-4 py-3 rounded-xl outline-none cursor-not-allowed"
+                      className="w-full px-4 py-3.5 rounded-2xl outline-none cursor-not-allowed font-medium"
                       style={{ 
-                        backgroundColor: 'rgba(255, 255, 255, 0.02)', 
+                        background: 'rgba(255, 255, 255, 0.02)', 
                         border: '1px solid rgba(255, 255, 255, 0.05)', 
-                        color: '#666666'
+                        color: 'rgba(255,255,255,0.75)'
                       }}
                     />
                   </div>
 
                   {/* Phone */}
                   <div className="space-y-2">
-                    <label htmlFor="phoneNumber" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
-                      <FiPhone className="text-purple-500" />
+                    <label htmlFor="phoneNumber" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                      <FiPhone style={{ color: '#a855f7' }} />
                       Phone Number
                     </label>
                     <input 
@@ -380,11 +404,13 @@ const FarmerProfile = () => {
                       onChange={handleChange}
                       disabled={!isEditing}
                       autoComplete="tel"
-                      className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200"
+                      className="w-full px-4 py-3.5 rounded-2xl outline-none transition-all duration-200 font-medium"
                       style={{ 
-                        backgroundColor: isEditing ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)', 
+                        background: isEditing 
+                          ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)'
+                          : 'rgba(255, 255, 255, 0.02)', 
                         border: isEditing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.05)',
-                        color: isEditing ? '#ffffff' : '#a1a1a1',
+                        color: isEditing ? '#ffffff' : 'rgba(255,255,255,0.6)',
                         cursor: isEditing ? 'text' : 'default'
                       }}
                     />
@@ -392,8 +418,8 @@ const FarmerProfile = () => {
 
                   {/* Location */}
                   <div className="space-y-2">
-                    <label htmlFor="location" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
-                      <FiMapPin className="text-red-500" />
+                    <label htmlFor="location" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                      <FiMapPin style={{ color: '#ef4444' }} />
                       Location
                     </label>
                     <input 
@@ -403,11 +429,13 @@ const FarmerProfile = () => {
                       onChange={handleChange}
                       disabled={!isEditing}
                       autoComplete="address-level2"
-                      className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200"
+                      className="w-full px-4 py-3.5 rounded-2xl outline-none transition-all duration-200 font-medium"
                       style={{ 
-                        backgroundColor: isEditing ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)', 
+                        background: isEditing 
+                          ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)'
+                          : 'rgba(255, 255, 255, 0.02)', 
                         border: isEditing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.05)',
-                        color: isEditing ? '#ffffff' : '#a1a1a1',
+                        color: isEditing ? '#ffffff' : 'rgba(255,255,255,0.6)',
                         cursor: isEditing ? 'text' : 'default'
                       }}
                     />
@@ -415,8 +443,8 @@ const FarmerProfile = () => {
 
                   {/* Farm Size */}
                   <div className="space-y-2 md:col-span-2">
-                    <label htmlFor="farmSize" className="flex items-center gap-2 text-sm font-medium" style={{ color: '#a1a1a1' }}>
-                      <FiGrid className="text-yellow-500" />
+                    <label htmlFor="farmSize" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                      <FiGrid style={{ color: '#f59e0b' }} />
                       Farm Size (Acres)
                     </label>
                     <input 
@@ -427,11 +455,13 @@ const FarmerProfile = () => {
                       disabled={!isEditing}
                       placeholder="e.g. 50"
                       autoComplete="off"
-                      className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200"
+                      className="w-full px-4 py-3.5 rounded-2xl outline-none transition-all duration-200 font-medium"
                       style={{ 
-                        backgroundColor: isEditing ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)', 
+                        background: isEditing 
+                          ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)'
+                          : 'rgba(255, 255, 255, 0.02)', 
                         border: isEditing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.05)',
-                        color: isEditing ? '#ffffff' : '#a1a1a1',
+                        color: isEditing ? '#ffffff' : 'rgba(255,255,255,0.6)',
                         cursor: isEditing ? 'text' : 'default'
                       }}
                     />
@@ -441,7 +471,7 @@ const FarmerProfile = () => {
                 {/* Action Buttons */}
                 {isEditing && (
                   <div 
-                    className="flex justify-end gap-3 mt-6 pt-6"
+                    className="flex justify-end gap-3 mt-6 pt-6 relative"
                     style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}
                   >
                     <motion.button 
@@ -449,11 +479,11 @@ const FarmerProfile = () => {
                       onClick={handleCancel}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all"
+                      className="px-5 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all"
                       style={{ 
                         backgroundColor: 'rgba(255, 255, 255, 0.05)', 
                         border: '1px solid rgba(255, 255, 255, 0.1)', 
-                        color: '#a1a1a1'
+                        color: 'rgba(255,255,255,0.6)'
                       }}
                     >
                       <FiX className="w-4 h-4" />
@@ -462,17 +492,17 @@ const FarmerProfile = () => {
                     <motion.button 
                       type="submit"
                       disabled={saving}
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}
                       whileTap={{ scale: 0.98 }}
-                      className="px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all"
+                      className="px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all relative overflow-hidden"
                       style={{ 
-                        background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                        color: '#ffffff',
-                        boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                        color: '#ffffff'
                       }}
                     >
-                      {saving ? <FiRefreshCw className="w-4 h-4 animate-spin" /> : <FiSave className="w-4 h-4" />}
-                      <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                      {saving ? <FiRefreshCw className="w-4 h-4 animate-spin relative z-10" /> : <FiSave className="w-4 h-4 relative z-10" />}
+                      <span className="relative z-10">{saving ? 'Saving...' : 'Save Changes'}</span>
                     </motion.button>
                   </div>
                 )}
@@ -480,7 +510,7 @@ const FarmerProfile = () => {
 
               {/* 2FA Section */}
               <div 
-                className="px-6 pb-6"
+                className="px-6 pb-6 relative"
                 style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}
               >
                 <div className="pt-6">

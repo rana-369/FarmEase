@@ -93,14 +93,17 @@ const OwnerRequests = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
-        <div className="w-12 h-12 border-2 rounded-full animate-spin" style={{ borderColor: '#22c55e', borderTopColor: 'transparent' }}></div>
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
+        <div className="relative">
+          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(59, 130, 246, 0.2)', borderTopColor: '#3b82f6' }} />
+          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)' }} />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-8" style={{ backgroundColor: '#0a0a0a' }}>
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
       {/* Success Notification */}
       <AnimatePresence>
         {notification && (
@@ -110,8 +113,12 @@ const OwnerRequests = () => {
             exit={{ opacity: 0, y: -50, x: '-50%' }}
             className="fixed top-6 left-1/2 z-50 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3"
             style={{
-              backgroundColor: notification.type === 'success' ? 'rgba(34, 197, 94, 0.95)' : notification.type === 'error' ? 'rgba(239, 68, 68, 0.95)' : 'rgba(59, 130, 246, 0.95)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: notification.type === 'success' 
+                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                : notification.type === 'error' 
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               backdropFilter: 'blur(10px)'
             }}
           >
@@ -121,10 +128,23 @@ const OwnerRequests = () => {
         )}
       </AnimatePresence>
       
-      <div className="max-w-7xl mx-auto space-y-10">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-4xl font-bold text-white mb-2">Rental Requests</h1>
-          <p className="text-lg text-gray-400">Manage incoming booking requests for your equipment</p>
+      <div className="max-w-7xl mx-auto space-y-8">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4">
+          <motion.div 
+            className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+            whileHover={{ scale: 1.05 }}
+            style={{ 
+              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)',
+              boxShadow: '0 8px 32px rgba(59, 130, 246, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+            <FiCalendar className="text-xl text-white relative z-10" />
+          </motion.div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Rental Requests</h1>
+            <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Manage incoming booking requests for your equipment</p>
+          </div>
         </motion.div>
 
         <div className="space-y-4">
@@ -135,49 +155,75 @@ const OwnerRequests = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="p-8 rounded-3xl transition-all"
+                whileHover={{ scale: 1.005 }}
+                className="p-6 rounded-3xl transition-all relative overflow-hidden"
                 style={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
                   backdropFilter: 'blur(10px)'
                 }}
               >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)' }} />
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative">
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-4">
-                      <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-                        <FiUser className="text-2xl text-blue-500" />
+                      <div 
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+                        style={{ 
+                          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.15) 100%)',
+                          border: '1px solid rgba(59, 130, 246, 0.25)'
+                        }}
+                      >
+                        <FiUser className="text-2xl" style={{ color: '#3b82f6' }} />
                       </div>
                       <div>
-                        <h3 className="text-2xl font-bold text-white">{request.farmerName}</h3>
-                        <div className="flex items-center gap-2 text-gray-400">
+                        <h3 className="text-xl font-bold" style={{ color: '#ffffff' }}>{request.farmerName}</h3>
+                        <div className="flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.8)' }}>
                           <FiTruck className="text-sm" />
-                          <span>Requested {request.machineName}</span>
+                          <span className="text-sm font-medium">Requested {request.machineName}</span>
                         </div>
                       </div>
-                      <span className="ml-auto lg:ml-4 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border" 
+                      <span 
+                        className="ml-auto lg:ml-4 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest" 
                         style={{ 
-                          backgroundColor: getStatusStyle(request.status).bg,
+                          background: `linear-gradient(135deg, ${getStatusStyle(request.status).bg} 0%, ${getStatusStyle(request.status).bg} 100%)`,
                           color: getStatusStyle(request.status).color,
-                          borderColor: getStatusStyle(request.status).border
-                        }}>
+                          border: `1px solid ${getStatusStyle(request.status).border}`
+                        }}
+                      >
                         {request.status}
                       </span>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                      <div className="flex items-center gap-3 text-gray-300">
-                        <FiCalendar className="text-blue-500 text-lg" />
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-10 h-10 rounded-xl flex items-center justify-center"
+                          style={{ 
+                            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%)',
+                            border: '1px solid rgba(59, 130, 246, 0.2)'
+                          }}
+                        >
+                          <FiCalendar className="text-lg" style={{ color: '#3b82f6' }} />
+                        </div>
                         <div>
-                          <p className="text-xs uppercase font-bold text-gray-500 tracking-wider">Requested Period</p>
-                          <p className="font-medium">{new Date(request.createdAt).toLocaleDateString()} (Last {request.hours} hours)</p>
+                          <p className="text-xs uppercase font-bold tracking-wider" style={{ color: 'rgba(255,255,255,0.8)' }}>Requested Period</p>
+                          <p className="font-semibold" style={{ color: '#ffffff' }}>{new Date(request.createdAt).toLocaleDateString()} (Last {request.hours} hours)</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 text-gray-300">
-                        <FiClock className="text-blue-500 text-lg" />
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-10 h-10 rounded-xl flex items-center justify-center"
+                          style={{ 
+                            background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%)',
+                            border: '1px solid rgba(168, 85, 247, 0.2)'
+                          }}
+                        >
+                          <FiClock className="text-lg" style={{ color: '#a855f7' }} />
+                        </div>
                         <div>
-                          <p className="text-xs uppercase font-bold text-gray-500 tracking-wider">Duration</p>
-                          <p className="font-medium">{request.hours} Hours</p>
+                          <p className="text-xs uppercase font-bold tracking-wider" style={{ color: 'rgba(255,255,255,0.8)' }}>Duration</p>
+                          <p className="font-semibold" style={{ color: '#ffffff' }}>{request.hours} Hours</p>
                         </div>
                       </div>
                     </div>
@@ -185,71 +231,119 @@ const OwnerRequests = () => {
 
                   <div className="flex flex-col items-end gap-4 min-w-[240px]">
                     <div className="text-right">
-                      <p className="text-xs uppercase font-bold text-gray-500 tracking-widest mb-1">Your Earnings</p>
-                      <p className="text-4xl font-bold text-green-500">₹{(request.baseAmount || request.totalAmount).toLocaleString()}</p>
+                      <p className="text-xs uppercase font-bold tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>Your Earnings</p>
+                      <p className="text-3xl font-bold" style={{ color: '#10b981' }}>₹{(request.baseAmount || request.totalAmount).toLocaleString()}</p>
                       {request.platformFee > 0 && (
-                        <p className="text-xs text-gray-500 mt-1">(after ₹{request.platformFee} platform fee)</p>
+                        <p className="text-xs font-medium mt-1" style={{ color: 'rgba(255,255,255,0.8)' }}>(after ₹{request.platformFee} platform fee)</p>
                       )}
                     </div>
                     
                     {request.status === 'Pending' ? (
                       <div className="flex gap-3 w-full">
-                        <button 
+                        <motion.button 
+                          whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={() => handleAction(request.id, 'accept')}
-                          className="flex-1 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all bg-green-500 text-black hover:bg-green-400 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-green-500/20"
+                          className="flex-1 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 relative overflow-hidden"
+                          style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)', color: '#ffffff' }}
                         >
-                          <FiCheck className="text-xl" /> Accept
-                        </button>
-                        <button 
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                          <FiCheck className="text-lg relative z-10" />
+                          <span className="relative z-10">Accept</span>
+                        </motion.button>
+                        <motion.button 
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={() => handleAction(request.id, 'reject')}
-                          className="flex-1 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500/20 hover:scale-[1.02] active:scale-[0.98]"
+                          className="flex-1 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2"
+                          style={{ 
+                            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%)',
+                            border: '1px solid rgba(239, 68, 68, 0.25)',
+                            color: '#f87171'
+                          }}
                         >
-                          <FiX className="text-xl" /> Reject
-                        </button>
+                          <FiX className="text-lg" />
+                          <span>Reject</span>
+                        </motion.button>
                       </div>
                     ) : request.status === 'Active' ? (
                       <div className="w-full flex flex-col gap-3">
-                        <div className="p-4 rounded-xl text-center border border-green-500/20 bg-green-500/5">
-                           <p className="text-sm font-medium text-green-500">
+                        <div 
+                          className="p-4 rounded-xl text-center relative overflow-hidden"
+                          style={{ 
+                            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
+                            border: '1px solid rgba(16, 185, 129, 0.2)'
+                          }}
+                        >
+                           <p className="text-sm font-semibold" style={{ color: '#10b981' }}>
                              Rental in Progress
                            </p>
                         </div>
-                        <button 
+                        <motion.button 
+                          whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={() => handleAction(request.id, 'complete')}
-                          className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all bg-green-500 text-black hover:bg-green-400 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-green-500/20"
+                          className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 relative overflow-hidden"
+                          style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)', color: '#ffffff' }}
                         >
-                          <FiCheck className="text-xl" /> Mark as Completed
-                        </button>
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                          <FiCheck className="text-lg relative z-10" />
+                          <span className="relative z-10">Mark as Completed</span>
+                        </motion.button>
                       </div>
                     ) : request.status === 'Completed' ? (
                       <div className="w-full flex flex-col gap-3">
-                        <div className="p-4 rounded-xl text-center border border-green-500/30 bg-green-500/10">
-                           <p className="text-sm font-bold text-green-500">
+                        <div 
+                          className="p-4 rounded-xl text-center relative overflow-hidden"
+                          style={{ 
+                            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)',
+                            border: '1px solid rgba(16, 185, 129, 0.25)'
+                          }}
+                        >
+                           <p className="text-sm font-bold" style={{ color: '#10b981' }}>
                              ✓ Completed
                            </p>
                         </div>
-                        <button 
+                        <motion.button 
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={() => setSelectedRequest(request)}
-                          className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border border-white/10 hover:bg-white/5"
-                          style={{ color: '#22c55e' }}
+                          className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2"
+                          style={{ 
+                            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            color: '#10b981'
+                          }}
                         >
                           <FiInfo /> View Details
-                        </button>
+                        </motion.button>
                       </div>
                     ) : (
                       <div className="w-full flex flex-col gap-3">
-                        <div className="p-4 rounded-xl text-center border border-red-500/20 bg-red-500/5">
-                           <p className="text-sm font-medium text-red-500">
+                        <div 
+                          className="p-4 rounded-xl text-center relative overflow-hidden"
+                          style={{ 
+                            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)',
+                            border: '1px solid rgba(239, 68, 68, 0.2)'
+                          }}
+                        >
+                           <p className="text-sm font-semibold" style={{ color: '#f87171' }}>
                              Request {request.status.toUpperCase()}
                            </p>
                         </div>
-                        <button 
+                        <motion.button 
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={() => setSelectedRequest(request)}
-                          className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border border-white/10 hover:bg-white/5"
-                          style={{ color: '#22c55e' }}
+                          className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2"
+                          style={{ 
+                            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            color: '#10b981'
+                          }}
                         >
                           <FiInfo /> View Details
-                        </button>
+                        </motion.button>
                       </div>
                     )}
                   </div>
@@ -257,10 +351,24 @@ const OwnerRequests = () => {
               </motion.div>
             ))
           ) : (
-            <div className="text-center py-32 rounded-3xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
-              <FiCalendar className="text-6xl text-gray-700 mx-auto mb-6" />
-              <h3 className="text-2xl font-bold text-white mb-2">No pending requests</h3>
-              <p className="text-gray-400">When farmers request your equipment, they will appear here.</p>
+            <div 
+              className="text-center py-32 rounded-3xl relative overflow-hidden"
+              style={{ 
+                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                border: '1px dashed rgba(255, 255, 255, 0.1)'
+              }}
+            >
+              <div 
+                className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 relative overflow-hidden"
+                style={{ 
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)'
+                }}
+              >
+                <FiCalendar className="text-4xl" style={{ color: 'rgba(255,255,255,0.6)' }} />
+              </div>
+              <h3 className="text-xl font-bold mb-2" style={{ color: '#ffffff' }}>No pending requests</h3>
+              <p className="font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>When farmers request your equipment, they will appear here.</p>
             </div>
           )}
         </div>
@@ -283,60 +391,66 @@ const OwnerRequests = () => {
               alignItems: 'center',
               justifyContent: 'center',
               padding: '16px',
-              backgroundColor: 'rgba(0, 0, 0, 0.8)'
+              backgroundColor: 'rgba(0, 0, 0, 0.85)',
+              backdropFilter: 'blur(8px)'
             }}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               onClick={(e) => e.stopPropagation()}
+              className="relative overflow-hidden"
               style={{
                 width: '100%',
                 maxWidth: '512px',
                 borderRadius: '24px',
                 padding: '32px',
-                backgroundColor: '#1a1a1a',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.1) 0%, transparent 60%)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }} className="relative">
                 <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff' }}>Request Details</h2>
-                <button 
+                <motion.button 
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => setSelectedRequest(null)}
-                  style={{ padding: '8px', borderRadius: '8px', cursor: 'pointer', background: 'transparent', border: 'none' }}
+                  style={{ padding: '8px', borderRadius: '8px', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: 'none' }}
                 >
-                  <FiX style={{ fontSize: '20px', color: '#a1a1a1' }} />
-                </button>
+                  <FiX style={{ fontSize: '20px', color: 'rgba(255,255,255,0.6)' }} />
+                </motion.button>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} className="relative">
                 <div>
-                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Farmer</p>
+                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>Farmer</p>
                   <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff' }}>{selectedRequest.farmerName}</p>
                 </div>
                 <div>
-                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Equipment</p>
+                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>Equipment</p>
                   <p style={{ fontSize: '18px', fontWeight: '500', color: '#ffffff' }}>{selectedRequest.machineName}</p>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div>
-                    <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Duration</p>
+                    <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>Duration</p>
                     <p style={{ fontWeight: '500', color: '#ffffff' }}>{selectedRequest.hours} Hours</p>
                   </div>
                   <div>
-                    <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Requested</p>
+                    <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>Requested</p>
                     <p style={{ fontWeight: '500', color: '#ffffff' }}>{new Date(selectedRequest.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
                 <div>
-                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Status</p>
+                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>Status</p>
                   <span style={{ 
                     display: 'inline-block',
-                    padding: '4px 12px',
+                    padding: '6px 16px',
                     borderRadius: '9999px',
                     fontSize: '14px',
                     fontWeight: 'bold',
-                    backgroundColor: getStatusStyle(selectedRequest.status).bg, 
+                    background: `linear-gradient(135deg, ${getStatusStyle(selectedRequest.status).bg} 0%, ${getStatusStyle(selectedRequest.status).bg} 100%)`, 
                     color: getStatusStyle(selectedRequest.status).color,
                     border: `1px solid ${getStatusStyle(selectedRequest.status).border}`
                   }}>
@@ -344,34 +458,37 @@ const OwnerRequests = () => {
                   </span>
                 </div>
                 <div>
-                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Your Earnings (Net)</p>
-                  <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#22c55e' }}>₹{(selectedRequest.baseAmount || selectedRequest.totalAmount)?.toLocaleString()}</p>
+                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>Your Earnings (Net)</p>
+                  <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#10b981' }}>₹{(selectedRequest.baseAmount || selectedRequest.totalAmount)?.toLocaleString()}</p>
                   {selectedRequest.platformFee > 0 && (
-                    <p style={{ fontSize: '12px', color: '#666666', marginTop: '4px' }}>Platform fee: ₹{selectedRequest.platformFee}</p>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', marginTop: '4px' }}>Platform fee: ₹{selectedRequest.platformFee}</p>
                   )}
                 </div>
                 <div>
-                  <p style={{ fontSize: '14px', color: '#a1a1a1' }}>Request ID</p>
+                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>Request ID</p>
                   <p style={{ fontFamily: 'monospace', color: '#ffffff' }}>#{selectedRequest.id}</p>
                 </div>
               </div>
 
-              <button 
+              <motion.button 
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
                 onClick={() => setSelectedRequest(null)}
+                className="relative"
                 style={{
                   width: '100%',
                   marginTop: '24px',
-                  padding: '12px',
-                  borderRadius: '12px',
+                  padding: '14px',
+                  borderRadius: '14px',
                   fontWeight: 'bold',
                   color: '#ffffff',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'transparent',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
                   cursor: 'pointer'
                 }}
               >
                 Close
-              </button>
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
