@@ -47,6 +47,18 @@ namespace FarmEase.Controllers
             return Ok(new { Message = message });
         }
 
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var (success, message) = await _userService.DeleteUserAsync(id, currentUserId ?? "");
+            
+            if (!success)
+                return BadRequest(new { Message = message });
+
+            return Ok(new { Message = message });
+        }
+
         [HttpGet("farmers")]
         [Authorize] // Any authenticated user can view farmers
         public async Task<IActionResult> GetFarmers()

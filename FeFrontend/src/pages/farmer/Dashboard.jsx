@@ -89,9 +89,16 @@ const FarmerDashboard = () => {
     }
   ];
 
+  // Farmer role color config
+  const farmerColor = {
+    start: '#10b981',
+    end: '#059669',
+    glow: 'rgba(16, 185, 129, 0.15)'
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
+      <div className="page-content-new flex items-center justify-center min-h-screen">
         <div className="relative">
           <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }} />
           <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }} />
@@ -101,35 +108,33 @@ const FarmerDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }} 
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-4">
-            <motion.div 
-              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
-              whileHover={{ scale: 1.05 }}
-              style={{ 
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
-                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
-              }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-              <FiSun className="text-xl text-white relative z-10" />
-            </motion.div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Farmer Dashboard</h1>
-              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Manage your equipment rentals</p>
-            </div>
-          </div>
-        </motion.div>
+    <div className="page-content-new">
+      {/* Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }}
+        className="page-header-new"
+      >
+        <div>
+          <h1 className="page-title-new">Farmer Dashboard</h1>
+          <p className="page-subtitle-new">Manage your equipment rentals</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <motion.div 
+            className="logo-icon-new"
+            whileHover={{ scale: 1.05 }}
+            style={{ 
+              background: `linear-gradient(135deg, ${farmerColor.start} 0%, ${farmerColor.end} 100%)`,
+              boxShadow: `0 8px 32px ${farmerColor.start}35`
+            }}
+          >
+            <FiSun />
+          </motion.div>
+        </div>
+      </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div className="stats-grid">
           {statCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -139,38 +144,24 @@ const FarmerDashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.02, y: -4 }}
-                className="p-6 rounded-3xl cursor-pointer group relative overflow-hidden"
-                style={{ 
-                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                  backdropFilter: 'blur(10px)'
-                }}
+                className="stat-card-new"
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}10 0%, transparent 60%)` }} />
-                <div className="flex items-center justify-between mb-4">
-                  <div 
-                    className="w-12 h-12 rounded-xl flex items-center justify-center relative transition-transform duration-300 group-hover:scale-110"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${stat.color}25 0%, ${stat.color}15 100%)`,
-                      border: `1px solid ${stat.color}30`,
-                      boxShadow: `0 4px 20px ${stat.color}20`
-                    }}
-                  >
-                    <Icon className="text-lg relative z-10" style={{ color: stat.color }} />
+                <div className="stat-info">
+                  <p className="stat-title-new">{stat.title}</p>
+                  <h3 className="stat-value-new">{stat.value}</h3>
+                  <div className="stat-trend-new up">
+                    <span>{stat.change}</span>
                   </div>
-                  <span 
-                    className="text-xs font-semibold px-3 py-1.5 rounded-full"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`,
-                      border: `1px solid ${stat.color}30`,
-                      color: stat.color 
-                    }}
-                  >
-                    {stat.change}
-                  </span>
                 </div>
-                <h3 className="text-3xl font-bold mb-1" style={{ color: '#ffffff' }}>{stat.value}</h3>
-                <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>{stat.title}</p>
+                <div 
+                  className="stat-icon-new"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`,
+                    color: stat.color 
+                  }}
+                >
+                  <Icon />
+                </div>
               </motion.div>
             );
           })}
@@ -181,39 +172,33 @@ const FarmerDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="p-6 rounded-3xl mb-8 relative overflow-hidden"
-          style={{ 
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            backdropFilter: 'blur(10px)'
-          }}
+          className="table-container-new p-6 mb-8"
         >
-          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)' }} />
-          <div className="flex items-center justify-between mb-6 relative">
+          <div className="table-header-new" style={{ border: 'none', padding: '0 0 16px 0' }}>
             <div className="flex items-center gap-3">
               <div 
-                className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
+                className="stat-icon-new"
                 style={{ 
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%)',
-                  border: '1px solid rgba(16, 185, 129, 0.25)'
+                  background: `linear-gradient(135deg, ${farmerColor.start}20 0%, ${farmerColor.end}15 100%)`,
+                  color: farmerColor.start
                 }}
               >
-                <FiPackage className="text-lg" style={{ color: '#10b981' }} />
+                <FiPackage />
               </div>
-              <h2 className="text-lg font-semibold" style={{ color: '#ffffff' }}>Recent Rentals</h2>
+              <h2 className="table-title-new">Recent Rentals</h2>
             </div>
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate('/farmer/bookings')}
-              className="text-sm font-semibold px-4 py-2 rounded-xl transition-all animated-underline" 
-              style={{ color: '#10b981' }}
+              className="secondary-button" 
+              style={{ padding: '8px 16px', fontSize: '14px' }}
             >
               View All →
             </motion.button>
           </div>
 
-          <div className="space-y-3 relative">
+          <div className="space-y-3">
             {recentBookings.length > 0 ? recentBookings.map((booking, index) => (
               <motion.div
                 key={booking.id}
@@ -221,25 +206,22 @@ const FarmerDashboard = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 + index * 0.05 }}
                 whileHover={{ scale: 1.01, x: 4 }}
-                className="flex items-center justify-between p-4 rounded-2xl transition-all group"
-                style={{ 
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  border: '1px solid rgba(255, 255, 255, 0.04)'
-                }}
+                className="stat-card-new flex items-center justify-between"
+                style={{ padding: '16px' }}
               >
                 <div className="flex items-center gap-4">
                   <div 
-                    className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden transition-transform duration-300 group-hover:scale-105"
+                    className="nav-item-icon"
                     style={{ 
-                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)',
-                      border: '1px solid rgba(16, 185, 129, 0.2)'
+                      background: `linear-gradient(135deg, ${farmerColor.start}15 0%, ${farmerColor.end}10 100%)`,
+                      color: farmerColor.start
                     }}
                   >
-                    <FiTruck className="text-lg" style={{ color: '#10b981' }} />
+                    <FiTruck />
                   </div>
                   <div>
                     <h3 className="font-semibold" style={{ color: '#ffffff' }}>{booking.machineName}</h3>
-                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>{booking.ownerName}</p>
+                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>{booking.ownerName}</p>
                   </div>
                 </div>
 
@@ -249,47 +231,29 @@ const FarmerDashboard = () => {
                     <span>{booking.startDate}</span>
                   </div>
                   <span 
-                    className="px-3 py-1.5 rounded-full text-xs font-semibold"
-                    style={{ 
-                      background: booking.status.toLowerCase() === 'active' 
-                        ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%)'
-                        : 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(139, 92, 246, 0.15) 100%)',
-                      border: booking.status.toLowerCase() === 'active' 
-                        ? '1px solid rgba(16, 185, 129, 0.3)'
-                        : '1px solid rgba(168, 85, 247, 0.3)',
-                      color: booking.status.toLowerCase() === 'active' ? '#10b981' : '#a855f7'
-                    }}
+                    className={`badge ${booking.status.toLowerCase() === 'active' ? 'badge-success' : 'badge-info'}`}
                   >
                     {booking.status}
                   </span>
-                  <span className="font-bold text-lg" style={{ color: '#10b981' }}>₹{booking.totalCost.toLocaleString()}</span>
+                  <span className="font-bold text-lg" style={{ color: farmerColor.start }}>₹{booking.totalCost.toLocaleString()}</span>
                 </div>
               </motion.div>
             )) : (
               <div className="text-center py-12">
                 <div 
-                  className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden"
-                  style={{ 
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)'
-                  }}
+                  className="stat-icon-new mx-auto mb-4"
+                  style={{ background: 'rgba(255, 255, 255, 0.04)', color: 'rgba(255,255,255,0.4)' }}
                 >
-                  <FiPackage className="text-3xl" style={{ color: 'rgba(255,255,255,0.6)' }} />
+                  <FiPackage />
                 </div>
-                <p className="mb-6 font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>No rentals yet</p>
+                <p className="mb-6 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>No rentals yet</p>
                 <motion.button
-                  whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(16, 185, 129, 0.5)' }}
+                  whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => navigate('/farmer/machines')}
-                  className="px-6 py-3.5 rounded-2xl font-semibold relative overflow-hidden"
-                  style={{ 
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
-                    color: '#ffffff',
-                    boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35)'
-                  }}
+                  className="primary-button"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-                  <span className="relative z-10">Browse Equipment</span>
+                  Browse Equipment
                 </motion.button>
               </div>
             )}
@@ -302,49 +266,33 @@ const FarmerDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="p-6 rounded-3xl relative overflow-hidden"
-            style={{ 
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              backdropFilter: 'blur(10px)'
-            }}
+            className="table-container-new p-6"
           >
-            <h3 className="text-lg font-semibold mb-4" style={{ color: '#ffffff' }}>Quick Actions</h3>
+            <h3 className="table-title-new mb-4">Quick Actions</h3>
             <div className="space-y-3">
               <motion.button
-                whileHover={{ scale: 1.01, boxShadow: '0 12px 40px rgba(16, 185, 129, 0.5)' }}
+                whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
                 onClick={() => navigate('/farmer/machines')}
-                className="w-full flex items-center justify-between p-4 rounded-2xl relative overflow-hidden group"
-                style={{ 
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
-                  color: '#ffffff',
-                  boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35)'
-                }}
+                className="primary-button w-full flex items-center justify-between"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-                <div className="flex items-center gap-3 relative z-10">
-                  <FiTruck className="text-lg" />
-                  <span className="font-semibold">Browse Equipment</span>
+                <div className="flex items-center gap-3">
+                  <FiTruck />
+                  <span>Browse Equipment</span>
                 </div>
-                <FiArrowUpRight className="relative z-10" />
+                <FiArrowUpRight />
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
                 onClick={() => navigate('/farmer/bookings')}
-                className="w-full flex items-center justify-between p-4 rounded-2xl transition-all group"
-                style={{ 
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  color: '#ffffff',
-                  border: '1px solid rgba(255, 255, 255, 0.06)'
-                }}
+                className="secondary-button w-full flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <FiPackage className="text-lg" style={{ color: '#10b981' }} />
-                  <span className="font-semibold">My Bookings</span>
+                  <FiPackage />
+                  <span>My Bookings</span>
                 </div>
-                <FiArrowUpRight style={{ color: 'rgba(255,255,255,0.8)' }} />
+                <FiArrowUpRight />
               </motion.button>
             </div>
           </motion.div>
@@ -353,45 +301,34 @@ const FarmerDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="p-6 rounded-3xl relative overflow-hidden"
-            style={{ 
-              background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.02) 100%)',
-              border: '1px solid rgba(59, 130, 246, 0.15)',
-              backdropFilter: 'blur(10px)'
-            }}
+            className="table-container-new p-6"
           >
-            <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.1) 0%, transparent 60%)' }} />
-            <div className="flex items-center gap-3 mb-4 relative">
+            <div className="flex items-center gap-3 mb-4">
               <div 
-                className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
+                className="stat-icon-new"
                 style={{ 
                   background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%)',
-                  border: '1px solid rgba(59, 130, 246, 0.25)'
+                  color: '#3b82f6'
                 }}
               >
-                <FiTrendingUp className="text-lg" style={{ color: '#3b82f6' }} />
+                <FiTrendingUp />
               </div>
-              <h3 className="text-lg font-semibold" style={{ color: '#ffffff' }}>Agricultural Insights</h3>
+              <h3 className="table-title-new">Agricultural Insights</h3>
             </div>
-            <p className="text-sm mb-4 font-medium relative" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: '1.7' }}>
+            <p className="text-sm mb-4 font-medium" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: '1.7' }}>
               Access weather forecasts, crop health monitoring, and market price trends for your area.
             </p>
             <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               onClick={() => alert('Agricultural Insights feature coming soon! This will include weather forecasts, crop health monitoring, and market price trends.')}
-              className="w-full p-4 rounded-2xl font-semibold relative overflow-hidden"
-              style={{ 
-                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%)',
-                color: '#3b82f6',
-                border: '1px solid rgba(59, 130, 246, 0.25)'
-              }}
+              className="secondary-button w-full"
+              style={{ color: '#3b82f6' }}
             >
               View Insights
             </motion.button>
           </motion.div>
         </div>
-      </div>
     </div>
   );
 };

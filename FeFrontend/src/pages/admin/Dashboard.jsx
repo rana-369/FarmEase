@@ -124,10 +124,10 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
+      <div className="page-content-new flex items-center justify-center min-h-screen">
         <div className="relative">
-          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(239, 68, 68, 0.2)', borderTopColor: '#ef4444' }} />
-          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(239, 68, 68, 0.1) 0%, transparent 70%)' }} />
+          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(244, 63, 94, 0.2)', borderTopColor: '#f43f5e' }} />
+          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(244, 63, 94, 0.1) 0%, transparent 70%)' }} />
         </div>
       </div>
     );
@@ -135,15 +135,14 @@ const AdminDashboard = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
+      <div className="page-content-new flex items-center justify-center min-h-screen">
         <div className="text-center">
           <p style={{ color: '#f87171' }} className="mb-4 font-medium">{error}</p>
           <motion.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => window.location.reload()} 
-            className="px-6 py-3 rounded-xl font-semibold" 
-            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}
+            className="primary-button"
           >
             Retry
           </motion.button>
@@ -154,36 +153,41 @@ const AdminDashboard = () => {
 
   const maxRevenue = Math.max(...revenueData.map(d => d.revenue), 1);
 
+  // Admin role color config
+  const adminColor = {
+    start: '#f43f5e',
+    end: '#db2777',
+    glow: 'rgba(244, 63, 94, 0.15)'
+  };
+
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }} 
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-4">
-            <motion.div 
-              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
-              whileHover={{ scale: 1.05 }}
-              style={{ 
-                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)',
-                boxShadow: '0 8px 32px rgba(239, 68, 68, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
-              }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-              <FiShield className="text-xl text-white relative z-10" />
-            </motion.div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Admin Dashboard</h1>
-              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Monitor and manage your platform</p>
-            </div>
-          </div>
-        </motion.div>
+    <div className="page-content-new">
+      {/* Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }}
+        className="page-header-new"
+      >
+        <div>
+          <h1 className="page-title-new">Admin Dashboard</h1>
+          <p className="page-subtitle-new">Monitor and manage your platform</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <motion.div 
+            className="logo-icon-new"
+            whileHover={{ scale: 1.05 }}
+            style={{ 
+              background: `linear-gradient(135deg, ${adminColor.start} 0%, ${adminColor.end} 100%)`,
+              boxShadow: `0 8px 32px ${adminColor.start}35`
+            }}
+          >
+            <FiShield />
+          </motion.div>
+        </div>
+      </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="stats-grid">
           {statCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -193,37 +197,22 @@ const AdminDashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.02, y: -4 }}
-                className="p-5 rounded-2xl cursor-pointer relative overflow-hidden group"
-                style={{ 
-                  background: `linear-gradient(135deg, ${stat.color}10 0%, ${stat.color}05 100%)`,
-                  border: `1px solid ${stat.color}20`
-                }}
+                className="stat-card-new"
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}15 0%, transparent 60%)` }} />
-                <div className="flex items-center justify-between mb-4 relative">
-                  <div 
-                    className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}15 100%)`,
-                      border: `1px solid ${stat.color}30`
-                    }}
-                  >
-                    <Icon className="text-lg" style={{ color: stat.color }} />
-                  </div>
-                  <span 
-                    className="text-xs font-semibold px-3 py-1.5 rounded-full"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}15 100%)`,
-                      border: `1px solid ${stat.color}25`,
-                      color: stat.color 
-                    }}
-                  >
-                    {stat.change}
-                  </span>
+                <div className="stat-info">
+                  <p className="stat-title-new">{stat.title}</p>
+                  <h3 className="stat-value-new">{stat.value}</h3>
+                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{stat.breakdown}</p>
                 </div>
-                <h3 className="text-2xl font-bold mb-1 relative" style={{ color: '#ffffff' }}>{stat.value}</h3>
-                <p className="text-sm font-medium mb-1 relative" style={{ color: 'rgba(255,255,255,0.8)' }}>{stat.title}</p>
-                <p className="text-xs relative" style={{ color: 'rgba(255,255,255,0.7)' }}>{stat.breakdown}</p>
+                <div 
+                  className="stat-icon-new"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`,
+                    color: stat.color 
+                  }}
+                >
+                  <Icon />
+                </div>
               </motion.div>
             );
           })}
@@ -236,26 +225,20 @@ const AdminDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="p-6 rounded-3xl relative overflow-hidden"
-            style={{ 
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              backdropFilter: 'blur(10px)'
-            }}
+            className="table-container-new p-6"
           >
-            <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)' }} />
-            <div className="flex items-center justify-between mb-6 relative">
+            <div className="table-header-new" style={{ border: 'none', padding: '0 0 16px 0' }}>
               <div className="flex items-center gap-3">
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
+                  className="stat-icon-new"
                   style={{ 
                     background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)',
-                    border: '1px solid rgba(16, 185, 129, 0.25)'
+                    color: '#10b981'
                   }}
                 >
-                  <FiTrendingUp className="text-lg" style={{ color: '#10b981' }} />
+                  <FiTrendingUp />
                 </div>
-                <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Revenue Overview</h2>
+                <h2 className="table-title-new">Revenue Overview</h2>
               </div>
             </div>
             
@@ -290,30 +273,24 @@ const AdminDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="p-6 rounded-3xl relative overflow-hidden"
-            style={{ 
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              backdropFilter: 'blur(10px)'
-            }}
+            className="table-container-new p-6"
           >
-            <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 100% 0%, rgba(168, 85, 247, 0.05) 0%, transparent 50%)' }} />
-            <div className="flex items-center justify-between mb-6 relative">
+            <div className="table-header-new" style={{ border: 'none', padding: '0 0 16px 0' }}>
               <div className="flex items-center gap-3">
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
+                  className="stat-icon-new"
                   style={{ 
                     background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.15) 100%)',
-                    border: '1px solid rgba(168, 85, 247, 0.25)'
+                    color: '#a855f7'
                   }}
                 >
-                  <FiActivity className="text-lg" style={{ color: '#a855f7' }} />
+                  <FiActivity />
                 </div>
-                <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Recent Activity</h2>
+                <h2 className="table-title-new">Recent Activity</h2>
               </div>
             </div>
 
-            <div className="space-y-3 max-h-80 overflow-y-auto relative">
+            <div className="space-y-3 max-h-80 overflow-y-auto">
               {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
                 <motion.div
                   key={activity.id}
@@ -321,28 +298,19 @@ const AdminDashboard = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.6 + index * 0.05 }}
                   whileHover={{ scale: 1.01, x: 4 }}
-                  className="flex items-start gap-3 p-4 rounded-2xl transition-all group"
-                  style={{ 
-                    background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.04)'
-                  }}
+                  className="stat-card-new flex items-start gap-3"
+                  style={{ padding: '16px' }}
                 >
                   <div 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-105"
+                    className="nav-item-icon flex-shrink-0"
                     style={{ 
                       background: activity.status === 'completed' 
                         ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)'
                         : 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.15) 100%)',
-                      border: activity.status === 'completed' 
-                        ? '1px solid rgba(16, 185, 129, 0.25)'
-                        : '1px solid rgba(59, 130, 246, 0.25)'
+                      color: activity.status === 'completed' ? '#10b981' : '#3b82f6'
                     }}
                   >
-                    {activity.status === 'completed' ? (
-                      <FiCheckCircle className="text-sm" style={{ color: '#10b981' }} />
-                    ) : (
-                      <FiClock className="text-sm" style={{ color: '#3b82f6' }} />
-                    )}
+                    {activity.status === 'completed' ? <FiCheckCircle /> : <FiClock />}
                   </div>
                   
                   <div className="flex-1 min-w-0">
@@ -352,21 +320,18 @@ const AdminDashboard = () => {
                         <span style={{ color: '#10b981' }}> • ₹{activity.revenue}</span>
                       )}
                     </p>
-                    <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>{activity.time}</p>
+                    <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>{activity.time}</p>
                   </div>
                 </motion.div>
               )) : (
                 <div className="text-center py-8">
                   <div 
-                    className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 relative overflow-hidden"
-                    style={{ 
-                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                      border: '1px solid rgba(255, 255, 255, 0.06)'
-                    }}
+                    className="stat-icon-new mx-auto mb-3"
+                    style={{ background: 'rgba(255, 255, 255, 0.04)', color: 'rgba(255,255,255,0.4)' }}
                   >
-                    <FiActivity className="text-3xl" style={{ color: 'rgba(255,255,255,0.6)' }} />
+                    <FiActivity />
                   </div>
-                  <p className="font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>No recent activity</p>
+                  <p className="font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>No recent activity</p>
                 </div>
               )}
             </div>
@@ -378,17 +343,11 @@ const AdminDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="p-6 rounded-3xl mb-8 relative overflow-hidden"
-          style={{ 
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            backdropFilter: 'blur(10px)'
-          }}
+          className="table-container-new p-6 mb-8"
         >
-          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 50% 0%, rgba(239, 68, 68, 0.05) 0%, transparent 50%)' }} />
-          <h2 className="text-lg font-bold mb-6 relative" style={{ color: '#ffffff' }}>Quick Actions</h2>
+          <h2 className="table-title-new mb-6">Quick Actions</h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { icon: FiUsers, label: 'Manage Users', path: '/admin/users', color: '#3b82f6' },
               { icon: FiTruck, label: 'Approve Equipment', path: '/admin/machines', color: '#10b981' },
@@ -403,23 +362,18 @@ const AdminDashboard = () => {
                 whileHover={{ scale: 1.02, y: -4 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate(action.path)}
-                className="p-5 rounded-2xl cursor-pointer text-center relative overflow-hidden group"
-                style={{ 
-                  background: `linear-gradient(135deg, ${action.color}08 0%, ${action.color}04 100%)`,
-                  border: `1px solid ${action.color}20`
-                }}
+                className="quick-action-card"
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${action.color}10 0%, transparent 60%)` }} />
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 relative overflow-hidden"
+                  className="quick-action-card-icon"
                   style={{ 
-                    background: `linear-gradient(135deg, ${action.color}15 0%, ${action.color}10 100%)`,
-                    border: `1px solid ${action.color}25`
+                    background: `linear-gradient(135deg, ${action.color}20 0%, ${action.color}10 100%)`,
+                    color: action.color
                   }}
                 >
-                  <action.icon className="text-lg" style={{ color: action.color }} />
+                  <action.icon />
                 </div>
-                <p className="text-sm font-semibold relative" style={{ color: '#ffffff' }}>{action.label}</p>
+                <p className="quick-action-card-label">{action.label}</p>
               </motion.div>
             ))}
           </div>
@@ -430,17 +384,11 @@ const AdminDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="p-6 rounded-3xl relative overflow-hidden"
-          style={{ 
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            backdropFilter: 'blur(10px)'
-          }}
+          className="table-container-new p-6"
         >
-          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 0% 100%, rgba(168, 85, 247, 0.05) 0%, transparent 50%)' }} />
-          <h2 className="text-lg font-bold mb-6 relative" style={{ color: '#ffffff' }}>Platform Health</h2>
+          <h2 className="table-title-new mb-6">Platform Health</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+          <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
             {[
               { 
                 label: 'System Health', 
@@ -467,29 +415,24 @@ const AdminDashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 + index * 0.1 }}
                 whileHover={{ scale: 1.02, y: -4 }}
-                className="p-5 rounded-2xl text-center relative overflow-hidden group"
-                style={{ 
-                  background: `linear-gradient(135deg, ${metric.color}08 0%, ${metric.color}04 100%)`,
-                  border: `1px solid ${metric.color}20`
-                }}
+                className="stat-card-new text-center"
+                style={{ flexDirection: 'column', alignItems: 'center' }}
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${metric.color}10 0%, transparent 60%)` }} />
                 <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden"
+                  className="stat-icon-new mb-4"
                   style={{ 
-                    background: `linear-gradient(135deg, ${metric.color}15 0%, ${metric.color}10 100%)`,
-                    border: `1px solid ${metric.color}30`
+                    background: `linear-gradient(135deg, ${metric.color}20 0%, ${metric.color}10 100%)`,
+                    color: metric.color
                   }}
                 >
-                  <span className="text-xl font-bold" style={{ color: metric.color }}>{metric.value}</span>
+                  <span className="text-xl font-bold">{metric.value}</span>
                 </div>
-                <h3 className="text-sm font-semibold mb-1 relative" style={{ color: '#ffffff' }}>{metric.label}</h3>
-                <p className="text-xs font-medium relative" style={{ color: 'rgba(255,255,255,0.8)' }}>{metric.subtext}</p>
+                <h3 className="stat-title-new">{metric.label}</h3>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{metric.subtext}</p>
               </motion.div>
             ))}
           </div>
         </motion.div>
-      </div>
     </div>
   );
 };

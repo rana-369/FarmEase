@@ -127,6 +127,28 @@ export const getAllUsers = async (page = 1, limit = 10, search = '', role = 'all
   }
 };
 
+// Change user role
+export const changeUserRole = async (userId, newRole) => {
+  try {
+    const response = await api.put(`users/${userId}/role`, { newRole });
+    return { success: true, message: response.data?.Message || 'Role updated successfully' };
+  } catch (error) {
+    console.error('Error changing user role:', error.response?.data || error.message);
+    return { success: false, message: error.response?.data?.Message || 'Failed to update role' };
+  }
+};
+
+// Delete user
+export const deleteUser = async (userId) => {
+  try {
+    const response = await api.delete(`users/${userId}`);
+    return { success: true, message: response.data?.Message || 'User deleted successfully' };
+  } catch (error) {
+    console.error('Error deleting user:', error.response?.data || error.message);
+    return { success: false, message: error.response?.data?.Message || 'Failed to delete user' };
+  }
+};
+
 // Get all machines for approval with pagination
 export const getAllMachines = async (page = 1, limit = 10, search = '', status = 'all') => {
   try {

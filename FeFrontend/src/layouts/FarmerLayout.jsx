@@ -9,17 +9,22 @@ const FarmerLayout = () => {
   // This avoids race conditions with auth state
 
   return (
-    <div className="flex h-screen" style={{ backgroundColor: '#0a0a0a' }}>
+    <div className="flex h-screen" style={{ backgroundColor: '#050505' }}>
       {/* Sidebar */}
       <Sidebar />
       
       {/* Main Content */}
-      <div className="flex-1 overflow-auto" style={{ backgroundColor: '#0a0a0a' }}>
+      <div 
+        className="flex-1 overflow-auto"
+        style={{ 
+          backgroundColor: '#050505',
+          marginLeft: '260px'
+        }}
+      >
         <motion.div
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3 }}
-          className="p-8"
           style={{ color: '#ffffff' }}
         >
           <Outlet />

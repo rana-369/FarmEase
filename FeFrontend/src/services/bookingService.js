@@ -54,8 +54,15 @@ export const completeBooking = async (bookingId) => {
 
 // Cancel booking (farmer)
 export const cancelBooking = async (bookingId) => {
-  const response = await api.delete(`/bookings/${bookingId}/cancel`);
-  return response.data;
+  try {
+    const response = await api.delete(`/bookings/${bookingId}/cancel`);
+    return { success: true, message: response.data?.message || response.data?.Message || 'Booking cancelled successfully.' };
+  } catch (error) {
+    return { 
+      success: false, 
+      message: error.response?.data?.message || error.response?.data?.Message || 'Failed to cancel booking.' 
+    };
+  }
 };
 
 // Pay for booking (farmer)

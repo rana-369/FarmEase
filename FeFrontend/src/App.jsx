@@ -45,7 +45,7 @@ const AppRoutes = () => {
   // Protected Route Component
   const ProtectedRoute = ({ children, allowedRole }) => {
     if (loading) {
-      return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+      return <div className="page-content-new flex items-center justify-center min-h-screen"><div className="spinner" /></div>;
     }
 
     if (!user) {
@@ -62,7 +62,7 @@ const AppRoutes = () => {
   // Public Route Component (redirects authenticated users to their dashboard)
   const PublicRoute = ({ children }) => {
     if (loading) {
-      return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+      return <div className="page-content-new flex items-center justify-center min-h-screen"><div className="spinner" /></div>;
     }
 
     return children;
@@ -142,7 +142,7 @@ const AppRoutes = () => {
               <Route path="revenue" element={<EarningsPage key="admin-revenue" />} />
               <Route path="notifications" element={<NotificationsPage key="admin-notifications" />} />
               <Route path="settings" element={<SettingsPage key="admin-settings" />} />
-              <Route path="analytics" element={<div className="p-8"><h2 className="text-2xl font-bold">Analytics</h2><p className="text-gray-600 mt-2">Analytics page coming soon...</p></div>} />
+              <Route path="analytics" element={<div className="page-content-new"><h2 className="page-title-new">Analytics</h2><p className="page-subtitle-new">Analytics page coming soon...</p></div>} />
             </Route>
 
             {/* Catch-all route */}
@@ -155,7 +155,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="App" style={{ backgroundColor: '#0a0a0a', minHeight: '100vh' }}>
+        <div className="App" style={{ backgroundColor: '#050505', minHeight: '100vh' }}>
           <AppRoutes />
         </div>
       </BrowserRouter>

@@ -152,6 +152,53 @@ namespace FEServices.Service
             return (true, $"User role successfully updated to {role}.");
         }
 
+        public async Task<(bool Success, string Message)> DeleteUserAsync(string id, string currentUserId)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return (false, "User not found.");
+
+            if (user.Id == currentUserId) return (false, "You cannot delete your own admin account.");
+
+            // Delete user's machines if they are an owner
+            if (user.Role?.ToLower() == "owner")
+            {
+                var machines = await _unitOfWork.Machines.Query()
+                    .Where(m => m.OwnerId == id)
+                    .ToListAsync();
+                foreach (var machine in machines)
+                {
+                    _unitOfWork.Machines.Delete(machine);
+                }
+            }
+
+            // Delete user's bookings
+            var bookings = await _unitOfWork.Bookings.Query()
+                .Where(b => b.FarmerId == id || b.OwnerId == id)
+                .ToListAsync();
+            foreach (var booking in bookings)
+            {
+                _unitOfWork.Bookings.Delete(booking);
+            }
+
+            // Delete user's notifications
+            var notifications = await _unitOfWork.Notifications.Query()
+                .Where(n => n.UserId == id)
+                .ToListAsync();
+            foreach (var notification in notifications)
+            {
+                _unitOfWork.Notifications.Delete(notification);
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+
+            // Delete the user
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+                return (false, string.Join(", ", result.Errors.Select(e => e.Description)));
+
+            return (true, "User deleted successfully.");
+        }
+
         public async Task<IEnumerable<FarmerSummaryDto>> GetFarmersAsync()
         {
             var farmers = await _unitOfWork.Users.GetFarmersAsync();

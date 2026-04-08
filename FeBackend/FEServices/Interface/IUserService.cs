@@ -12,6 +12,7 @@ namespace FEServices.Interface
         Task<UserProfileDto?> GetUserByIdAsync(string id);
         Task<(bool Success, string Message, bool IsSuspended)> ToggleSuspensionAsync(string id, string currentUserId);
         Task<(bool Success, string Message)> ChangeRoleAsync(string id, string newRole);
+        Task<(bool Success, string Message)> DeleteUserAsync(string id, string currentUserId);
         Task<IEnumerable<FarmerSummaryDto>> GetFarmersAsync();
         Task<IEnumerable<OwnerSummaryDto>> GetOwnersAsync();
         Task<(bool Success, string Message)> UpdateProfileAsync(string userId, UserProfileUpdateDto model);

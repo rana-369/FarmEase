@@ -139,7 +139,6 @@ namespace FEServices.Service
             _logger.LogInformation("Refunding payment for BookingId: {BookingId}, Reason: {Reason}", bookingId, reason);
             
             var booking = await _unitOfWork.Bookings.Query()
-                .AsNoTracking()
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
             if (booking == null)
             {

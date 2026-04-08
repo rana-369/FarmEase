@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { FiUsers, FiEdit2, FiTrash2, FiEye, FiMail, FiCalendar, FiShield, FiSearch, FiFilter, FiX, FiUserCheck, FiUserX, FiCheckCircle } from 'react-icons/fi';
-import { getAllUsers } from '../../services/dashboardService';
+import { FiUsers, FiEdit2, FiTrash2, FiEye, FiMail, FiCalendar, FiShield, FiSearch, FiFilter, FiX, FiUserCheck, FiUserX, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
+import Modal from '../../components/Modal';
+import { getAllUsers, changeUserRole, deleteUser } from '../../services/dashboardService';
 import Pagination from '../../components/Pagination';
 
 const UsersManagement = () => {
@@ -10,6 +11,10 @@ const UsersManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
+  const [editModal, setEditModal] = useState({ open: false, user: null, newRole: '' });
+  const [deleteModal, setDeleteModal] = useState({ open: false, user: null });
+  const [actionLoading, setActionLoading] = useState(false);
+  const [notification, setNotification] = useState(null);
   
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -75,13 +80,48 @@ const UsersManagement = () => {
     });
   };
 
+  const handleEditClick = (user) => {
+    setEditModal({ open: true, user, newRole: user.role || 'farmer' });
+  };
+
+  const handleDeleteClick = (user) => {
+    setDeleteModal({ open: true, user });
+  };
+
+  const handleRoleChange = async () => {
+    if (!editModal.user) return;
+    setActionLoading(true);
+    const result = await changeUserRole(editModal.user.id, editModal.newRole);
+    if (result.success) {
+      setNotification({ type: 'success', message: result.message });
+      setEditModal({ open: false, user: null, newRole: '' });
+      fetchUsers();
+    } else {
+      setNotification({ type: 'error', message: result.message });
+    }
+    setActionLoading(false);
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.user) return;
+    setActionLoading(true);
+    const result = await deleteUser(deleteModal.user.id);
+    if (result.success) {
+      setNotification({ type: 'success', message: result.message });
+      setDeleteModal({ open: false, user: null });
+      fetchUsers();
+    } else {
+      setNotification({ type: 'error', message: result.message });
+    }
+    setActionLoading(false);
+    setTimeout(() => setNotification(null), 3000);
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
-        <div className="relative">
-          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(168, 85, 247, 0.2)', borderTopColor: '#a855f7' }} />
-          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%)' }} />
-        </div>
+      <div className="page-content-new flex items-center justify-center min-h-screen">
+        <div className="spinner" />
       </div>
     );
   }
@@ -91,35 +131,33 @@ const UsersManagement = () => {
   const ownerCount = users.filter(u => u.role?.toLowerCase() === 'owner').length;
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }} 
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
-        >
-          <div className="flex items-center gap-4">
-            <motion.div 
-              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
-              whileHover={{ scale: 1.05 }}
-              style={{ 
-                background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 50%, #7c3aed 100%)',
-                boxShadow: '0 8px 32px rgba(168, 85, 247, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
-              }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-              <FiUsers className="text-xl text-white relative z-10" />
-            </motion.div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Users</h1>
-              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Manage platform users</p>
-            </div>
-          </div>
-        </motion.div>
+    <div className="page-content-new">
+      {/* Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }}
+        className="page-header-new"
+      >
+        <div>
+          <h1 className="page-title-new">Users</h1>
+          <p className="page-subtitle-new">Manage platform users</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <motion.div 
+            className="logo-icon-new"
+            whileHover={{ scale: 1.05 }}
+            style={{ 
+              background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
+              boxShadow: '0 8px 32px rgba(168, 85, 247, 0.35)'
+            }}
+          >
+            <FiUsers />
+          </motion.div>
+        </div>
+      </motion.div>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
           {[
             { label: 'Total', value: totalItems, color: '#a855f7', icon: FiUsers },
             { label: 'Admins', value: adminCount, color: '#ef4444', icon: FiShield },
@@ -134,35 +172,30 @@ const UsersManagement = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.02, y: -4 }}
-                className="p-5 rounded-2xl relative overflow-hidden group"
-                style={{ 
-                  background: `linear-gradient(135deg, ${stat.color}10 0%, ${stat.color}05 100%)`,
-                  border: `1px solid ${stat.color}20`
-                }}
+                className="stat-card-new"
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}15 0%, transparent 60%)` }} />
-                <div className="flex items-center justify-between mb-2 relative">
-                  <div 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}15 100%)`,
-                      border: `1px solid ${stat.color}30`
-                    }}
-                  >
-                    <Icon className="text-lg" style={{ color: stat.color }} />
-                  </div>
+                <div className="stat-info">
+                  <p className="stat-title-new">{stat.label}</p>
+                  <h3 className="stat-value-new" style={{ color: stat.color }}>{stat.value}</h3>
                 </div>
-                <p className="text-2xl font-bold relative" style={{ color: stat.color }}>{stat.value}</p>
-                <p className="text-xs font-medium relative" style={{ color: 'rgba(255,255,255,0.8)' }}>{stat.label}</p>
+                <div 
+                  className="stat-icon-new"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`,
+                    color: stat.color
+                  }}
+                >
+                  <Icon />
+                </div>
               </motion.div>
             );
           })}
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1 flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all focus-within:border-purple-500/30" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-            <FiSearch style={{ color: 'rgba(255,255,255,0.8)' }} />
+        <div className="filters-bar-new mb-6">
+          <div className="search-box-new">
+            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.5)' }} />
             <input
               id="user-search"
               name="user-search"
@@ -170,59 +203,43 @@ const UsersManagement = () => {
               placeholder="Search by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 bg-transparent outline-none text-sm font-medium"
+              className="input-field"
+              style={{ paddingLeft: '40px' }}
               autoComplete="off"
-              style={{ color: '#ffffff' }}
             />
           </div>
-          <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-            <FiFilter style={{ color: 'rgba(255,255,255,0.8)' }} />
+          <div className="flex items-center gap-2">
+            <FiFilter style={{ color: 'rgba(255,255,255,0.5)' }} />
             <select
               id="role-filter"
               name="role-filter"
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
               autoComplete="off"
-              className="bg-transparent outline-none cursor-pointer text-sm font-medium"
-              style={{ color: '#ffffff' }}
+              className="filter-select-new"
             >
-              <option value="all" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>All Roles</option>
-              <option value="admin" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Admin</option>
-              <option value="farmer" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Farmer</option>
-              <option value="owner" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Owner</option>
+              <option value="all">All Roles</option>
+              <option value="admin">Admin</option>
+              <option value="farmer">Farmer</option>
+              <option value="owner">Owner</option>
             </select>
           </div>
         </div>
 
         {/* Users Table */}
-        <div className="rounded-3xl overflow-hidden relative" style={{ 
-          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
-          backdropFilter: 'blur(10px)'
-        }}>
-          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 0% 0%, rgba(168, 85, 247, 0.05) 0%, transparent 50%)' }} />
-          <div className="overflow-x-auto relative">
-            <table className="w-full">
-              <thead style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)' }}>
+        <div className="table-container-new">
+          <div className="overflow-x-auto">
+            <table className="data-table-new">
+              <thead>
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                    User
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                    Role
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                    Joined
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                    Actions
-                  </th>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y" style={{ borderColor: 'rgba(255, 255, 255, 0.04)' }}>
+              <tbody>
                 {users.map((user, index) => {
                   const config = getRoleConfig(user.role);
                   const Icon = config.icon;
@@ -232,98 +249,72 @@ const UsersManagement = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.03 }}
-                      whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}
-                      className="transition-colors"
                     >
-                      <td className="px-6 py-4">
+                      <td>
                         <div className="flex items-center gap-3">
                           <div 
-                            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
+                            className="nav-item-icon"
                             style={{ 
                               background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%)',
-                              border: '1px solid rgba(168, 85, 247, 0.2)'
+                              color: '#a855f7'
                             }}
                           >
-                            <FiUsers className="text-sm" style={{ color: '#a855f7' }} />
+                            <FiUsers />
                           </div>
                           <div>
-                            <div className="text-sm font-semibold" style={{ color: '#ffffff' }}>
+                            <div className="font-semibold">
                               {user.fullName || 'N/A'}
                             </div>
-                            <div className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                            <div className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
                               {user.email}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span 
-                          className="px-3 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5"
-                          style={{ 
-                            background: `linear-gradient(135deg, ${config.bg} 0%, ${config.bg} 100%)`,
-                            border: `1px solid ${config.color}25`,
-                            color: config.color 
-                          }}
-                        >
+                      <td>
+                        <span className="badge" style={{ background: config.bg, color: config.color, border: `1px solid ${config.color}25` }}>
                           <Icon className="w-3 h-3" />
                           {user.role || 'Unknown'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span 
-                          className="px-3 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5"
-                          style={{ 
-                            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)',
-                            border: '1px solid rgba(16, 185, 129, 0.25)',
-                            color: '#10b981' 
-                          }}
-                        >
+                      <td>
+                        <span className="badge badge-success">
                           <FiCheckCircle className="w-3 h-3" />
                           Active
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-sm font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                      <td>
+                        <div className="flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
                           <FiCalendar className="w-3 h-3" />
                           {formatDate(user.createdAt || user.created_at)}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td>
                         <div className="flex items-center gap-2">
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setSelectedUser(user)}
-                            className="p-2.5 rounded-xl transition-colors"
-                            style={{ 
-                              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)',
-                              border: '1px solid rgba(16, 185, 129, 0.25)',
-                              color: '#10b981' 
-                            }}
+                            className="icon-button"
+                            style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}
                           >
                             <FiEye className="w-4 h-4" />
                           </motion.button>
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            className="p-2.5 rounded-xl"
-                            style={{ 
-                              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%)',
-                              border: '1px solid rgba(59, 130, 246, 0.25)',
-                              color: '#3b82f6' 
-                            }}
+                            onClick={() => handleEditClick(user)}
+                            className="icon-button"
+                            style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6' }}
                           >
                             <FiEdit2 className="w-4 h-4" />
                           </motion.button>
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            className="p-2.5 rounded-xl"
-                            style={{ 
-                              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%)',
-                              border: '1px solid rgba(239, 68, 68, 0.25)',
-                              color: '#f87171' 
-                            }}
+                            onClick={() => handleDeleteClick(user)}
+                            className="icon-button"
+                            style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171' }}
                           >
                             <FiTrash2 className="w-4 h-4" />
                           </motion.button>
@@ -337,18 +328,12 @@ const UsersManagement = () => {
           </div>
           
           {users.length === 0 && (
-            <div className="text-center py-12 relative">
-              <div 
-                className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden"
-                style={{ 
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)'
-                }}
-              >
-                <FiUsers className="text-4xl" style={{ color: 'rgba(255,255,255,0.6)' }} />
+            <div className="empty-state">
+              <div className="empty-state-icon">
+                <FiUsers />
               </div>
-              <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>No users found</p>
-              <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Try adjusting your search or filter</p>
+              <p className="empty-state-title">No users found</p>
+              <p className="empty-state-text">Try adjusting your search or filter</p>
             </div>
           )}
         </div>
@@ -362,73 +347,185 @@ const UsersManagement = () => {
           onPageChange={handlePageChange}
           onItemsPerPageChange={handleItemsPerPageChange}
         />
-      </div>
 
       {/* User Detail Modal */}
-      {selectedUser && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 flex items-center justify-center p-4 z-50"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}
-          onClick={() => setSelectedUser(null)}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="rounded-3xl p-6 max-w-md w-full relative overflow-hidden"
-            style={{
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(20px)'
-            }}
-            onClick={(e) => e.stopPropagation()}
+      <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)}>
+        <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 className="card-title">User Details</h3>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setSelectedUser(null)}
+            className="icon-button"
           >
-            <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.1) 0%, transparent 60%)' }} />
-            <div className="flex items-center justify-between mb-6 relative">
-              <h3 className="text-lg font-bold" style={{ color: '#ffffff' }}>User Details</h3>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setSelectedUser(null)}
-                className="p-2 rounded-xl"
-                style={{ 
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  color: 'rgba(255,255,255,0.6)' 
-                }}
-              >
-                <FiX />
-              </motion.button>
+            <FiX />
+          </motion.button>
+        </div>
+        
+        <div className="space-y-4 px-4 pb-4">
+          {[
+            { label: 'Name', value: selectedUser?.fullName || 'N/A' },
+            { label: 'Email', value: selectedUser?.email },
+            { label: 'Joined', value: formatDate(selectedUser?.createdAt || selectedUser?.created_at) }
+          ].map((item) => (
+            <div key={item.label}>
+              <p className="input-label">{item.label}</p>
+              <p className="font-semibold" style={{ color: '#ffffff' }}>{item.value}</p>
             </div>
-            
-            <div className="space-y-4 relative">
-              {[
-                { label: 'Name', value: selectedUser.fullName || 'N/A' },
-                { label: 'Email', value: selectedUser.email },
-                { label: 'Joined', value: formatDate(selectedUser.createdAt || selectedUser.created_at) }
-              ].map((item) => (
-                <div key={item.label}>
-                  <p className="text-xs font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>{item.label}</p>
-                  <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>{item.value}</p>
-                </div>
-              ))}
-              
-              <div>
-                <p className="text-xs font-medium mb-2" style={{ color: 'rgba(255,255,255,0.8)' }}>Role</p>
-                <span 
-                  className="px-4 py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5"
-                  style={{ 
-                    background: `linear-gradient(135deg, ${getRoleConfig(selectedUser.role).bg} 0%, ${getRoleConfig(selectedUser.role).bg} 100%)`,
-                    border: `1px solid ${getRoleConfig(selectedUser.role).color}25`,
-                    color: getRoleConfig(selectedUser.role).color 
-                  }}
-                >
-                  {selectedUser.role || 'Unknown'}
-                </span>
-              </div>
+          ))}
+          
+          <div>
+            <p className="input-label">Role</p>
+            <span 
+              className="badge"
+              style={{ 
+                background: getRoleConfig(selectedUser?.role).bg,
+                border: `1px solid ${getRoleConfig(selectedUser?.role).color}25`,
+                color: getRoleConfig(selectedUser?.role).color 
+              }}
+            >
+              {selectedUser?.role || 'Unknown'}
+            </span>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Role Modal */}
+      <Modal isOpen={editModal.open} onClose={() => setEditModal({ open: false, user: null, newRole: '' })}>
+        <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 className="card-title">Change User Role</h3>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setEditModal({ open: false, user: null, newRole: '' })}
+            className="icon-button"
+          >
+            <FiX />
+          </motion.button>
+        </div>
+        
+        <div className="px-4 pb-4">
+          <div className="mb-4">
+            <p className="input-label">User</p>
+            <p className="font-semibold" style={{ color: '#ffffff' }}>{editModal.user?.fullName}</p>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{editModal.user?.email}</p>
+          </div>
+          
+          <div className="mb-6">
+            <p className="input-label mb-2">New Role</p>
+            <select
+              value={editModal.newRole}
+              onChange={(e) => setEditModal({ ...editModal, newRole: e.target.value })}
+              style={{ 
+                padding: '12px', 
+                borderRadius: '8px', 
+                width: '100%',
+                background: '#1a1a2e',
+                color: '#ffffff',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}
+            >
+              <option value="farmer" style={{ background: '#1a1a2e', color: '#ffffff' }}>Farmer</option>
+              <option value="owner" style={{ background: '#1a1a2e', color: '#ffffff' }}>Owner</option>
+              <option value="admin" style={{ background: '#1a1a2e', color: '#ffffff' }}>Admin</option>
+            </select>
+          </div>
+          
+          <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            Are you sure you want to change this user's role to <strong style={{ color: '#10b981' }}>{editModal.newRole}</strong>?
+          </p>
+          
+          <div className="flex gap-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setEditModal({ open: false, user: null, newRole: '' })}
+              className="secondary-button flex-1"
+            >
+              Cancel
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleRoleChange}
+              disabled={actionLoading}
+              className="primary-button flex-1"
+            >
+              {actionLoading ? 'Updating...' : 'Confirm'}
+            </motion.button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={deleteModal.open} onClose={() => setDeleteModal({ open: false, user: null })}>
+        <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 className="card-title" style={{ color: '#f87171' }}>Delete User</h3>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setDeleteModal({ open: false, user: null })}
+            className="icon-button"
+          >
+            <FiX />
+          </motion.button>
+        </div>
+        
+        <div className="px-4 pb-4">
+          <div className="flex items-center gap-3 mb-4 p-4" style={{ background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px' }}>
+            <FiAlertTriangle style={{ color: '#f87171', fontSize: '24px' }} />
+            <div>
+              <p className="font-semibold" style={{ color: '#f87171' }}>Warning</p>
+              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>This action cannot be undone.</p>
             </div>
-          </motion.div>
+          </div>
+          
+          <div className="mb-4">
+            <p className="input-label">User to delete</p>
+            <p className="font-semibold" style={{ color: '#ffffff' }}>{deleteModal.user?.fullName}</p>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{deleteModal.user?.email}</p>
+          </div>
+          
+          <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            All associated data (bookings, machines, notifications) will be permanently deleted.
+          </p>
+          
+          <div className="flex gap-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setDeleteModal({ open: false, user: null })}
+              className="secondary-button flex-1"
+            >
+              Cancel
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleDeleteConfirm}
+              disabled={actionLoading}
+              className="primary-button flex-1"
+              style={{ background: 'rgba(239, 68, 68, 0.8)' }}
+            >
+              {actionLoading ? 'Deleting...' : 'Delete User'}
+            </motion.button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Notification */}
+      {notification && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed top-4 right-4 z-[10000] p-4 rounded-lg"
+          style={{
+            background: notification.type === 'success' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(239, 68, 68, 0.9)',
+            color: '#ffffff'
+          }}
+        >
+          {notification.message}
         </motion.div>
       )}
     </div>

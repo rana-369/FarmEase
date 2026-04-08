@@ -450,9 +450,69 @@ namespace FEServices.Service
                 // Handle active bookings - process refund
                 if (booking.Status == "Active")
                 {
+                    // Check if payment already refunded
+                    var existingPayment = await _unitOfWork.Payments.Query()
+                        .FirstOrDefaultAsync(p => p.BookingId == id);
+                    
+                    if (existingPayment != null && existingPayment.Status == "Refunded")
+                    {
+                        // Payment already refunded, just update booking status
+                        booking.Status = "Cancelled";
+                        _unitOfWork.Bookings.Update(booking);
+                        await _unitOfWork.SaveChangesAsync();
+                        return (true, "Booking cancelled. Refund was already processed.");
+                    }
+                    
                     var (success, message, _) = await _paymentService.RefundAsync(id, "Cancelled by farmer");
                     if (!success)
+                    {
+                        // Check if the error is "already refunded" - if so, just update status
+                        if (message.Contains("already refunded", StringComparison.OrdinalIgnoreCase))
+                        {
+                            booking.Status = "Cancelled";
+                            _unitOfWork.Bookings.Update(booking);
+                            
+                            // Update payment status if needed
+                            if (existingPayment != null && existingPayment.Status != "Refunded")
+                            {
+                                existingPayment.Status = "Refunded";
+                                existingPayment.RefundedAt = DateTime.UtcNow;
+                                existingPayment.RefundReason = "Cancelled by farmer";
+                                _unitOfWork.Payments.Update(existingPayment);
+                            }
+                            
+                            var notification = new Notification
+                            {
+                                UserId = booking.OwnerId,
+                                Title = "Booking Cancelled & Refunded",
+                                Message = $"Booking for {booking.MachineName} has been cancelled by the farmer. Refund processed.",
+                                Type = "info",
+                                IsRead = false,
+                                CreatedAt = DateTime.UtcNow
+                            };
+                            await _unitOfWork.Notifications.AddAsync(notification);
+                            await _unitOfWork.SaveChangesAsync();
+                            
+                            return (true, "Booking cancelled. Refund was already processed.");
+                        }
                         return (false, $"Failed to process refund: {message}");
+                    }
+                    
+                    // Update booking status to Cancelled after successful refund
+                    booking.Status = "Cancelled";
+                    _unitOfWork.Bookings.Update(booking);
+                    
+                    var notification2 = new Notification
+                    {
+                        UserId = booking.OwnerId,
+                        Title = "Booking Cancelled & Refunded",
+                        Message = $"Booking for {booking.MachineName} has been cancelled by the farmer. Refund processed.",
+                        Type = "info",
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _unitOfWork.Notifications.AddAsync(notification2);
+                    await _unitOfWork.SaveChangesAsync();
                     
                     return (true, "Booking cancelled and refund processed successfully.");
                 }
@@ -468,7 +528,54 @@ namespace FEServices.Service
                         // Payment was made, process refund
                         var (success, message, _) = await _paymentService.RefundAsync(id, "Cancelled by farmer");
                         if (!success)
+                        {
+                            // Check if the error is "already refunded" - if so, just update status
+                            if (message.Contains("already refunded", StringComparison.OrdinalIgnoreCase))
+                            {
+                                booking.Status = "Cancelled";
+                                _unitOfWork.Bookings.Update(booking);
+                                
+                                // Update payment status if needed
+                                if (payment.Status != "Refunded")
+                                {
+                                    payment.Status = "Refunded";
+                                    payment.RefundedAt = DateTime.UtcNow;
+                                    payment.RefundReason = "Cancelled by farmer";
+                                    _unitOfWork.Payments.Update(payment);
+                                }
+                                
+                                var notification = new Notification
+                                {
+                                    UserId = booking.OwnerId,
+                                    Title = "Booking Cancelled & Refunded",
+                                    Message = $"Booking for {booking.MachineName} has been cancelled by the farmer. Refund processed.",
+                                    Type = "info",
+                                    IsRead = false,
+                                    CreatedAt = DateTime.UtcNow
+                                };
+                                await _unitOfWork.Notifications.AddAsync(notification);
+                                await _unitOfWork.SaveChangesAsync();
+                                
+                                return (true, "Booking cancelled. Refund was already processed.");
+                            }
                             return (false, $"Failed to process refund: {message}");
+                        }
+                        
+                        // Update booking status to Cancelled after successful refund
+                        booking.Status = "Cancelled";
+                        _unitOfWork.Bookings.Update(booking);
+                        
+                        var notification3 = new Notification
+                        {
+                            UserId = booking.OwnerId,
+                            Title = "Booking Cancelled & Refunded",
+                            Message = $"Booking for {booking.MachineName} has been cancelled by the farmer. Refund processed.",
+                            Type = "info",
+                            IsRead = false,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await _unitOfWork.Notifications.AddAsync(notification3);
+                        await _unitOfWork.SaveChangesAsync();
                         
                         return (true, "Booking cancelled and refund processed successfully.");
                     }
@@ -477,7 +584,7 @@ namespace FEServices.Service
                     booking.Status = "Cancelled";
                     _unitOfWork.Bookings.Update(booking);
                     
-                    var notification = new Notification
+                    var notification4 = new Notification
                     {
                         UserId = booking.OwnerId,
                         Title = "Booking Cancelled",
@@ -486,7 +593,7 @@ namespace FEServices.Service
                         IsRead = false,
                         CreatedAt = DateTime.UtcNow
                     };
-                    await _unitOfWork.Notifications.AddAsync(notification);
+                    await _unitOfWork.Notifications.AddAsync(notification4);
                     await _unitOfWork.SaveChangesAsync();
                     
                     return (true, "Booking cancelled.");

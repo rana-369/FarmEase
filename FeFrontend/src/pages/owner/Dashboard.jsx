@@ -126,9 +126,16 @@ const OwnerDashboard = () => {
     }
   ];
 
+  // Owner role color config
+  const ownerColor = {
+    start: '#3b82f6',
+    end: '#4f46e5',
+    glow: 'rgba(59, 130, 246, 0.15)'
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
+      <div className="page-content-new flex items-center justify-center min-h-screen">
         <div className="relative">
           <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(59, 130, 246, 0.2)', borderTopColor: '#3b82f6' }} />
           <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)' }} />
@@ -138,35 +145,33 @@ const OwnerDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }} 
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-4">
-            <motion.div 
-              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
-              whileHover={{ scale: 1.05 }}
-              style={{ 
-                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)',
-                boxShadow: '0 8px 32px rgba(59, 130, 246, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
-              }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-              <FiTruck className="text-xl text-white relative z-10" />
-            </motion.div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Owner Dashboard</h1>
-              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Manage your equipment fleet</p>
-            </div>
-          </div>
-        </motion.div>
+    <div className="page-content-new">
+      {/* Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }}
+        className="page-header-new"
+      >
+        <div>
+          <h1 className="page-title-new">Owner Dashboard</h1>
+          <p className="page-subtitle-new">Manage your equipment fleet</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <motion.div 
+            className="logo-icon-new"
+            whileHover={{ scale: 1.05 }}
+            style={{ 
+              background: `linear-gradient(135deg, ${ownerColor.start} 0%, ${ownerColor.end} 100%)`,
+              boxShadow: `0 8px 32px ${ownerColor.start}35`
+            }}
+          >
+            <FiTruck />
+          </motion.div>
+        </div>
+      </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="stats-grid">
           {statCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -176,36 +181,24 @@ const OwnerDashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.02, y: -4 }}
-                className="p-5 rounded-2xl cursor-pointer relative overflow-hidden group"
-                style={{ 
-                  background: `linear-gradient(135deg, ${stat.color}10 0%, ${stat.color}05 100%)`,
-                  border: `1px solid ${stat.color}20`
-                }}
+                className="stat-card-new"
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}15 0%, transparent 60%)` }} />
-                <div className="flex items-center justify-between mb-4 relative">
-                  <div 
-                    className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}15 100%)`,
-                      border: `1px solid ${stat.color}30`
-                    }}
-                  >
-                    <Icon className="text-lg" style={{ color: stat.color }} />
+                <div className="stat-info">
+                  <p className="stat-title-new">{stat.title}</p>
+                  <h3 className="stat-value-new">{stat.value}</h3>
+                  <div className="stat-trend-new up">
+                    <span>{stat.change}</span>
                   </div>
-                  <span 
-                    className="text-xs font-semibold px-3 py-1.5 rounded-full"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}15 100%)`,
-                      border: `1px solid ${stat.color}25`,
-                      color: stat.color 
-                    }}
-                  >
-                    {stat.change}
-                  </span>
                 </div>
-                <h3 className="text-2xl font-bold mb-1 relative" style={{ color: '#ffffff' }}>{stat.value}</h3>
-                <p className="text-sm font-medium relative" style={{ color: 'rgba(255,255,255,0.8)' }}>{stat.title}</p>
+                <div 
+                  className="stat-icon-new"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`,
+                    color: stat.color 
+                  }}
+                >
+                  <Icon />
+                </div>
               </motion.div>
             );
           })}
@@ -216,17 +209,11 @@ const OwnerDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="p-6 rounded-3xl mb-8 relative overflow-hidden"
-          style={{ 
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            backdropFilter: 'blur(10px)'
-          }}
+          className="table-container-new p-6 mb-8"
         >
-          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)' }} />
-          <h2 className="text-lg font-bold mb-4 relative" style={{ color: '#ffffff' }}>Quick Actions</h2>
+          <h2 className="table-title-new mb-4">Quick Actions</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
               { icon: FiPlus, label: 'Add Machinery', path: '/owner/add-machine', color: '#10b981' },
               { icon: FiCalendar, label: 'Rental Requests', path: '/owner/requests', color: '#3b82f6' },
@@ -237,26 +224,21 @@ const OwnerDashboard = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 + index * 0.1 }}
-                whileHover={{ scale: 1.02, y: -2 }}
+                whileHover={{ scale: 1.02, y: -4 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate(action.path)}
-                className="p-5 rounded-2xl cursor-pointer text-center relative overflow-hidden group"
-                style={{ 
-                  background: `linear-gradient(135deg, ${action.color}08 0%, ${action.color}04 100%)`,
-                  border: `1px solid ${action.color}20`
-                }}
+                className="quick-action-card"
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${action.color}10 0%, transparent 60%)` }} />
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 relative overflow-hidden"
+                  className="quick-action-card-icon"
                   style={{ 
-                    background: `linear-gradient(135deg, ${action.color}15 0%, ${action.color}10 100%)`,
-                    border: `1px solid ${action.color}25`
+                    background: `linear-gradient(135deg, ${action.color}20 0%, ${action.color}10 100%)`,
+                    color: action.color
                   }}
                 >
-                  <action.icon className="text-lg" style={{ color: action.color }} />
+                  <action.icon />
                 </div>
-                <p className="text-sm font-semibold relative" style={{ color: '#ffffff' }}>{action.label}</p>
+                <p className="quick-action-card-label">{action.label}</p>
               </motion.div>
             ))}
           </div>
@@ -267,43 +249,33 @@ const OwnerDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="p-6 rounded-3xl relative overflow-hidden"
-          style={{ 
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            backdropFilter: 'blur(10px)'
-          }}
+          className="table-container-new p-6"
         >
-          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 100% 0%, rgba(168, 85, 247, 0.05) 0%, transparent 50%)' }} />
-          <div className="flex items-center justify-between mb-6 relative">
+          <div className="table-header-new" style={{ border: 'none', padding: '0 0 16px 0' }}>
             <div className="flex items-center gap-3">
               <div 
-                className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
+                className="stat-icon-new"
                 style={{ 
                   background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.15) 100%)',
-                  border: '1px solid rgba(168, 85, 247, 0.25)'
+                  color: '#a855f7'
                 }}
               >
-                <FiClock className="text-lg" style={{ color: '#a855f7' }} />
+                <FiClock />
               </div>
-              <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Recent Activity</h2>
+              <h2 className="table-title-new">Recent Activity</h2>
             </div>
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate('/owner/requests')}
-              className="text-sm font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5" 
-              style={{ 
-                color: '#10b981',
-                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)',
-                border: '1px solid rgba(16, 185, 129, 0.2)'
-              }}
+              className="secondary-button flex items-center gap-1.5" 
+              style={{ padding: '8px 16px', fontSize: '14px' }}
             >
               View All <FiArrowUpRight className="w-3 h-3" />
             </motion.button>
           </div>
 
-          <div className="space-y-3 relative">
+          <div className="space-y-3">
             {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
               <motion.div
                 key={activity.id}
@@ -311,35 +283,26 @@ const OwnerDashboard = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6 + index * 0.05 }}
                 whileHover={{ scale: 1.01, x: 4 }}
-                className="flex items-center justify-between p-4 rounded-2xl transition-all group"
-                style={{ 
-                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.04)'
-                }}
+                className="stat-card-new flex items-center justify-between"
+                style={{ padding: '16px' }}
               >
                 <div className="flex items-center gap-4">
                   <div 
-                    className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden transition-transform duration-300 group-hover:scale-105"
+                    className="nav-item-icon"
                     style={{ 
                       background: activity.type === 'booking' 
-                        ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.15) 100%)'
+                        ? `linear-gradient(135deg, ${ownerColor.start}20 0%, ${ownerColor.end}15 100%)`
                         : 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)',
-                      border: activity.type === 'booking' 
-                        ? '1px solid rgba(59, 130, 246, 0.25)'
-                        : '1px solid rgba(16, 185, 129, 0.25)'
+                      color: activity.type === 'booking' ? ownerColor.start : '#10b981'
                     }}
                   >
-                    {activity.type === 'booking' ? (
-                      <FiCalendar className="text-lg" style={{ color: '#3b82f6' }} />
-                    ) : (
-                      <FiCheckCircle className="text-lg" style={{ color: '#10b981' }} />
-                    )}
+                    {activity.type === 'booking' ? <FiCalendar /> : <FiCheckCircle />}
                   </div>
                   <div>
                     <p className="font-semibold" style={{ color: '#ffffff' }}>
                       {activity.farmerName} booked {activity.machineName}
                     </p>
-                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>{activity.time}</p>
+                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>{activity.time}</p>
                   </div>
                 </div>
 
@@ -348,16 +311,7 @@ const OwnerDashboard = () => {
                     <span className="font-bold text-lg" style={{ color: '#10b981' }}>₹{activity.amount.toLocaleString()}</span>
                   )}
                   <span 
-                    className="px-4 py-2 rounded-full text-xs font-semibold"
-                    style={{ 
-                      background: activity.status === 'completed' 
-                        ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)'
-                        : 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.15) 100%)',
-                      border: activity.status === 'completed' 
-                        ? '1px solid rgba(16, 185, 129, 0.25)'
-                        : '1px solid rgba(245, 158, 11, 0.25)',
-                      color: activity.status === 'completed' ? '#10b981' : '#f59e0b'
-                    }}
+                    className={`badge ${activity.status === 'completed' ? 'badge-success' : 'badge-warning'}`}
                   >
                     {activity.status}
                   </span>
@@ -366,20 +320,16 @@ const OwnerDashboard = () => {
             )) : (
               <div className="text-center py-12">
                 <div 
-                  className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden"
-                  style={{ 
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)'
-                  }}
+                  className="stat-icon-new mx-auto mb-4"
+                  style={{ background: 'rgba(255, 255, 255, 0.04)', color: 'rgba(255,255,255,0.4)' }}
                 >
-                  <FiClock className="text-3xl" style={{ color: 'rgba(255,255,255,0.6)' }} />
+                  <FiClock />
                 </div>
-                <p className="font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>No recent activity</p>
+                <p className="font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>No recent activity</p>
               </div>
             )}
           </div>
         </motion.div>
-      </div>
     </div>
   );
 };
