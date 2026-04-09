@@ -220,13 +220,13 @@ const FarmerDashboard = () => {
                     <FiTruck />
                   </div>
                   <div>
-                    <h3 className="font-semibold" style={{ color: '#ffffff' }}>{booking.machineName}</h3>
-                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>{booking.ownerName}</p>
+                    <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>{booking.machineName}</h3>
+                    <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{booking.ownerName}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2 text-sm font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  <div className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
                     <FiCalendar className="text-sm" />
                     <span>{booking.startDate}</span>
                   </div>
@@ -242,11 +242,11 @@ const FarmerDashboard = () => {
               <div className="text-center py-12">
                 <div 
                   className="stat-icon-new mx-auto mb-4"
-                  style={{ background: 'rgba(255, 255, 255, 0.04)', color: 'rgba(255,255,255,0.4)' }}
+                  style={{ background: 'var(--bg-button)', color: 'var(--text-muted)' }}
                 >
                   <FiPackage />
                 </div>
-                <p className="mb-6 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>No rentals yet</p>
+                <p className="mb-6 font-medium" style={{ color: 'var(--text-muted)' }}>No rentals yet</p>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -315,7 +315,7 @@ const FarmerDashboard = () => {
               </div>
               <h3 className="table-title-new">Agricultural Insights</h3>
             </div>
-            <p className="text-sm mb-4 font-medium" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: '1.7' }}>
+            <p className="text-sm mb-4 font-medium" style={{ color: 'var(--text-muted)', lineHeight: '1.7' }}>
               Access weather forecasts, crop health monitoring, and market price trends for your area.
             </p>
             <motion.button

@@ -93,8 +93,8 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
       animate={{ opacity: 1 }}
       className="p-5 rounded-2xl"
       style={{ 
-        background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-        border: '1px solid rgba(255, 255, 255, 0.06)'
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-primary)'
       }}
     >
       {/* Header */}
@@ -103,17 +103,17 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
           <div 
             className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ 
-              background: isEnabled ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' : 'rgba(255, 255, 255, 0.05)',
+              background: isEnabled ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' : 'var(--bg-button)',
               boxShadow: isEnabled ? '0 4px 12px rgba(34, 197, 94, 0.3)' : 'none'
             }}
           >
-            <FiShield className="text-lg" style={{ color: isEnabled ? '#ffffff' : '#888888' }} />
+            <FiShield className="text-lg" style={{ color: isEnabled ? '#ffffff' : 'var(--text-muted)' }} />
           </div>
           <div>
-            <h3 className="text-base font-semibold" style={{ color: '#ffffff' }}>
+            <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
               Two-Factor Authentication
             </h3>
-            <p className="text-xs" style={{ color: '#888888' }}>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
               {isEnabled ? 'Enabled' : 'Disabled'}
             </p>
           </div>
@@ -165,7 +165,7 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
 
       {/* Method Selection */}
       <div className="mb-5">
-        <label className="block text-sm font-medium mb-3" style={{ color: '#ffffff' }}>
+        <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-primary)' }}>
           Verification Method
         </label>
         <div className="grid grid-cols-2 gap-3">
@@ -176,22 +176,22 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
             disabled={isEnabled}
             className="p-4 rounded-xl transition-all text-center"
             style={{
-              backgroundColor: method === 'email' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-              border: method === 'email' ? '2px solid #22c55e' : '1px solid rgba(255, 255, 255, 0.08)',
+              backgroundColor: method === 'email' ? 'rgba(34, 197, 94, 0.1)' : 'var(--bg-button)',
+              border: method === 'email' ? '2px solid #22c55e' : '1px solid var(--border-primary)',
               cursor: isEnabled ? 'not-allowed' : 'pointer',
               opacity: isEnabled && method !== 'email' ? 0.5 : 1
             }}
           >
             <div 
               className="w-9 h-9 rounded-lg flex items-center justify-center mx-auto mb-2"
-              style={{ backgroundColor: method === 'email' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.05)' }}
+              style={{ backgroundColor: method === 'email' ? 'rgba(34, 197, 94, 0.2)' : 'var(--bg-button)' }}
             >
-              <FiMail className="text-lg" style={{ color: method === 'email' ? '#22c55e' : '#888888' }} />
+              <FiMail className="text-lg" style={{ color: method === 'email' ? '#22c55e' : 'var(--text-muted)' }} />
             </div>
-            <p className="text-sm font-medium" style={{ color: method === 'email' ? '#22c55e' : '#ffffff' }}>
+            <p className="text-sm font-medium" style={{ color: method === 'email' ? '#22c55e' : 'var(--text-primary)' }}>
               Email OTP
             </p>
-            <p className="text-xs mt-1" style={{ color: '#888888' }}>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
               Receive code via email
             </p>
           </motion.button>
@@ -203,22 +203,22 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
             disabled={isEnabled}
             className="p-4 rounded-xl transition-all text-center"
             style={{
-              backgroundColor: method === 'authenticator' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-              border: method === 'authenticator' ? '2px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.08)',
+              backgroundColor: method === 'authenticator' ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-button)',
+              border: method === 'authenticator' ? '2px solid #3b82f6' : '1px solid var(--border-primary)',
               cursor: isEnabled ? 'not-allowed' : 'pointer',
               opacity: isEnabled && method !== 'authenticator' ? 0.5 : 1
             }}
           >
             <div 
               className="w-9 h-9 rounded-lg flex items-center justify-center mx-auto mb-2"
-              style={{ backgroundColor: method === 'authenticator' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)' }}
+              style={{ backgroundColor: method === 'authenticator' ? 'rgba(59, 130, 246, 0.2)' : 'var(--bg-button)' }}
             >
-              <FiSmartphone className="text-lg" style={{ color: method === 'authenticator' ? '#3b82f6' : '#888888' }} />
+              <FiSmartphone className="text-lg" style={{ color: method === 'authenticator' ? '#3b82f6' : 'var(--text-muted)' }} />
             </div>
-            <p className="text-sm font-medium" style={{ color: method === 'authenticator' ? '#3b82f6' : '#ffffff' }}>
+            <p className="text-sm font-medium" style={{ color: method === 'authenticator' ? '#3b82f6' : 'var(--text-primary)' }}>
               Authenticator App
             </p>
-            <p className="text-xs mt-1" style={{ color: '#888888' }}>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
               Google/Microsoft Auth
             </p>
           </motion.button>
@@ -227,14 +227,14 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
 
       {/* QR Code Display */}
       {showQRCode && qrCodeUrl && (
-        <div className="mb-5 p-4 rounded-xl text-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}>
-          <p className="text-sm mb-3" style={{ color: '#888888' }}>
+        <div className="mb-5 p-4 rounded-xl text-center" style={{ backgroundColor: 'var(--bg-button)' }}>
+          <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>
             Scan this QR code with your authenticator app
           </p>
           <img src={qrCodeUrl} alt="2FA QR Code" className="mx-auto mb-3" />
           {backupCodes.length > 0 && (
             <div>
-              <p className="text-xs mb-2" style={{ color: '#888888' }}>
+              <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>
                 Save these backup codes:
               </p>
               <div className="grid grid-cols-2 gap-1 text-xs font-mono" style={{ color: '#22c55e' }}>
@@ -252,10 +252,10 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
         <div className="flex items-start gap-3">
           <FiLock className="text-base mt-0.5" style={{ color: '#22c55e' }} />
           <div>
-            <p className="text-sm font-medium" style={{ color: '#ffffff' }}>
+            <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
               Enhanced Security
             </p>
-            <p className="text-xs mt-1" style={{ color: '#888888', lineHeight: '1.5' }}>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)', lineHeight: '1.5' }}>
               Two-factor authentication adds an extra layer of security. Even if someone knows your password, they won't be able to access your account.
             </p>
           </div>
@@ -273,7 +273,7 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
             border: '1px solid rgba(239, 68, 68, 0.2)'
           }}
         >
-          <p className="text-sm mb-4" style={{ color: '#ffffff' }}>
+          <p className="text-sm mb-4" style={{ color: 'var(--text-primary)' }}>
             Are you sure you want to disable two-factor authentication? This will make your account less secure.
           </p>
           <div className="flex gap-3">
@@ -296,9 +296,9 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
               onClick={() => setShowConfirmDisable(false)}
               className="flex-1 py-2.5 rounded-xl font-medium text-sm transition-all"
               style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                color: '#888888',
-                border: '1px solid rgba(255, 255, 255, 0.08)'
+                backgroundColor: 'var(--bg-button)',
+                color: 'var(--text-muted)',
+                border: '1px solid var(--border-primary)'
               }}
             >
               Cancel
@@ -361,9 +361,9 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
               disabled={loading}
               className="px-5 py-3 rounded-xl font-medium transition-all"
               style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                color: '#888888',
-                border: '1px solid rgba(255, 255, 255, 0.08)'
+                backgroundColor: 'var(--bg-button)',
+                color: 'var(--text-muted)',
+                border: '1px solid var(--border-primary)'
               }}
             >
               Close

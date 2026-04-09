@@ -177,7 +177,7 @@ const FarmerBookings = () => {
         {/* Filters */}
         <div className="filters-bar-new mb-6">
           <div className="search-box-new">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
             <input 
               id="booking-search"
               name="booking-search"
@@ -191,7 +191,7 @@ const FarmerBookings = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <FiFilter style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <FiFilter style={{ color: 'var(--text-muted)' }} />
             <select 
               id="status-filter"
               name="status-filter"
@@ -250,11 +250,11 @@ const FarmerBookings = () => {
                             {booking.status}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
                           <FiMapPin className="flex-shrink-0" />
                           <span>Owned by {booking.ownerName}</span>
                         </div>
-                        <div className="flex items-center gap-4 mt-2 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        <div className="flex items-center gap-4 mt-2 text-xs" style={{ color: 'var(--text-muted)' }}>
                           <div className="flex items-center gap-1">
                             <FiCalendar />
                             <span>{booking.startDate} - {booking.endDate}</span>
@@ -334,7 +334,7 @@ const FarmerBookings = () => {
 
         {/* Booking Details Modal */}
         <Modal isOpen={!!selectedBooking} onClose={() => setSelectedBooking(null)}>
-          <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid var(--border-secondary)' }}>
             <h2 className="card-title">Booking Details</h2>
             <motion.button
               whileHover={{ scale: 1.1 }}
@@ -393,7 +393,7 @@ const FarmerBookings = () => {
                   </div>
                   <div>
                     <p className="input-label">Date</p>
-                    <p className="font-semibold" style={{ color: '#ffffff' }}>
+                    <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>
                       {selectedBooking?.refundDate ? new Date(selectedBooking.refundDate).toLocaleDateString() : 'N/A'}
                     </p>
                   </div>

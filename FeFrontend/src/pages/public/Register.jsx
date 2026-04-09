@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiTruck, FiMail, FiLock, FiUser, FiPhone, FiMapPin, FiEye, FiEyeOff, FiAlertCircle, FiCheck, FiShield, FiUsers, FiArrowLeft } from 'react-icons/fi';
+import { FiTruck, FiMail, FiLock, FiUser, FiPhone, FiMapPin, FiEye, FiEyeOff, FiAlertCircle, FiCheck, FiShield, FiUsers, FiArrowLeft, FiSun, FiMoon } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const { theme, toggleTheme, isDark } = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -68,9 +70,12 @@ const Register = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: '#050505' }}>
+      <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', transition: 'background-color 0.3s ease' }}>
         <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ 
-          background: 'linear-gradient(135deg, #050505 0%, #080808 50%, #050505 100%)'
+          background: isDark 
+            ? 'linear-gradient(135deg, #050505 0%, #080808 50%, #050505 100%)'
+            : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%)',
+          transition: 'background 0.3s ease'
         }}>
           <div className="absolute inset-0" style={{
             background: 'radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 50%)'
@@ -81,8 +86,8 @@ const Register = () => {
             className="w-full max-w-md relative z-10"
           >
             <div className="p-8 rounded-3xl text-center relative overflow-hidden" style={{ 
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-primary)',
               backdropFilter: 'blur(20px)'
             }}>
               <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 relative overflow-hidden" style={{ 
@@ -92,8 +97,8 @@ const Register = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
                 <FiCheck className="text-3xl text-white relative z-10" />
               </div>
-              <h2 className="text-2xl font-bold mb-2" style={{ color: '#ffffff' }}>Account Created!</h2>
-              <p className="mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>Your account has been successfully registered.</p>
+              <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Account Created!</h2>
+              <p className="mb-4" style={{ color: 'var(--text-muted)' }}>Your account has been successfully registered.</p>
               <p className="text-sm font-medium" style={{ color: '#10b981' }}>Redirecting to login page...</p>
             </div>
           </motion.div>
@@ -103,9 +108,12 @@ const Register = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#050505' }}>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', transition: 'background-color 0.3s ease' }}>
       <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ 
-        background: 'linear-gradient(135deg, #050505 0%, #080808 50%, #050505 100%)'
+        background: isDark 
+          ? 'linear-gradient(135deg, #050505 0%, #080808 50%, #050505 100%)'
+          : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%)',
+        transition: 'background 0.3s ease'
       }}>
         <div className="absolute inset-0" style={{ 
           backgroundImage: `
@@ -149,8 +157,25 @@ const Register = () => {
               <FiTruck className="text-white text-3xl relative z-10" />
             </motion.div>
             <div className="mb-4">
-              <h1 className="text-3xl font-bold mb-2 tracking-tight" style={{ color: '#ffffff' }}>Create Account</h1>
-              <p className="text-base" style={{ color: 'rgba(255,255,255,0.5)' }}>Join the AgriConnect platform</p>
+              <div className="flex items-center justify-center gap-4 mb-2">
+                <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Create Account</h1>
+                <motion.button
+                  onClick={toggleTheme}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
+                  style={{ 
+                    color: 'var(--text-secondary)',
+                    backgroundColor: 'var(--bg-button)',
+                    border: '1px solid var(--border-primary)'
+                  }}
+                  title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                  {isDark ? <FiSun size={14} /> : <FiMoon size={14} />}
+                  <span className="text-xs font-medium">{isDark ? 'Light' : 'Dark'}</span>
+                </motion.button>
+              </div>
+              <p className="text-base" style={{ color: 'var(--text-muted)' }}>Join the FarmEase platform</p>
             </div>
             <div className="flex items-center justify-center gap-4 text-xs font-medium">
               {[
@@ -158,7 +183,7 @@ const Register = () => {
                 { icon: FiLock, text: 'Encrypted' },
                 { icon: FiUsers, text: 'Trusted' }
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                <div key={i} className="flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
                   <item.icon style={{ color: '#10b981' }} />
                   <span>{item.text}</span>
                 </div>
@@ -173,8 +198,8 @@ const Register = () => {
             transition={{ delay: 0.2 }}
             className="p-8 rounded-3xl relative overflow-hidden"
             style={{ 
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-primary)',
               backdropFilter: 'blur(20px)'
             }}
           >
@@ -197,7 +222,7 @@ const Register = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Role Selection */}
               <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
                   Account Type
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -212,11 +237,11 @@ const Register = () => {
                       style={{ 
                         background: formData.role === role 
                           ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)' 
-                          : 'rgba(255, 255, 255, 0.03)',
+                          : 'var(--bg-button)',
                         border: formData.role === role 
                           ? '2px solid rgba(16, 185, 129, 0.4)' 
-                          : '2px solid rgba(255, 255, 255, 0.06)',
-                        color: formData.role === role ? '#10b981' : 'rgba(255,255,255,0.5)'
+                          : '2px solid var(--border-primary)',
+                        color: formData.role === role ? '#10b981' : 'var(--text-muted)'
                       }}
                     >
                       {role}
@@ -227,7 +252,7 @@ const Register = () => {
 
               {/* Name Field */}
               <div>
-                <label htmlFor="name" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                <label htmlFor="name" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
                   <FiUser style={{ color: '#10b981' }} />
                   Full Name
                 </label>
@@ -246,7 +271,7 @@ const Register = () => {
 
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
                   <FiMail style={{ color: '#3b82f6' }} />
                   Email Address
                 </label>
@@ -265,7 +290,7 @@ const Register = () => {
 
               {/* Phone Field */}
               <div>
-                <label htmlFor="phone" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                <label htmlFor="phone" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
                   <FiPhone style={{ color: '#8b5cf6' }} />
                   Phone Number
                 </label>
@@ -284,7 +309,7 @@ const Register = () => {
 
               {/* Address Field */}
               <div>
-                <label htmlFor="address" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                <label htmlFor="address" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
                   <FiMapPin style={{ color: '#f59e0b' }} />
                   Address
                 </label>
@@ -303,7 +328,7 @@ const Register = () => {
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                <label htmlFor="password" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
                   <FiLock style={{ color: '#10b981' }} />
                   Password
                 </label>
@@ -323,7 +348,7 @@ const Register = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors hover:opacity-80"
-                    style={{ color: 'rgba(255,255,255,0.8)' }}
+                    style={{ color: 'var(--text-secondary)' }}
                   >
                     {showPassword ? <FiEyeOff /> : <FiEye />}
                   </button>
@@ -332,7 +357,7 @@ const Register = () => {
 
               {/* Confirm Password Field */}
               <div>
-                <label htmlFor="confirmPassword" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                <label htmlFor="confirmPassword" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
                   <FiLock style={{ color: '#3b82f6' }} />
                   Confirm Password
                 </label>
@@ -352,7 +377,7 @@ const Register = () => {
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors hover:opacity-80"
-                    style={{ color: 'rgba(255,255,255,0.8)' }}
+                    style={{ color: 'var(--text-secondary)' }}
                   >
                     {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
                   </button>
@@ -385,8 +410,8 @@ const Register = () => {
             </form>
 
             {/* Login Link */}
-            <div className="mt-6 text-center pt-6" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
-              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>
+            <div className="mt-6 text-center pt-6" style={{ borderTop: '1px solid var(--border-secondary)' }}>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 Already have an account?{' '}
                 <button
                   onClick={() => navigate('/login')}

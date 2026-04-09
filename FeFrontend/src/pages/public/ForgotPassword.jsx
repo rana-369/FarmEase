@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiMail, FiArrowLeft, FiAlertCircle, FiCheck, FiTruck } from 'react-icons/fi';
+import { FiMail, FiArrowLeft, FiAlertCircle, FiCheck, FiTruck, FiSun, FiMoon } from 'react-icons/fi';
 import { forgotPassword } from '../../services/authService';
+import { useTheme } from '../../context/ThemeContext';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme, isDark } = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -42,9 +44,12 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#050505' }}>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', transition: 'background-color 0.3s ease' }}>
       <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ 
-        background: 'linear-gradient(135deg, #050505 0%, #080808 50%, #050505 100%)'
+        background: isDark 
+          ? 'linear-gradient(135deg, #050505 0%, #080808 50%, #050505 100%)'
+          : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%)',
+        transition: 'background 0.3s ease'
       }}>
         <div className="absolute inset-0" style={{ 
           backgroundImage: `
@@ -87,8 +92,25 @@ const ForgotPassword = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
               <FiTruck className="text-white text-3xl relative z-10" />
             </motion.div>
-            <h1 className="text-3xl font-bold mb-2 tracking-tight" style={{ color: '#ffffff' }}>Forgot Password</h1>
-            <p className="text-base" style={{ color: 'rgba(255,255,255,0.5)' }}>Enter your email to receive a reset code</p>
+            <div className="flex items-center justify-center gap-4 mb-2">
+              <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Forgot Password</h1>
+              <motion.button
+                onClick={toggleTheme}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
+                style={{ 
+                  color: 'var(--text-secondary)',
+                  backgroundColor: 'var(--bg-button)',
+                  border: '1px solid var(--border-primary)'
+                }}
+                title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {isDark ? <FiSun size={14} /> : <FiMoon size={14} />}
+                <span className="text-xs font-medium">{isDark ? 'Light' : 'Dark'}</span>
+              </motion.button>
+            </div>
+            <p className="text-base" style={{ color: 'var(--text-muted)' }}>Enter your email to receive a reset code</p>
           </div>
 
           {/* Form Card */}
@@ -98,8 +120,8 @@ const ForgotPassword = () => {
             transition={{ delay: 0.2 }}
             className="p-8 rounded-3xl relative overflow-hidden"
             style={{ 
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-primary)',
               backdropFilter: 'blur(20px)'
             }}
           >
@@ -111,8 +133,8 @@ const ForgotPassword = () => {
                 }}>
                   <FiCheck className="text-3xl" style={{ color: '#10b981' }} />
                 </div>
-                <h3 className="text-xl font-bold mb-2" style={{ color: '#ffffff' }}>OTP Sent!</h3>
-                <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>OTP Sent!</h3>
+                <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
                   We've sent a 6-digit code to <span className="font-semibold" style={{ color: '#10b981' }}>{email}</span>. 
                   The code is valid for 15 minutes.
                 </p>
@@ -159,7 +181,7 @@ const ForgotPassword = () => {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
-                    <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                    <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
                       <FiMail style={{ color: '#10b981' }} />
                       Email Address
                     </label>
@@ -199,8 +221,8 @@ const ForgotPassword = () => {
                   </motion.button>
                 </form>
 
-                <div className="mt-6 text-center pt-6" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                <div className="mt-6 text-center pt-6" style={{ borderTop: '1px solid var(--border-secondary)' }}>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                     Remember your password?{' '}
                     <button
                       onClick={() => navigate('/login')}

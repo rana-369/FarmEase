@@ -65,7 +65,7 @@ const OwnerEarnings = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="relative">
           <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }} />
           <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }} />
@@ -79,7 +79,7 @@ const OwnerEarnings = () => {
     .reduce((sum, a) => sum + (a.amount || 0), 0);
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -100,8 +100,8 @@ const OwnerEarnings = () => {
               <FiTrendingUp className="text-xl text-white relative z-10" />
             </motion.div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Earnings</h1>
-              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Track your rental income</p>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Earnings</h1>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Track your rental income</p>
             </div>
           </div>
         </motion.div>
@@ -140,7 +140,7 @@ const OwnerEarnings = () => {
                   </div>
                 </div>
                 <p className="text-2xl font-bold relative" style={{ color: stat.color }}>{stat.value}</p>
-                <p className="text-xs font-medium relative" style={{ color: 'rgba(255,255,255,0.8)' }}>{stat.label}</p>
+                <p className="text-xs font-medium relative" style={{ color: 'var(--text-secondary)' }}>{stat.label}</p>
               </motion.div>
             );
           })}
@@ -153,8 +153,8 @@ const OwnerEarnings = () => {
           transition={{ delay: 0.3 }}
           className="rounded-3xl p-6 relative overflow-hidden" 
           style={{ 
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-primary)',
             backdropFilter: 'blur(10px)'
           }}
         >
@@ -170,7 +170,7 @@ const OwnerEarnings = () => {
               >
                 <FiTrendingUp className="text-lg" style={{ color: '#10b981' }} />
               </div>
-              <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Recent Transactions</h2>
+              <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Recent Transactions</h2>
             </div>
             <div className="flex gap-2">
               <motion.button
@@ -178,9 +178,9 @@ const OwnerEarnings = () => {
                 whileTap={{ scale: 0.9 }}
                 className="p-2.5 rounded-xl"
                 style={{ 
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  color: 'rgba(255,255,255,0.6)'
+                  background: 'var(--bg-button)',
+                  border: '1px solid var(--border-primary)',
+                  color: 'var(--text-muted)'
                 }}
               >
                 <FiFilter className="w-4 h-4" />
@@ -190,9 +190,9 @@ const OwnerEarnings = () => {
                 whileTap={{ scale: 0.9 }}
                 className="p-2.5 rounded-xl"
                 style={{ 
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  color: 'rgba(255,255,255,0.6)'
+                  background: 'var(--bg-button)',
+                  border: '1px solid var(--border-primary)',
+                  color: 'var(--text-muted)'
                 }}
               >
                 <FiDownload className="w-4 h-4" />
@@ -210,8 +210,8 @@ const OwnerEarnings = () => {
                 whileHover={{ scale: 1.01, x: 4 }}
                 className="p-4 rounded-2xl flex items-center justify-between transition-all group"
                 style={{ 
-                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.04)'
+                  background: 'var(--bg-button)',
+                  border: '1px solid var(--border-secondary)'
                 }}
               >
                 <div className="flex items-center gap-3">
@@ -225,8 +225,8 @@ const OwnerEarnings = () => {
                     <FiTrendingUp className="text-lg" style={{ color: '#10b981' }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-sm" style={{ color: '#ffffff' }}>{item.machineName}</p>
-                    <div className="flex items-center gap-2 text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                    <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{item.machineName}</p>
+                    <div className="flex items-center gap-2 text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
                       <FiCalendar className="w-3 h-3" />
                       <span>{new Date(item.time).toLocaleDateString()}</span>
                       <span>•</span>
@@ -255,14 +255,14 @@ const OwnerEarnings = () => {
                 <div 
                   className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden"
                   style={{ 
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)'
+                    background: 'var(--bg-button)',
+                    border: '1px solid var(--border-secondary)'
                   }}
                 >
-                  <FiTrendingUp className="text-3xl" style={{ color: 'rgba(255,255,255,0.6)' }} />
+                  <FiTrendingUp className="text-3xl" style={{ color: 'var(--text-muted)' }} />
                 </div>
-                <p className="text-sm mb-1 font-semibold" style={{ color: '#ffffff' }}>No transactions yet</p>
-                <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Earnings will appear here after rentals</p>
+                <p className="text-sm mb-1 font-semibold" style={{ color: 'var(--text-primary)' }}>No transactions yet</p>
+                <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Earnings will appear here after rentals</p>
               </div>
             )}
           </div>

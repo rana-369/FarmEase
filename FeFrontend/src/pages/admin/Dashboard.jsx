@@ -202,7 +202,7 @@ const AdminDashboard = () => {
                 <div className="stat-info">
                   <p className="stat-title-new">{stat.title}</p>
                   <h3 className="stat-value-new">{stat.value}</h3>
-                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{stat.breakdown}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{stat.breakdown}</p>
                 </div>
                 <div 
                   className="stat-icon-new"
@@ -245,8 +245,8 @@ const AdminDashboard = () => {
             <div className="space-y-4 relative">
               {revenueData.map((data, index) => (
                 <div key={data.month || index} className="flex items-center gap-4">
-                  <span className="text-sm font-medium w-12" style={{ color: 'rgba(255,255,255,0.8)' }}>{data.month}</span>
-                  <div className="flex-1 h-2 rounded-full" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)' }}>
+                  <span className="text-sm font-medium w-12" style={{ color: 'var(--text-secondary)' }}>{data.month}</span>
+                  <div className="flex-1 h-2 rounded-full" style={{ background: 'var(--bg-button)' }}>
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${((data.revenue || data.Revenue || 0) / maxRevenue) * 100}%` }}
@@ -255,15 +255,15 @@ const AdminDashboard = () => {
                       style={{ background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)' }}
                     />
                   </div>
-                  <span className="text-sm font-semibold w-16 text-right" style={{ color: '#ffffff' }}>
+                  <span className="text-sm font-semibold w-16 text-right" style={{ color: 'var(--text-primary)' }}>
                     ₹{((data.revenue || data.Revenue || 0) / 1000).toFixed(0)}K
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="mt-6 pt-6 flex items-center justify-between relative" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
-              <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Total Revenue</span>
+            <div className="mt-6 pt-6 flex items-center justify-between relative" style={{ borderTop: '1px solid var(--border-secondary)' }}>
+              <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Total Revenue</span>
               <span className="text-xl font-bold" style={{ color: '#10b981' }}>₹{(stats.totalRevenue / 1000).toFixed(0)}K</span>
             </div>
           </motion.div>
@@ -314,24 +314,24 @@ const AdminDashboard = () => {
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium" style={{ color: '#ffffff' }}>
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                       Booking by <span className="font-semibold">{activity.farmer}</span> for {activity.machine}
                       {activity.revenue && (
                         <span style={{ color: '#10b981' }}> • ₹{activity.revenue}</span>
                       )}
                     </p>
-                    <p className="text-xs mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>{activity.time}</p>
+                    <p className="text-xs mt-1 font-medium" style={{ color: 'var(--text-muted)' }}>{activity.time}</p>
                   </div>
                 </motion.div>
               )) : (
                 <div className="text-center py-8">
                   <div 
                     className="stat-icon-new mx-auto mb-3"
-                    style={{ background: 'rgba(255, 255, 255, 0.04)', color: 'rgba(255,255,255,0.4)' }}
+                    style={{ background: 'var(--bg-button)', color: 'var(--text-muted)' }}
                   >
                     <FiActivity />
                   </div>
-                  <p className="font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>No recent activity</p>
+                  <p className="font-medium" style={{ color: 'var(--text-muted)' }}>No recent activity</p>
                 </div>
               )}
             </div>
@@ -428,7 +428,7 @@ const AdminDashboard = () => {
                   <span className="text-xl font-bold">{metric.value}</span>
                 </div>
                 <h3 className="stat-title-new">{metric.label}</h3>
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{metric.subtext}</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{metric.subtext}</p>
               </motion.div>
             ))}
           </div>

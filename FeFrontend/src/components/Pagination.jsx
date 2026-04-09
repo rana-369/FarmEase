@@ -53,19 +53,20 @@ const Pagination = ({
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 px-4 py-4 rounded-2xl" style={{ 
-      backgroundColor: 'rgba(255, 255, 255, 0.02)',
-      border: '1px solid rgba(255, 255, 255, 0.05)'
+      backgroundColor: 'var(--bg-card)',
+      border: '1px solid var(--border-primary)'
     }}>
       {/* Items per page selector */}
       <div className="flex items-center gap-3">
-        <span className="text-sm" style={{ color: '#a1a1a1' }}>Show</span>
+        <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Show</span>
         <select
           value={itemsPerPage}
           onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-          className="px-3 py-2 rounded-lg text-white outline-none cursor-pointer"
+          className="px-3 py-2 rounded-lg outline-none cursor-pointer"
           style={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
+            backgroundColor: 'var(--bg-button)',
+            border: '1px solid var(--border-primary)',
+            color: 'var(--text-primary)'
           }}
         >
           <option value={5}>5</option>
@@ -73,14 +74,14 @@ const Pagination = ({
           <option value={20}>20</option>
           <option value={50}>50</option>
         </select>
-        <span className="text-sm" style={{ color: '#a1a1a1' }}>per page</span>
+        <span className="text-sm" style={{ color: 'var(--text-muted)' }}>per page</span>
       </div>
 
       {/* Items info */}
-      <div className="text-sm" style={{ color: '#a1a1a1' }}>
+      <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
         Showing <span style={{ color: '#22c55e' }}>{startItem}</span> to{' '}
         <span style={{ color: '#22c55e' }}>{endItem}</span> of{' '}
-        <span style={{ color: '#ffffff' }}>{totalItems}</span> items
+        <span style={{ color: 'var(--text-primary)' }}>{totalItems}</span> items
       </div>
 
       {/* Page navigation */}
@@ -93,8 +94,8 @@ const Pagination = ({
           disabled={currentPage === 1}
           className="p-2 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ 
-            backgroundColor: currentPage === 1 ? 'transparent' : 'rgba(255, 255, 255, 0.05)',
-            color: '#a1a1a1'
+            backgroundColor: currentPage === 1 ? 'transparent' : 'var(--bg-button)',
+            color: 'var(--text-muted)'
           }}
         >
           <FiChevronsLeft className="text-lg" />
@@ -108,8 +109,8 @@ const Pagination = ({
           disabled={currentPage === 1}
           className="p-2 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ 
-            backgroundColor: currentPage === 1 ? 'transparent' : 'rgba(255, 255, 255, 0.05)',
-            color: '#a1a1a1'
+            backgroundColor: currentPage === 1 ? 'transparent' : 'var(--bg-button)',
+            color: 'var(--text-muted)'
           }}
         >
           <FiChevronLeft className="text-lg" />
@@ -127,9 +128,9 @@ const Pagination = ({
                 page === '...' ? 'cursor-default' : ''
               }`}
               style={{ 
-                backgroundColor: page === currentPage ? '#22c55e' : 'rgba(255, 255, 255, 0.05)',
-                color: page === currentPage ? '#000000' : page === '...' ? '#666666' : '#a1a1a1',
-                border: page === currentPage ? 'none' : '1px solid rgba(255, 255, 255, 0.1)'
+                backgroundColor: page === currentPage ? '#22c55e' : 'var(--bg-button)',
+                color: page === currentPage ? '#000000' : page === '...' ? 'var(--text-muted)' : 'var(--text-muted)',
+                border: page === currentPage ? 'none' : '1px solid var(--border-primary)'
               }}
             >
               {page}
@@ -145,8 +146,8 @@ const Pagination = ({
           disabled={currentPage === totalPages}
           className="p-2 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ 
-            backgroundColor: currentPage === totalPages ? 'transparent' : 'rgba(255, 255, 255, 0.05)',
-            color: '#a1a1a1'
+            backgroundColor: currentPage === totalPages ? 'transparent' : 'var(--bg-button)',
+            color: 'var(--text-muted)'
           }}
         >
           <FiChevronRight className="text-lg" />
@@ -160,8 +161,8 @@ const Pagination = ({
           disabled={currentPage === totalPages}
           className="p-2 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ 
-            backgroundColor: currentPage === totalPages ? 'transparent' : 'rgba(255, 255, 255, 0.05)',
-            color: '#a1a1a1'
+            backgroundColor: currentPage === totalPages ? 'transparent' : 'var(--bg-button)',
+            color: 'var(--text-muted)'
           }}
         >
           <FiChevronsRight className="text-lg" />

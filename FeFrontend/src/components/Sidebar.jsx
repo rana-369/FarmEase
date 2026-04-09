@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { 
   FiHome, 
   FiTruck, 
@@ -12,14 +13,18 @@ import {
   FiLogOut,
   FiPlus,
   FiUser,
-  FiChevronRight
+  FiChevronRight,
+  FiSun,
+  FiMoon
 } from 'react-icons/fi';
 import { RupeeIcon } from './RupeeIcon';
+import ThemeToggle from './ThemeToggle';
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, user } = useAuth();
+  const { theme, toggleTheme, isDark } = useTheme();
 
   const adminMenuItems = [
     { icon: FiHome, label: 'Dashboard', path: '/admin' },
@@ -133,7 +138,7 @@ const Sidebar = () => {
             <span>A</span>
           </div>
           <div className="user-info">
-            <h2 className="logo-text-new">AgriConnect</h2>
+            <h2 className="logo-text-new">FarmEase</h2>
             <p className="logo-subtitle">Farm Equipment Platform</p>
           </div>
         </motion.div>
@@ -244,6 +249,47 @@ const Sidebar = () => {
           })}
         </ul>
       </nav>
+      
+      {/* Theme Toggle Section */}
+      <div style={{ padding: '8px 16px' }}>
+        <motion.button
+          onClick={toggleTheme}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            width: '100%',
+            padding: '12px 16px',
+            background: 'var(--bg-button)',
+            border: '1px solid var(--border-primary)',
+            borderRadius: '12px',
+            color: 'var(--text-tertiary)',
+            fontSize: '14px',
+            fontWeight: 500,
+            cursor: 'pointer',
+            transition: 'all 0.25s ease',
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45, duration: 0.4 }}
+          whileHover={{ scale: 1.01, backgroundColor: 'var(--bg-button-hover)' }}
+          whileTap={{ scale: 0.99 }}
+        >
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: isDark ? 'rgba(245, 158, 11, 0.15)' : 'rgba(99, 102, 241, 0.15)',
+            border: isDark ? '1px solid rgba(245, 158, 11, 0.2)' : '1px solid rgba(99, 102, 241, 0.2)',
+          }}>
+            {isDark ? <FiSun style={{ color: '#f59e0b' }} /> : <FiMoon style={{ color: '#6366f1' }} />}
+          </div>
+          <span className="nav-item-text">{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+        </motion.button>
+      </div>
       
       {/* Logout Section */}
       <div className="sidebar-footer-new">

@@ -85,7 +85,7 @@ export const openRazorpayCheckout = (options) => {
       key: options.keyId,
       amount: options.amount * 100, // Convert rupees to paise
       currency: 'INR',
-      name: 'AgriConnect',
+      name: 'FarmEase',
       description: options.description,
       order_id: options.orderId,
       handler: (response) => {

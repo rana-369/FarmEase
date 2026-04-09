@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiTruck, FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle, FiShield, FiUsers, FiArrowLeft, FiX, FiCheck, FiSun, FiTool, FiUser } from 'react-icons/fi';
+import { FiTruck, FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle, FiShield, FiUsers, FiArrowLeft, FiX, FiCheck, FiSun, FiTool, FiUser, FiMoon } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { createPortal } from 'react-dom';
 import TwoFactorVerify from '../../components/TwoFactorVerify';
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, logout, verify2FA, resend2FACode, cancel2FA, requires2FA, pending2FAEmail, pending2FARole } = useAuth();
+  const { theme, toggleTheme, isDark } = useTheme();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -128,10 +130,13 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: '#050505' }}>
+    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--bg-primary)', transition: 'background-color 0.3s ease' }}>
       {/* Left Side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden" style={{ 
-        background: 'linear-gradient(135deg, #080808 0%, #0c0c0c 50%, #080808 100%)'
+        background: isDark 
+          ? 'linear-gradient(135deg, #080808 0%, #0c0c0c 50%, #080808 100%)'
+          : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%)',
+        transition: 'background 0.3s ease'
       }}>
         {/* Background Pattern */}
         <div className="absolute inset-0" style={{
@@ -199,18 +204,18 @@ const Login = () => {
                 <FiTruck className="text-2xl text-white relative z-10" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold tracking-tight" style={{ color: '#ffffff' }}>AgriConnect</h1>
-                <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>Farm Equipment Platform</p>
+                <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>FarmEase</h1>
+                <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Farm Equipment Platform</p>
               </div>
             </div>
 
             {/* Headline */}
-            <h2 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight" style={{ color: '#ffffff' }}>
+            <h2 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight" style={{ color: 'var(--text-primary)' }}>
               Modern Farming<br />
               <span className="text-gradient">Starts Here</span>
             </h2>
             
-            <p className="text-lg mb-10 max-w-md" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            <p className="text-lg mb-10 max-w-md" style={{ color: 'var(--text-muted)' }}>
               Connect with equipment owners, manage your farm operations, and grow your agricultural business.
             </p>
 
@@ -237,7 +242,7 @@ const Login = () => {
                   >
                     <feature.icon className="text-sm" style={{ color: feature.color }} />
                   </div>
-                  <span style={{ color: 'rgba(255,255,255,0.7)' }}>{feature.text}</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>{feature.text}</span>
                 </motion.div>
               ))}
             </div>
@@ -246,12 +251,14 @@ const Login = () => {
 
         {/* Bottom Gradient */}
         <div className="absolute bottom-0 left-0 right-0 h-32" style={{
-          background: 'linear-gradient(to top, #050505, transparent)'
+          background: isDark 
+            ? 'linear-gradient(to top, #050505, transparent)'
+            : 'linear-gradient(to top, var(--bg-primary), transparent)'
         }} />
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 relative" style={{ backgroundColor: '#050505' }}>
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 relative" style={{ backgroundColor: 'var(--bg-primary)', transition: 'background-color 0.3s ease' }}>
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -287,21 +294,38 @@ const Login = () => {
                 <FiTruck className="text-xl text-white relative z-10" />
               </div>
               <div>
-                <h1 className="text-xl font-bold tracking-tight" style={{ color: '#ffffff' }}>AgriConnect</h1>
-                <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>Farm Equipment Platform</p>
+                <h1 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>FarmEase</h1>
+                <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Farm Equipment Platform</p>
               </div>
             </div>
           </div>
 
           {/* Header */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-2" style={{ color: '#ffffff' }}>Welcome Back</h2>
-            <p style={{ color: 'rgba(255,255,255,0.8)' }}>Sign in to access your dashboard</p>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Welcome Back</h2>
+              <motion.button
+                onClick={toggleTheme}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
+                style={{ 
+                  color: 'var(--text-secondary)',
+                  backgroundColor: 'var(--bg-button)',
+                  border: '1px solid var(--border-primary)'
+                }}
+                title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {isDark ? <FiSun size={14} /> : <FiMoon size={14} />}
+                <span className="text-xs font-medium">{isDark ? 'Light' : 'Dark'}</span>
+              </motion.button>
+            </div>
+            <p style={{ color: 'var(--text-secondary)' }}>Sign in to access your dashboard</p>
           </div>
 
           {/* Role Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-tertiary)' }}>
               Select your role
             </label>
             <div className="grid grid-cols-3 gap-3">
@@ -321,8 +345,8 @@ const Login = () => {
                     whileTap={{ scale: 0.97 }}
                     className="flex flex-col items-center gap-2 p-4 rounded-2xl transition-all relative overflow-hidden group"
                     style={{ 
-                      backgroundColor: isActive ? `${config.color}15` : 'rgba(255, 255, 255, 0.03)',
-                      border: isActive ? `2px solid ${config.color}40` : '2px solid rgba(255, 255, 255, 0.06)',
+                      backgroundColor: isActive ? `${config.color}15` : 'var(--bg-card)',
+                      border: isActive ? `2px solid ${config.color}40` : '2px solid var(--border-primary)',
                       opacity: requires2FA && !isActive ? 0.5 : 1,
                       cursor: requires2FA ? 'not-allowed' : 'pointer'
                     }}
@@ -335,8 +359,8 @@ const Login = () => {
                         }}
                       />
                     )}
-                    <Icon className="text-xl relative z-10" style={{ color: isActive ? config.color : 'rgba(255,255,255,0.8)' }} />
-                    <span className="text-sm font-semibold relative z-10" style={{ color: isActive ? config.color : 'rgba(255,255,255,0.5)' }}>
+                    <Icon className="text-xl relative z-10" style={{ color: isActive ? config.color : 'var(--text-secondary)' }} />
+                    <span className="text-sm font-semibold relative z-10" style={{ color: isActive ? config.color : 'var(--text-muted)' }}>
                       {role}
                     </span>
                   </motion.button>
@@ -349,8 +373,8 @@ const Login = () => {
           <div 
             className="p-6 rounded-3xl relative overflow-hidden"
             style={{ 
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-primary)',
               backdropFilter: 'blur(10px)'
             }}
           >
@@ -398,7 +422,7 @@ const Login = () => {
                 <form onSubmit={handleSubmit} className="space-y-5">
                   {/* Email */}
                   <div className="space-y-2">
-                    <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                    <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
                       <FiMail style={{ color: '#10b981' }} />
                       Email Address
                     </label>
@@ -417,7 +441,7 @@ const Login = () => {
 
                   {/* Password */}
                   <div className="space-y-2">
-                    <label htmlFor="password" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                    <label htmlFor="password" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
                       <FiLock style={{ color: '#3b82f6' }} />
                       Password
                     </label>
@@ -437,7 +461,7 @@ const Login = () => {
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors hover:opacity-80"
-                        style={{ color: 'rgba(255,255,255,0.8)' }}
+                        style={{ color: 'var(--text-secondary)' }}
                       >
                         {showPassword ? <FiEyeOff /> : <FiEye />}
                       </button>
@@ -482,8 +506,8 @@ const Login = () => {
                 </form>
 
                 {/* Register Link */}
-                <div className="mt-6 text-center pt-6" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                <div className="mt-6 text-center pt-6" style={{ borderTop: '1px solid var(--border-secondary)' }}>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                     Don't have an account?{' '}
                     <button
                       onClick={() => navigate('/register')}
@@ -499,7 +523,7 @@ const Login = () => {
           </div>
 
           {/* Security Badge */}
-          <div className="mt-6 flex items-center justify-center gap-4 text-xs" style={{ color: '#555555' }}>
+          <div className="mt-6 flex items-center justify-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
             <div className="flex items-center gap-1.5">
               <FiShield />
               <span>Secure</span>
@@ -520,7 +544,7 @@ const Login = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="w-full max-w-sm p-6 rounded-2xl relative"
             style={{ 
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
+              background: 'var(--bg-card)',
               border: '1px solid rgba(245, 158, 11, 0.3)',
               boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)'
             }}
@@ -528,7 +552,7 @@ const Login = () => {
             <button
               onClick={() => setShowRoleModal(false)}
               className="absolute top-4 right-4 p-2 rounded-lg transition-colors hover:bg-white/5"
-              style={{ color: '#666666' }}
+              style={{ color: 'var(--text-muted)' }}
             >
               <FiX />
             </button>
@@ -541,8 +565,8 @@ const Login = () => {
                 <FiAlertCircle className="text-3xl" style={{ color: '#f59e0b' }} />
               </div>
               
-              <h3 className="text-xl font-bold mb-2" style={{ color: '#ffffff' }}>Role Mismatch</h3>
-              <p className="text-sm mb-6" style={{ color: '#888888' }}>
+              <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Role Mismatch</h3>
+              <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
                 This account is registered as <span className="font-semibold" style={{ color: '#22c55e' }}>{actualRole}</span>. 
                 Only <span className="font-semibold" style={{ color: '#22c55e' }}>{actualRole}</span>s can login with these credentials.
               </p>
@@ -570,9 +594,9 @@ const Login = () => {
                   onClick={() => setShowRoleModal(false)}
                   className="w-full py-3 rounded-xl font-medium transition-all"
                   style={{ 
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    color: '#a1a1a1',
-                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                    backgroundColor: 'var(--bg-button)',
+                    color: 'var(--text-secondary)',
+                    border: '1px solid var(--border-primary)'
                   }}
                 >
                   Try Different Account

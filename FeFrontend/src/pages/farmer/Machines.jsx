@@ -130,7 +130,7 @@ const FarmerMachines = () => {
           </div>
         ) : (
           <>
-            <div className="flex justify-between items-center mb-6 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="flex justify-between items-center mb-6 p-4" style={{ borderBottom: '1px solid var(--border-secondary)' }}>
               <h3 className="card-title">Book Equipment</h3>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -157,7 +157,7 @@ const FarmerMachines = () => {
             <div className="mb-6 px-4">
               <label className="input-label block mb-2">Number of Hours</label>
               <div className="search-box-new">
-                <FiClock className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.5)' }} />
+                <FiClock className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
                 <input
                   id="booking-hours"
                   type="number"
@@ -180,11 +180,11 @@ const FarmerMachines = () => {
                 <span className="input-label">Platform Fee (10%)</span>
                 <span className="font-semibold">Rs.{Math.round((bookingModal.machine?.rate || 0) * bookingModal.hours * 0.1)}</span>
               </div>
-              <div className="flex justify-between items-center pt-2" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+              <div className="flex justify-between items-center pt-2" style={{ borderTop: '1px solid var(--border-secondary)' }}>
                 <span className="input-label">Total Amount</span>
                 <span className="text-2xl font-bold" style={{ color: '#10b981' }}>Rs.{Math.round((bookingModal.machine?.rate || 0) * bookingModal.hours * 1.1)}</span>
               </div>
-              <p className="text-xs mt-1 text-right" style={{ color: 'rgba(255,255,255,0.75)' }}>
+              <p className="text-xs mt-1 text-right" style={{ color: 'var(--text-secondary)' }}>
                 Rs.{Math.round(bookingModal.machine?.rate * 1.1)}/hr × {bookingModal.hours} hr{bookingModal.hours > 1 ? 's' : ''}
               </p>
             </div>
@@ -257,7 +257,7 @@ const FarmerMachines = () => {
         {/* Filters */}
         <div className="filters-bar-new mb-6">
           <div className="search-box-new">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
             <input
               id="marketplace-search"
               name="marketplace-search"
@@ -271,7 +271,7 @@ const FarmerMachines = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <FiFilter style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <FiFilter style={{ color: 'var(--text-muted)' }} />
             <select
               id="category-filter"
               name="category-filter"
@@ -289,7 +289,7 @@ const FarmerMachines = () => {
 
         {/* Results Count */}
         <p className="input-label mb-4">
-          Showing <span className="font-semibold" style={{ color: '#ffffff' }}>{filteredMachines.length}</span> equipment
+          Showing <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{filteredMachines.length}</span> equipment
         </p>
 
         {/* Machines Grid */}
@@ -303,7 +303,7 @@ const FarmerMachines = () => {
               whileHover={{ y: -4 }}
               className="card overflow-hidden"
             >
-              <div className="h-40 overflow-hidden relative" style={{ backgroundColor: '#0a0a0a' }}>
+              <div className="h-40 overflow-hidden relative" style={{ backgroundColor: 'var(--bg-primary)' }}>
                 <img
                   src={machine.image}
                   alt={machine.name}
@@ -313,8 +313,8 @@ const FarmerMachines = () => {
                     e.target.nextSibling.style.display = 'flex';
                   }}
                 />
-                <div className="absolute inset-0 hidden items-center justify-center" style={{ backgroundColor: '#0a0a0a' }}>
-                  <FiTruck className="w-12 h-12" style={{ color: 'rgba(255,255,255,0.2)' }} />
+                <div className="absolute inset-0 hidden items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
+                  <FiTruck className="w-12 h-12" style={{ color: 'var(--text-muted)' }} />
                 </div>
                 {!machine.available && (
                   <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(4px)' }}>
@@ -338,15 +338,15 @@ const FarmerMachines = () => {
                 <h3 className="card-title mb-1 truncate">{machine.name}</h3>
                 <p className="card-subtitle mb-3 line-clamp-1">{machine.description}</p>
                 
-                <div className="flex items-center gap-2 text-xs mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                <div className="flex items-center gap-2 text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
                   <FiMapPin className="w-3 h-3" style={{ color: '#10b981' }} />
                   <span className="truncate">{machine.location}</span>
                 </div>
 
-                <div className="flex items-center justify-between pt-4" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <div className="flex items-center justify-between pt-4" style={{ borderTop: '1px solid var(--border-secondary)' }}>
                   <div>
-                    <p className="text-xl font-bold" style={{ color: '#10b981' }}>Rs.{Math.round(machine.rate * 1.1)}<span className="text-xs font-normal" style={{ color: 'rgba(255,255,255,0.8)' }}>/hr</span></p>
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.75)' }}>incl. platform fee</p>
+                    <p className="text-xl font-bold" style={{ color: '#10b981' }}>Rs.{Math.round(machine.rate * 1.1)}<span className="text-xs font-normal" style={{ color: 'var(--text-secondary)' }}>/hr</span></p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>incl. platform fee</p>
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.05 }}

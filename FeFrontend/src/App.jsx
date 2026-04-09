@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import Navbar from './components/Navbar';
 import FarmerLayout from './layouts/FarmerLayout';
 import OwnerLayout from './layouts/OwnerLayout';
@@ -153,14 +154,25 @@ const AppRoutes = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <div className="App" style={{ backgroundColor: '#050505', minHeight: '100vh' }}>
-          <AppRoutes />
-        </div>
-      </BrowserRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
+
+// Separate component to use theme context
+const AppContent = () => {
+  const { theme } = useTheme();
+  
+  return (
+    <div className="App" style={{ backgroundColor: 'var(--bg-primary)', minHeight: '100vh', transition: 'background-color 0.3s ease' }}>
+      <AppRoutes />
+    </div>
+  );
+};
 
 export default App;

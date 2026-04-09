@@ -27,7 +27,7 @@ const Modal = ({ isOpen, onClose, children }) => {
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999,
-        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        backgroundColor: 'var(--overlay-bg)',
         padding: '16px'
       }}
       onClick={(e) => {
@@ -38,10 +38,12 @@ const Modal = ({ isOpen, onClose, children }) => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         style={{
-          background: '#1a1a2e',
+          background: 'var(--modal-bg)',
           borderRadius: '16px',
           maxWidth: '28rem',
-          width: '100%'
+          width: '100%',
+          border: '1px solid var(--border-primary)',
+          boxShadow: 'var(--shadow-lg)'
         }}
         onClick={(e) => e.stopPropagation()}
       >

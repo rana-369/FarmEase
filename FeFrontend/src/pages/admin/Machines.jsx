@@ -176,7 +176,7 @@ const MachineApproval = () => {
         {/* Filters */}
         <div className="filters-bar-new mb-6">
           <div className="search-box-new">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
             <input
               id="machine-search"
               name="machine-search"
@@ -190,7 +190,7 @@ const MachineApproval = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <FiFilter style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <FiFilter style={{ color: 'var(--text-muted)' }} />
             <select
               id="status-filter"
               name="status-filter"
@@ -239,15 +239,15 @@ const MachineApproval = () => {
                 </div>
 
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  <div className="flex items-center text-sm" style={{ color: 'var(--text-muted)' }}>
                     <FiMapPin className="mr-2 w-3 h-3" style={{ color: '#10b981' }} />
                     {machine.ownerLocation || 'No location'}
                   </div>
-                  <div className="flex items-center text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  <div className="flex items-center text-sm" style={{ color: 'var(--text-muted)' }}>
                     <span className="text-sm mr-2 font-bold" style={{ color: '#10b981' }}>₹</span>
                     {machine.rate || 0}/hour
                   </div>
-                  <div className="flex items-center text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  <div className="flex items-center text-sm" style={{ color: 'var(--text-muted)' }}>
                     <FiCalendar className="mr-2 w-3 h-3" />
                     {formatDate(machine.createdAt || machine.created_at)}
                   </div>
@@ -330,7 +330,7 @@ const MachineApproval = () => {
 
       {/* Machine Detail Modal */}
       <Modal isOpen={!!selectedMachine} onClose={() => setSelectedMachine(null)}>
-        <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid var(--border-secondary)' }}>
           <h3 className="card-title">Machine Details</h3>
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -344,19 +344,19 @@ const MachineApproval = () => {
         <div className="grid grid-cols-2 gap-4 px-4 pb-4">
           <div>
             <p className="input-label">Name</p>
-            <p className="font-semibold" style={{ color: '#ffffff' }}>{selectedMachine?.name || 'N/A'}</p>
+            <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{selectedMachine?.name || 'N/A'}</p>
           </div>
           <div>
             <p className="input-label">Type</p>
-            <p className="font-semibold" style={{ color: '#ffffff' }}>{selectedMachine?.type || 'N/A'}</p>
+            <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{selectedMachine?.type || 'N/A'}</p>
           </div>
           <div>
             <p className="input-label">Owner</p>
-            <p className="font-semibold" style={{ color: '#ffffff' }}>{selectedMachine?.ownerName || 'N/A'}</p>
+            <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{selectedMachine?.ownerName || 'N/A'}</p>
           </div>
           <div>
             <p className="input-label">Location</p>
-            <p className="font-semibold" style={{ color: '#ffffff' }}>{selectedMachine?.ownerLocation || 'N/A'}</p>
+            <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{selectedMachine?.ownerLocation || 'N/A'}</p>
           </div>
           <div>
             <p className="input-label">Rate</p>
@@ -377,7 +377,7 @@ const MachineApproval = () => {
           </div>
           <div className="col-span-2">
             <p className="input-label">Added</p>
-            <p className="font-semibold" style={{ color: '#ffffff' }}>
+            <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>
               {formatDate(selectedMachine?.createdAt || selectedMachine?.created_at)}
             </p>
           </div>

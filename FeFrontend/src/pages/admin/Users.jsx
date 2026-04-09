@@ -195,7 +195,7 @@ const UsersManagement = () => {
         {/* Filters */}
         <div className="filters-bar-new mb-6">
           <div className="search-box-new">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
             <input
               id="user-search"
               name="user-search"
@@ -209,7 +209,7 @@ const UsersManagement = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <FiFilter style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <FiFilter style={{ color: 'var(--text-muted)' }} />
             <select
               id="role-filter"
               name="role-filter"
@@ -265,7 +265,7 @@ const UsersManagement = () => {
                             <div className="font-semibold">
                               {user.fullName || 'N/A'}
                             </div>
-                            <div className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                               {user.email}
                             </div>
                           </div>
@@ -284,7 +284,7 @@ const UsersManagement = () => {
                         </span>
                       </td>
                       <td>
-                        <div className="flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        <div className="flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
                           <FiCalendar className="w-3 h-3" />
                           {formatDate(user.createdAt || user.created_at)}
                         </div>
@@ -350,7 +350,7 @@ const UsersManagement = () => {
 
       {/* User Detail Modal */}
       <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)}>
-        <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid var(--border-secondary)' }}>
           <h3 className="card-title">User Details</h3>
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -370,7 +370,7 @@ const UsersManagement = () => {
           ].map((item) => (
             <div key={item.label}>
               <p className="input-label">{item.label}</p>
-              <p className="font-semibold" style={{ color: '#ffffff' }}>{item.value}</p>
+              <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{item.value}</p>
             </div>
           ))}
           
@@ -392,7 +392,7 @@ const UsersManagement = () => {
 
       {/* Edit Role Modal */}
       <Modal isOpen={editModal.open} onClose={() => setEditModal({ open: false, user: null, newRole: '' })}>
-        <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid var(--border-secondary)' }}>
           <h3 className="card-title">Change User Role</h3>
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -407,8 +407,8 @@ const UsersManagement = () => {
         <div className="px-4 pb-4">
           <div className="mb-4">
             <p className="input-label">User</p>
-            <p className="font-semibold" style={{ color: '#ffffff' }}>{editModal.user?.fullName}</p>
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{editModal.user?.email}</p>
+            <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{editModal.user?.fullName}</p>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{editModal.user?.email}</p>
           </div>
           
           <div className="mb-6">
@@ -420,18 +420,18 @@ const UsersManagement = () => {
                 padding: '12px', 
                 borderRadius: '8px', 
                 width: '100%',
-                background: '#1a1a2e',
-                color: '#ffffff',
-                border: '1px solid rgba(255,255,255,0.1)'
+                background: 'var(--bg-input)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-primary)'
               }}
             >
-              <option value="farmer" style={{ background: '#1a1a2e', color: '#ffffff' }}>Farmer</option>
-              <option value="owner" style={{ background: '#1a1a2e', color: '#ffffff' }}>Owner</option>
-              <option value="admin" style={{ background: '#1a1a2e', color: '#ffffff' }}>Admin</option>
+              <option value="farmer">Farmer</option>
+              <option value="owner">Owner</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
           
-          <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
             Are you sure you want to change this user's role to <strong style={{ color: '#10b981' }}>{editModal.newRole}</strong>?
           </p>
           
@@ -459,7 +459,7 @@ const UsersManagement = () => {
 
       {/* Delete Confirmation Modal */}
       <Modal isOpen={deleteModal.open} onClose={() => setDeleteModal({ open: false, user: null })}>
-        <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid var(--border-secondary)' }}>
           <h3 className="card-title" style={{ color: '#f87171' }}>Delete User</h3>
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -476,17 +476,17 @@ const UsersManagement = () => {
             <FiAlertTriangle style={{ color: '#f87171', fontSize: '24px' }} />
             <div>
               <p className="font-semibold" style={{ color: '#f87171' }}>Warning</p>
-              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>This action cannot be undone.</p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>This action cannot be undone.</p>
             </div>
           </div>
           
           <div className="mb-4">
             <p className="input-label">User to delete</p>
-            <p className="font-semibold" style={{ color: '#ffffff' }}>{deleteModal.user?.fullName}</p>
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{deleteModal.user?.email}</p>
+            <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{deleteModal.user?.fullName}</p>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{deleteModal.user?.email}</p>
           </div>
           
-          <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
             All associated data (bookings, machines, notifications) will be permanently deleted.
           </p>
           

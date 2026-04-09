@@ -42,7 +42,7 @@ const EarningsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64" style={{ backgroundColor: '#050505' }}>
+      <div className="flex items-center justify-center h-64" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="relative">
           <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }} />
           <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }} />
@@ -54,7 +54,7 @@ const EarningsPage = () => {
   const maxRevenue = Math.max(...revenueData.map(d => d.revenue), 1);
 
   return (
-    <div className="min-h-screen p-8" style={{ backgroundColor: '#050505' }}>
+    <div className="min-h-screen p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="max-w-7xl mx-auto space-y-12">
         {/* Header */}
         <motion.div
@@ -70,8 +70,8 @@ const EarningsPage = () => {
               Financial Overview
             </span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-2" style={{ color: '#ffffff' }}>Earnings Analytics</h1>
-          <p className="text-lg font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Track and analyze platform revenue and commissions</p>
+          <h1 className="text-4xl font-bold tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>Earnings Analytics</h1>
+          <p className="text-lg font-medium" style={{ color: 'var(--text-secondary)' }}>Track and analyze platform revenue and commissions</p>
         </motion.div>
 
         {/* Stats Grid */}
@@ -115,8 +115,8 @@ const EarningsPage = () => {
               }}>
                 <item.icon className="text-xl" style={{ color: item.color }} />
               </div>
-              <p className="text-sm font-medium mb-2 relative" style={{ color: 'rgba(255,255,255,0.8)' }}>{item.label}</p>
-              <h3 className="text-3xl font-bold relative" style={{ color: '#ffffff' }}>{item.value}</h3>
+              <p className="text-sm font-medium mb-2 relative" style={{ color: 'var(--text-secondary)' }}>{item.label}</p>
+              <h3 className="text-3xl font-bold relative" style={{ color: 'var(--text-primary)' }}>{item.value}</h3>
             </motion.div>
           ))}
         </div>
@@ -128,23 +128,23 @@ const EarningsPage = () => {
           transition={{ delay: 0.3 }}
           className="p-8 rounded-3xl relative overflow-hidden"
           style={{ 
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-primary)',
             backdropFilter: 'blur(10px)'
           }}
         >
           <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)' }} />
           <div className="flex items-center justify-between mb-10 relative">
-            <h2 className="text-2xl font-bold" style={{ color: '#ffffff' }}>Monthly Revenue Breakdown</h2>
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Monthly Revenue Breakdown</h2>
             <div className="flex gap-3">
               <motion.button 
                 whileHover={{ scale: 1.05 }} 
                 whileTap={{ scale: 0.95 }}
                 className="p-3 rounded-xl transition-all" 
                 style={{ 
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)', 
-                  border: '1px solid rgba(255, 255, 255, 0.08)', 
-                  color: 'rgba(255,255,255,0.6)' 
+                  background: 'var(--bg-button)', 
+                  border: '1px solid var(--border-primary)', 
+                  color: 'var(--text-muted)' 
                 }}
               >
                 <FiFilter />
@@ -154,9 +154,9 @@ const EarningsPage = () => {
                 whileTap={{ scale: 0.95 }}
                 className="p-3 rounded-xl transition-all" 
                 style={{ 
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)', 
-                  border: '1px solid rgba(255, 255, 255, 0.08)', 
-                  color: 'rgba(255,255,255,0.6)' 
+                  background: 'var(--bg-button)', 
+                  border: '1px solid var(--border-primary)', 
+                  color: 'var(--text-muted)' 
                 }}
               >
                 <FiDownload />
@@ -168,10 +168,10 @@ const EarningsPage = () => {
             {revenueData.map((data, index) => (
               <div key={data.month || index} className="group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>{data.month}</span>
-                  <span className="font-bold text-lg" style={{ color: '#ffffff' }}>₹{(data.revenue || data.Revenue || 0).toLocaleString()}</span>
+                  <span className="font-medium" style={{ color: 'var(--text-muted)' }}>{data.month}</span>
+                  <span className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>₹{(data.revenue || data.Revenue || 0).toLocaleString()}</span>
                 </div>
-                <div className="w-full rounded-full h-3" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)' }}>
+                <div className="w-full rounded-full h-3" style={{ background: 'var(--bg-button)' }}>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${((data.revenue || data.Revenue || 0) / maxRevenue) * 100}%` }}

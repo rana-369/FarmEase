@@ -3,10 +3,12 @@ import { motion } from 'framer-motion';
 import { FiUser, FiMail, FiPhone, FiMapPin, FiCamera, FiSave, FiRefreshCw, FiBriefcase, FiCheck, FiEdit2, FiX, FiUpload } from 'react-icons/fi';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import TwoFactorSetup from '../../components/TwoFactorSetup';
 
 const OwnerProfile = () => {
   const { get2FASettings, update2FASettings } = useAuth();
+  const { isDark } = useTheme();
   const fileInputRef = useRef(null);
   const [profile, setProfile] = useState({
     fullName: '',
@@ -143,7 +145,7 @@ const OwnerProfile = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="relative">
           <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(59, 130, 246, 0.2)', borderTopColor: '#3b82f6' }} />
           <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)' }} />
@@ -153,7 +155,7 @@ const OwnerProfile = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -174,8 +176,8 @@ const OwnerProfile = () => {
               <FiBriefcase className="text-xl text-white relative z-10" />
             </motion.div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Owner Profile</h1>
-              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Manage your personal details and business identity</p>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Owner Profile</h1>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Manage your personal details and business identity</p>
             </div>
           </div>
           
@@ -227,8 +229,8 @@ const OwnerProfile = () => {
             <div 
               className="p-6 rounded-3xl text-center relative overflow-hidden"
               style={{ 
-                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-primary)',
                 backdropFilter: 'blur(10px)'
               }}
             >
@@ -282,7 +284,7 @@ const OwnerProfile = () => {
               </div>
 
               {/* User Info */}
-              <h3 className="text-lg font-bold mb-1 relative" style={{ color: '#ffffff' }}>
+              <h3 className="text-lg font-bold mb-1 relative" style={{ color: 'var(--text-primary)' }}>
                 {profile.fullName || 'Fleet Owner'}
               </h3>
               <span 
@@ -298,29 +300,29 @@ const OwnerProfile = () => {
               </span>
 
               {/* Quick Stats */}
-              <div className="mt-6 pt-4 relative" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+              <div className="mt-6 pt-4 relative" style={{ borderTop: '1px solid var(--border-secondary)' }}>
                 <div className="grid grid-cols-2 gap-3">
                   <div 
                     className="p-3 rounded-xl"
                     style={{ 
-                      background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
-                      border: '1px solid rgba(255, 255, 255, 0.04)'
+                      background: 'var(--bg-button)',
+                      border: '1px solid var(--border-tertiary)'
                     }}
                   >
-                    <p className="text-xs font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>Company</p>
-                    <p className="text-sm font-semibold truncate" style={{ color: '#ffffff' }}>
+                    <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Company</p>
+                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
                       {profile.companyName || 'N/A'}
                     </p>
                   </div>
                   <div 
                     className="p-3 rounded-xl"
                     style={{ 
-                      background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
-                      border: '1px solid rgba(255, 255, 255, 0.04)'
+                      background: 'var(--bg-button)',
+                      border: '1px solid var(--border-tertiary)'
                     }}
                   >
-                    <p className="text-xs font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>Location</p>
-                    <p className="text-sm font-semibold truncate" style={{ color: '#ffffff' }}>
+                    <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Location</p>
+                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
                       {profile.location || 'N/A'}
                     </p>
                   </div>
@@ -338,8 +340,8 @@ const OwnerProfile = () => {
             <div 
               className="rounded-3xl overflow-hidden relative"
               style={{ 
-                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-primary)',
                 backdropFilter: 'blur(10px)'
               }}
             >
@@ -348,7 +350,7 @@ const OwnerProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* Full Name */}
                   <div className="space-y-2">
-                    <label htmlFor="fullName" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    <label htmlFor="fullName" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>
                       <FiUser style={{ color: '#3b82f6' }} />
                       Full Name
                     </label>
@@ -361,9 +363,9 @@ const OwnerProfile = () => {
                       autoComplete="name"
                       className="w-full px-4 py-3.5 rounded-2xl outline-none transition-all duration-200 font-medium"
                       style={{ 
-                        background: isEditing ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)', 
-                        border: isEditing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.05)',
-                        color: isEditing ? '#ffffff' : 'rgba(255,255,255,0.6)',
+                        background: isEditing ? 'var(--bg-input)' : 'var(--bg-button)', 
+                        border: isEditing ? '1px solid var(--border-primary)' : '1px solid var(--border-tertiary)',
+                        color: isEditing ? 'var(--text-primary)' : 'var(--text-muted)',
                         cursor: isEditing ? 'text' : 'default'
                       }}
                     />
@@ -371,7 +373,7 @@ const OwnerProfile = () => {
 
                   {/* Email */}
                   <div className="space-y-2">
-                    <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>
                       <FiMail style={{ color: '#a855f7' }} />
                       Email Address
                     </label>
@@ -383,16 +385,16 @@ const OwnerProfile = () => {
                       autoComplete="email"
                       className="w-full px-4 py-3.5 rounded-2xl outline-none cursor-not-allowed font-medium"
                       style={{ 
-                        background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)', 
-                        border: '1px solid rgba(255, 255, 255, 0.05)', 
-                        color: 'rgba(255,255,255,0.8)'
+                        background: 'var(--bg-button)', 
+                        border: '1px solid var(--border-tertiary)', 
+                        color: 'var(--text-secondary)'
                       }}
                     />
                   </div>
 
                   {/* Phone */}
                   <div className="space-y-2">
-                    <label htmlFor="phoneNumber" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    <label htmlFor="phoneNumber" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>
                       <FiPhone style={{ color: '#10b981' }} />
                       Phone Number
                     </label>
@@ -405,9 +407,9 @@ const OwnerProfile = () => {
                       autoComplete="tel"
                       className="w-full px-4 py-3.5 rounded-2xl outline-none transition-all duration-200 font-medium"
                       style={{ 
-                        background: isEditing ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)', 
-                        border: isEditing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.05)',
-                        color: isEditing ? '#ffffff' : 'rgba(255,255,255,0.6)',
+                        background: isEditing ? 'var(--bg-input)' : 'var(--bg-button)', 
+                        border: isEditing ? '1px solid var(--border-primary)' : '1px solid var(--border-tertiary)',
+                        color: isEditing ? 'var(--text-primary)' : 'var(--text-muted)',
                         cursor: isEditing ? 'text' : 'default'
                       }}
                     />
@@ -415,7 +417,7 @@ const OwnerProfile = () => {
 
                   {/* Location */}
                   <div className="space-y-2">
-                    <label htmlFor="location" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    <label htmlFor="location" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>
                       <FiMapPin style={{ color: '#ef4444' }} />
                       Location
                     </label>
@@ -428,9 +430,9 @@ const OwnerProfile = () => {
                       autoComplete="address-level2"
                       className="w-full px-4 py-3.5 rounded-2xl outline-none transition-all duration-200 font-medium"
                       style={{ 
-                        background: isEditing ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)', 
-                        border: isEditing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.05)',
-                        color: isEditing ? '#ffffff' : 'rgba(255,255,255,0.6)',
+                        background: isEditing ? 'var(--bg-input)' : 'var(--bg-button)', 
+                        border: isEditing ? '1px solid var(--border-primary)' : '1px solid var(--border-tertiary)',
+                        color: isEditing ? 'var(--text-primary)' : 'var(--text-muted)',
                         cursor: isEditing ? 'text' : 'default'
                       }}
                     />
@@ -438,7 +440,7 @@ const OwnerProfile = () => {
 
                   {/* Company Name */}
                   <div className="space-y-2 md:col-span-2">
-                    <label htmlFor="companyName" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    <label htmlFor="companyName" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>
                       <FiBriefcase style={{ color: '#f59e0b' }} />
                       Company Name
                     </label>
@@ -452,9 +454,9 @@ const OwnerProfile = () => {
                       autoComplete="organization"
                       className="w-full px-4 py-3.5 rounded-2xl outline-none transition-all duration-200 font-medium"
                       style={{ 
-                        background: isEditing ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)', 
-                        border: isEditing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.05)',
-                        color: isEditing ? '#ffffff' : 'rgba(255,255,255,0.6)',
+                        background: isEditing ? 'var(--bg-input)' : 'var(--bg-button)', 
+                        border: isEditing ? '1px solid var(--border-primary)' : '1px solid var(--border-tertiary)',
+                        color: isEditing ? 'var(--text-primary)' : 'var(--text-muted)',
                         cursor: isEditing ? 'text' : 'default'
                       }}
                     />
@@ -465,7 +467,7 @@ const OwnerProfile = () => {
                 {isEditing && (
                   <div 
                     className="flex justify-end gap-3 mt-6 pt-6 relative"
-                    style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}
+                    style={{ borderTop: '1px solid var(--border-secondary)' }}
                   >
                     <motion.button 
                       type="button"
@@ -474,9 +476,9 @@ const OwnerProfile = () => {
                       whileTap={{ scale: 0.98 }}
                       className="px-5 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all"
                       style={{ 
-                        background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)', 
-                        border: '1px solid rgba(255, 255, 255, 0.08)', 
-                        color: 'rgba(255,255,255,0.6)'
+                        background: 'var(--bg-button)', 
+                        border: '1px solid var(--border-primary)', 
+                        color: 'var(--text-muted)'
                       }}
                     >
                       <FiX className="w-4 h-4" />
@@ -504,7 +506,7 @@ const OwnerProfile = () => {
               {/* 2FA Section */}
               <div 
                 className="px-6 pb-6 relative"
-                style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}
+                style={{ borderTop: '1px solid var(--border-secondary)' }}
               >
                 <div className="pt-6">
                   <TwoFactorSetup

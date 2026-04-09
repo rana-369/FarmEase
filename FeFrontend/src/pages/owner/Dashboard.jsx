@@ -299,10 +299,10 @@ const OwnerDashboard = () => {
                     {activity.type === 'booking' ? <FiCalendar /> : <FiCheckCircle />}
                   </div>
                   <div>
-                    <p className="font-semibold" style={{ color: '#ffffff' }}>
+                    <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>
                       {activity.farmerName} booked {activity.machineName}
                     </p>
-                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>{activity.time}</p>
+                    <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{activity.time}</p>
                   </div>
                 </div>
 
@@ -321,11 +321,11 @@ const OwnerDashboard = () => {
               <div className="text-center py-12">
                 <div 
                   className="stat-icon-new mx-auto mb-4"
-                  style={{ background: 'rgba(255, 255, 255, 0.04)', color: 'rgba(255,255,255,0.4)' }}
+                  style={{ background: 'var(--bg-button)', color: 'var(--text-muted)' }}
                 >
                   <FiClock />
                 </div>
-                <p className="font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>No recent activity</p>
+                <p className="font-medium" style={{ color: 'var(--text-muted)' }}>No recent activity</p>
               </div>
             )}
           </div>

@@ -101,14 +101,14 @@ const AddMachine = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: '#050505' }}>
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="p-8 rounded-3xl max-w-md w-full text-center relative overflow-hidden"
           style={{ 
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-primary)',
             backdropFilter: 'blur(10px)'
           }}
         >
@@ -122,15 +122,15 @@ const AddMachine = () => {
           >
             <FiCheckCircle className="text-3xl" style={{ color: '#10b981' }} />
           </div>
-          <h2 className="text-xl font-bold mb-2 relative" style={{ color: '#ffffff' }}>Listed Successfully!</h2>
-          <p className="text-sm font-medium relative" style={{ color: 'rgba(255,255,255,0.8)' }}>Your machinery has been added and is pending verification.</p>
+          <h2 className="text-xl font-bold mb-2 relative" style={{ color: 'var(--text-primary)' }}>Listed Successfully!</h2>
+          <p className="text-sm font-medium relative" style={{ color: 'var(--text-secondary)' }}>Your machinery has been added and is pending verification.</p>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div
@@ -151,8 +151,8 @@ const AddMachine = () => {
               <FiTool className="text-xl text-white relative z-10" />
             </motion.div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Add Equipment</h1>
-              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>List new machinery for rent</p>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Add Equipment</h1>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>List new machinery for rent</p>
             </div>
           </div>
         </motion.div>
@@ -178,8 +178,8 @@ const AddMachine = () => {
             animate={{ opacity: 1, y: 0 }}
             className="rounded-3xl p-6 relative overflow-hidden"
             style={{ 
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-primary)',
               backdropFilter: 'blur(10px)'
             }}
           >
@@ -187,9 +187,9 @@ const AddMachine = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
               {/* Equipment Name */}
               <div>
-                <label htmlFor="name" className="text-xs font-semibold block mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>Machinery Name</label>
-                <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all focus-within:border-blue-500/30" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                  <FiTool style={{ color: 'rgba(255,255,255,0.8)' }} />
+                <label htmlFor="name" className="text-xs font-semibold block mb-2" style={{ color: 'var(--text-muted)' }}>Machinery Name</label>
+                <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all focus-within:border-blue-500/30" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-primary)' }}>
+                  <FiTool style={{ color: 'var(--text-secondary)' }} />
                   <input
                     id="name"
                     type="text"
@@ -199,7 +199,7 @@ const AddMachine = () => {
                     required
                     autoComplete="off"
                     className="flex-1 bg-transparent outline-none text-sm font-medium"
-                    style={{ color: '#ffffff' }}
+                    style={{ color: 'var(--text-primary)' }}
                     placeholder="e.g., Mahindra Arjun Nova 605"
                   />
                 </div>
@@ -207,9 +207,9 @@ const AddMachine = () => {
 
               {/* Category */}
               <div>
-                <label htmlFor="category" className="text-xs font-semibold block mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>Category</label>
-                <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                  <FiTruck style={{ color: 'rgba(255,255,255,0.8)' }} />
+                <label htmlFor="category" className="text-xs font-semibold block mb-2" style={{ color: 'var(--text-muted)' }}>Category</label>
+                <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-primary)' }}>
+                  <FiTruck style={{ color: 'var(--text-secondary)' }} />
                   <select
                     id="category"
                     name="category"
@@ -218,10 +218,10 @@ const AddMachine = () => {
                     required
                     autoComplete="off"
                     className="flex-1 bg-transparent outline-none cursor-pointer text-sm font-medium"
-                    style={{ color: '#ffffff' }}
+                    style={{ color: 'var(--text-primary)' }}
                   >
                     {categories.map(category => (
-                      <option key={category} value={category} style={{ backgroundColor: '#1a1a1a' }}>{category}</option>
+                      <option key={category} value={category} style={{ backgroundColor: 'var(--bg-card)' }}>{category}</option>
                     ))}
                   </select>
                 </div>
@@ -229,8 +229,8 @@ const AddMachine = () => {
 
               {/* Hourly Rate */}
               <div>
-                <label htmlFor="rate" className="text-xs font-semibold block mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>Hourly Rate (₹)</label>
-                <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all focus-within:border-green-500/30" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <label htmlFor="rate" className="text-xs font-semibold block mb-2" style={{ color: 'var(--text-muted)' }}>Hourly Rate (₹)</label>
+                <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all focus-within:border-green-500/30" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-primary)' }}>
                   <span className="font-bold" style={{ color: '#10b981' }}>₹</span>
                   <input
                     id="rate"
@@ -242,7 +242,7 @@ const AddMachine = () => {
                     min="0"
                     autoComplete="off"
                     className="flex-1 bg-transparent outline-none text-sm font-medium"
-                    style={{ color: '#ffffff' }}
+                    style={{ color: 'var(--text-primary)' }}
                     placeholder="800"
                   />
                 </div>
@@ -250,9 +250,9 @@ const AddMachine = () => {
 
               {/* Location */}
               <div>
-                <label htmlFor="location" className="text-xs font-semibold block mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>Location</label>
-                <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all focus-within:border-red-500/30" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                  <FiMapPin style={{ color: 'rgba(255,255,255,0.8)' }} />
+                <label htmlFor="location" className="text-xs font-semibold block mb-2" style={{ color: 'var(--text-muted)' }}>Location</label>
+                <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all focus-within:border-red-500/30" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-primary)' }}>
+                  <FiMapPin style={{ color: 'var(--text-secondary)' }} />
                   <input
                     id="location"
                     type="text"
@@ -262,7 +262,7 @@ const AddMachine = () => {
                     required
                     autoComplete="address-level2"
                     className="flex-1 bg-transparent outline-none text-sm font-medium"
-                    style={{ color: '#ffffff' }}
+                    style={{ color: 'var(--text-primary)' }}
                     placeholder="City, State"
                   />
                 </div>
@@ -270,8 +270,8 @@ const AddMachine = () => {
 
               {/* Description */}
               <div className="md:col-span-2">
-                <label htmlFor="description" className="text-xs font-semibold block mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>Description</label>
-                <div className="px-4 py-3.5 rounded-2xl" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <label htmlFor="description" className="text-xs font-semibold block mb-2" style={{ color: 'var(--text-muted)' }}>Description</label>
+                <div className="px-4 py-3.5 rounded-2xl" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-primary)' }}>
                   <textarea
                     id="description"
                     name="description"
@@ -281,7 +281,7 @@ const AddMachine = () => {
                     rows="3"
                     autoComplete="off"
                     className="w-full bg-transparent outline-none text-sm font-medium resize-none"
-                    style={{ color: '#ffffff' }}
+                    style={{ color: 'var(--text-primary)' }}
                     placeholder="Describe technical details, condition, and accessories..."
                   />
                 </div>
@@ -289,22 +289,22 @@ const AddMachine = () => {
 
               {/* Image Upload */}
               <div className="md:col-span-2">
-                <label className="text-xs font-semibold block mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>Equipment Image</label>
+                <label className="text-xs font-semibold block mb-2" style={{ color: 'var(--text-muted)' }}>Equipment Image</label>
                 <div 
                   className="border border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all hover:border-green-500/30"
-                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)' }}
+                  style={{ borderColor: 'var(--border-primary)', background: 'var(--bg-button)' }}
                 >
                   <div 
                     className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 relative overflow-hidden"
                     style={{ 
-                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                      border: '1px solid rgba(255, 255, 255, 0.06)'
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-secondary)'
                     }}
                   >
-                    <FiCamera className="text-3xl" style={{ color: 'rgba(255,255,255,0.7)' }} />
+                    <FiCamera className="text-3xl" style={{ color: 'var(--text-muted)' }} />
                   </div>
-                  <p className="text-sm mb-1 font-semibold" style={{ color: '#ffffff' }}>Drop image or click to browse</p>
-                  <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>JPG, PNG, WEBP (Max 5MB)</p>
+                  <p className="text-sm mb-1 font-semibold" style={{ color: 'var(--text-primary)' }}>Drop image or click to browse</p>
+                  <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>JPG, PNG, WEBP (Max 5MB)</p>
                   <input
                     type="file"
                     multiple
@@ -330,9 +330,9 @@ const AddMachine = () => {
                 {formData.images.length > 0 && (
                   <div className="mt-4 flex flex-wrap gap-3">
                     {formData.images.map((image, index) => (
-                      <div key={index} className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                      <div key={index} className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl" style={{ background: 'var(--bg-button)', border: '1px solid var(--border-secondary)' }}>
                         <FiFileText style={{ color: '#10b981' }} />
-                        <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>{image}</span>
+                        <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{image}</span>
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
@@ -350,7 +350,7 @@ const AddMachine = () => {
               </div>
             </div>
 
-            <div className="mt-6 pt-6 flex justify-end gap-3 relative" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            <div className="mt-6 pt-6 flex justify-end gap-3 relative" style={{ borderTop: '1px solid var(--border-secondary)' }}>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -358,9 +358,9 @@ const AddMachine = () => {
                 onClick={() => navigate('/owner/machines')}
                 className="px-5 py-3 rounded-xl text-sm font-semibold"
                 style={{ 
-                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  color: 'rgba(255,255,255,0.6)'
+                  background: 'var(--bg-button)',
+                  border: '1px solid var(--border-primary)',
+                  color: 'var(--text-muted)'
                 }}
               >
                 Cancel

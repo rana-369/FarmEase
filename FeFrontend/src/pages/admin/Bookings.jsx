@@ -170,7 +170,7 @@ const BookingsManagement = () => {
         {/* Filters */}
         <div className="filters-bar-new mb-6">
           <div className="search-box-new">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
             <input
               id="booking-search"
               name="booking-search"
@@ -184,7 +184,7 @@ const BookingsManagement = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <FiFilter style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <FiFilter style={{ color: 'var(--text-muted)' }} />
             <select
               id="status-filter"
               name="status-filter"
@@ -241,11 +241,11 @@ const BookingsManagement = () => {
                             <div className="font-semibold">
                               {booking.machineName || 'Unknown Machine'}
                             </div>
-                            <div className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                            <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                               <FiUser className="inline mr-1" />
                               {booking.farmerName || 'Unknown Farmer'}
                             </div>
-                            <div className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                               Owner: {booking.ownerName || 'Unknown Owner'}
                             </div>
                           </div>
@@ -255,7 +255,7 @@ const BookingsManagement = () => {
                         <div className="font-semibold">
                           {calculateDuration(booking.startDate, booking.endDate)}
                         </div>
-                        <div className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                           {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}
                         </div>
                       </td>
@@ -264,7 +264,7 @@ const BookingsManagement = () => {
                           ₹{(booking.totalAmount || 0).toLocaleString()}
                         </div>
                         {booking.platformFee && (
-                          <div className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                             Fee: ₹{booking.platformFee}
                           </div>
                         )}
@@ -316,7 +316,7 @@ const BookingsManagement = () => {
 
       {/* Booking Detail Modal */}
       <Modal isOpen={!!selectedBooking} onClose={() => setSelectedBooking(null)}>
-        <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid var(--border-secondary)' }}>
           <h3 className="card-title">Booking Details</h3>
           <motion.button
             whileHover={{ scale: 1.1 }}

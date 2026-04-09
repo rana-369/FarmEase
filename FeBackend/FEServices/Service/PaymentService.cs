@@ -116,7 +116,8 @@ namespace FEServices.Service
             booking.Status = "Active";
             _unitOfWork.Bookings.Update(booking);
 
-            var notification = new Notification
+            // Notification for Owner
+            var ownerNotification = new Notification
             {
                 UserId = booking.OwnerId,
                 Title = "Payment Received",
@@ -126,7 +127,31 @@ namespace FEServices.Service
                 CreatedAt = DateTime.UtcNow
             };
 
-            await _unitOfWork.Notifications.AddAsync(notification);
+            // Notification for Farmer
+            var farmerNotification = new Notification
+            {
+                UserId = booking.FarmerId,
+                Title = "Payment Successful",
+                Message = $"Your payment of ₹{booking.TotalAmount} for {booking.MachineName} was successful. The rental is now ACTIVE.",
+                Type = "success",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // Notification for Admin
+            var adminNotification = new Notification
+            {
+                UserId = "admin",
+                Title = "Payment Received",
+                Message = $"Payment of ₹{booking.TotalAmount} received for {booking.MachineName} booking (ID: {booking.Id}). Farmer: {booking.FarmerId}, Owner: {booking.OwnerId}.",
+                Type = "payment",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.Notifications.AddAsync(ownerNotification);
+            await _unitOfWork.Notifications.AddAsync(farmerNotification);
+            await _unitOfWork.Notifications.AddAsync(adminNotification);
             var saveResult = await _unitOfWork.SaveChangesAsync();
             
             _logger.LogInformation("Payment verified successfully for BookingId: {BookingId}", booking.Id);
@@ -222,8 +247,20 @@ namespace FEServices.Service
                     CreatedAt = DateTime.UtcNow
                 };
 
+                // Notification for Admin
+                var adminNotification = new Notification
+                {
+                    UserId = "admin",
+                    Title = "Refund Processed",
+                    Message = $"Refund of ₹{payment.Amount} processed for {booking.MachineName} booking (ID: {booking.Id}). Reason: {reason ?? "Booking cancelled"}. Farmer: {booking.FarmerId}, Owner: {booking.OwnerId}.",
+                    Type = "payment",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
                 await _unitOfWork.Notifications.AddAsync(farmerNotification);
                 await _unitOfWork.Notifications.AddAsync(ownerNotification);
+                await _unitOfWork.Notifications.AddAsync(adminNotification);
                 await _unitOfWork.SaveChangesAsync();
 
                 _logger.LogInformation("Refund processed successfully for booking {BookingId}", bookingId);

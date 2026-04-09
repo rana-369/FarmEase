@@ -3,9 +3,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiMenu, FiX, FiBell, FiUser, FiLogOut, FiSettings, FiHome, FiTruck, FiUsers, FiGrid, FiBarChart2 } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated, isAdmin, isFarmer, isOwner } = useAuth();
+  const { isDark } = useTheme();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -52,8 +54,8 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50" style={{ 
-      backgroundColor: 'rgba(5, 5, 5, 0.8)', 
-      borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+      backgroundColor: 'var(--bg-header)', 
+      borderBottom: '1px solid var(--border-primary)',
       backdropFilter: 'blur(20px)'
     }}>
       <div className="max-w-7xl mx-auto px-4">
@@ -71,7 +73,7 @@ const Navbar = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
               <FiTruck className="text-white text-xl relative z-10" />
             </motion.div>
-            <span className="text-xl font-bold tracking-tight" style={{ color: '#ffffff' }}>AgriConnect</span>
+            <span className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>FarmEase</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -84,7 +86,7 @@ const Navbar = () => {
                     to={link.path}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all relative overflow-hidden"
                     style={{
-                      color: isActive ? '#10b981' : 'rgba(255,255,255,0.5)',
+                      color: isActive ? '#10b981' : 'var(--text-muted)',
                       background: isActive 
                         ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)' 
                         : 'transparent',
@@ -115,9 +117,9 @@ const Navbar = () => {
               whileTap={{ scale: 0.95 }}
               className="relative p-2.5 rounded-xl transition-all"
               style={{ 
-                color: 'rgba(255,255,255,0.5)',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.06)'
+                color: 'var(--text-muted)',
+                background: 'var(--bg-button)',
+                border: '1px solid var(--border-primary)'
               }}
             >
               <FiBell className="text-xl" />
@@ -138,9 +140,9 @@ const Navbar = () => {
                 whileTap={{ scale: 0.98 }}
                 className="flex items-center gap-2 p-1.5 pr-3 rounded-xl transition-all"
                 style={{ 
-                  color: 'rgba(255,255,255,0.5)',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)'
+                  color: 'var(--text-muted)',
+                  background: 'var(--bg-button)',
+                  border: '1px solid var(--border-primary)'
                 }}
               >
                 <div 
@@ -163,17 +165,17 @@ const Navbar = () => {
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   className="absolute right-0 mt-2 w-52 rounded-2xl overflow-hidden"
                   style={{ 
-                    background: 'linear-gradient(180deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-primary)',
                     backdropFilter: 'blur(20px)',
-                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)'
+                    boxShadow: 'var(--shadow-lg)'
                   }}
                 >
                   <Link
                     to={isAdmin ? '/admin/settings' : isOwner ? '/owner/profile' : '/farmer/profile'}
                     onClick={() => setShowUserMenu(false)}
                     className="flex items-center gap-3 px-4 py-3.5 transition-all hover:bg-white/5"
-                    style={{ color: 'rgba(255,255,255,0.6)', borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}
+                    style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-secondary)' }}
                   >
                     <FiUser style={{ color: '#10b981' }} />
                     <span className="text-sm font-medium">Profile</span>
@@ -182,7 +184,7 @@ const Navbar = () => {
                     to={isAdmin ? '/admin/settings' : isOwner ? '/owner/notifications' : '/farmer/notifications'}
                     onClick={() => setShowUserMenu(false)}
                     className="flex items-center gap-3 px-4 py-3.5 transition-all hover:bg-white/5"
-                    style={{ color: 'rgba(255,255,255,0.6)', borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}
+                    style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-secondary)' }}
                   >
                     <FiSettings style={{ color: '#3b82f6' }} />
                     <span className="text-sm font-medium">Settings</span>
@@ -206,9 +208,9 @@ const Navbar = () => {
               whileTap={{ scale: 0.95 }}
               className="md:hidden p-2.5 rounded-xl transition-all"
               style={{ 
-                color: 'rgba(255,255,255,0.5)',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.06)'
+                color: 'var(--text-muted)',
+                background: 'var(--bg-button)',
+                border: '1px solid var(--border-primary)'
               }}
             >
               {isOpen ? <FiX className="text-xl" /> : <FiMenu className="text-xl" />}
@@ -239,7 +241,7 @@ const Navbar = () => {
                       onClick={() => setIsOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
                       style={{
-                        color: isActive ? '#10b981' : 'rgba(255,255,255,0.5)',
+                        color: isActive ? '#10b981' : 'var(--text-muted)',
                         background: isActive 
                           ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)' 
                           : 'transparent',

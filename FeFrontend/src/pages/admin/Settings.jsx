@@ -9,8 +9,8 @@ const SettingsPage = () => {
   const { get2FASettings, update2FASettings } = useAuth();
   const [settings, setSettings] = useState({
     general: {
-      siteName: 'AgriConnect',
-      supportEmail: 'support@agriconnect.com',
+      siteName: 'FarmEase',
+      supportEmail: 'support@farmease.com',
       platformFee: 10,
       maintenanceMode: false
     },
@@ -93,7 +93,7 @@ const SettingsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64" style={{ backgroundColor: '#050505' }}>
+      <div className="flex items-center justify-center h-64" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="relative">
           <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }} />
           <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }} />
@@ -109,7 +109,7 @@ const SettingsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -130,8 +130,8 @@ const SettingsPage = () => {
               <FiSettings className="text-xl text-white relative z-10" />
             </motion.div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>System Settings</h1>
-              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Configure platform parameters and security policies</p>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>System Settings</h1>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Configure platform parameters and security policies</p>
             </div>
           </div>
         </motion.div>
@@ -151,16 +151,16 @@ const SettingsPage = () => {
               style={{ 
                 background: activeTab === tab.id 
                   ? `linear-gradient(135deg, ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.2)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(16, 185, 129, 0.2)'} 0%, ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.05)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.05)' : 'rgba(16, 185, 129, 0.05)'} 100%)`
-                  : 'linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                  : 'var(--bg-button)',
                 border: activeTab === tab.id 
                   ? `1px solid ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.4)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(16, 185, 129, 0.4)'}`
-                  : '1px solid rgba(255, 255, 255, 0.08)',
+                  : '1px solid var(--border-primary)',
                 boxShadow: activeTab === tab.id 
                   ? `0 4px 20px ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.2)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`
                   : 'none',
                 color: activeTab === tab.id 
                   ? (tab.id === 'general' ? '#60a5fa' : tab.id === 'security' ? '#c084fc' : '#34d399') 
-                  : 'rgba(255,255,255,0.5)'
+                  : 'var(--text-muted)'
               }}
             >
               <div 
@@ -185,8 +185,8 @@ const SettingsPage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="rounded-3xl overflow-hidden relative"
           style={{ 
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-primary)',
             backdropFilter: 'blur(10px)'
           }}
         >
@@ -201,7 +201,7 @@ const SettingsPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                 >
-                  <label htmlFor="siteName" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  <label htmlFor="siteName" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
                     <div 
                       className="w-6 h-6 rounded-lg flex items-center justify-center"
                       style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.1) 100%)' }}
@@ -215,10 +215,11 @@ const SettingsPage = () => {
                     type="text"
                     value={settings.general.siteName}
                     onChange={(e) => handleChange('general', 'siteName', e.target.value)}
-                    className="w-full px-4 py-3.5 rounded-xl text-white outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-blue-500/30"
+                    className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-blue-500/30"
                     style={{ 
-                      background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%)', 
-                      border: '1px solid rgba(59, 130, 246, 0.2)'
+                      background: 'var(--bg-input)', 
+                      border: '1px solid var(--border-primary)',
+                      color: 'var(--text-primary)'
                     }}
                   />
                 </motion.div>
@@ -230,7 +231,7 @@ const SettingsPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}
                 >
-                  <label htmlFor="supportEmail" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  <label htmlFor="supportEmail" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
                     <div 
                       className="w-6 h-6 rounded-lg flex items-center justify-center"
                       style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(168, 85, 247, 0.1) 100%)' }}
@@ -244,10 +245,11 @@ const SettingsPage = () => {
                     type="email"
                     value={settings.general.supportEmail}
                     onChange={(e) => handleChange('general', 'supportEmail', e.target.value)}
-                    className="w-full px-4 py-3.5 rounded-xl text-white outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-purple-500/30"
+                    className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-purple-500/30"
                     style={{ 
-                      background: 'linear-gradient(180deg, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0.02) 100%)', 
-                      border: '1px solid rgba(168, 85, 247, 0.2)'
+                      background: 'var(--bg-input)', 
+                      border: '1px solid var(--border-primary)',
+                      color: 'var(--text-primary)'
                     }}
                   />
                 </motion.div>
@@ -259,7 +261,7 @@ const SettingsPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <label htmlFor="platformFee" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  <label htmlFor="platformFee" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
                     <div 
                       className="w-6 h-6 rounded-lg flex items-center justify-center"
                       style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(245, 158, 11, 0.1) 100%)' }}
@@ -273,10 +275,11 @@ const SettingsPage = () => {
                     type="number"
                     value={settings.general.platformFee}
                     onChange={(e) => handleChange('general', 'platformFee', parseInt(e.target.value))}
-                    className="w-full px-4 py-3.5 rounded-xl text-white outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-amber-500/30"
+                    className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-amber-500/30"
                     style={{ 
-                      background: 'linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.02) 100%)', 
-                      border: '1px solid rgba(245, 158, 11, 0.2)'
+                      background: 'var(--bg-input)', 
+                      border: '1px solid var(--border-primary)',
+                      color: 'var(--text-primary)'
                     }}
                   />
                 </motion.div>
@@ -290,10 +293,10 @@ const SettingsPage = () => {
                   style={{ 
                     background: settings.general.maintenanceMode 
                       ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%)'
-                      : 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                      : 'var(--bg-button)',
                     border: settings.general.maintenanceMode 
                       ? '1px solid rgba(239, 68, 68, 0.3)'
-                      : '1px solid rgba(255, 255, 255, 0.08)'
+                      : '1px solid var(--border-secondary)'
                   }}
                 >
                   <div 
@@ -306,17 +309,17 @@ const SettingsPage = () => {
                       style={{ 
                         background: settings.general.maintenanceMode 
                           ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%)'
-                          : 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)',
+                          : 'var(--bg-input)',
                         border: settings.general.maintenanceMode 
                           ? '1px solid rgba(239, 68, 68, 0.3)'
-                          : '1px solid rgba(255, 255, 255, 0.08)'
+                          : '1px solid var(--border-tertiary)'
                       }}
                     >
-                      <FiSettings style={{ color: settings.general.maintenanceMode ? '#f87171' : 'rgba(255,255,255,0.8)' }} />
+                      <FiSettings style={{ color: settings.general.maintenanceMode ? '#f87171' : 'var(--text-secondary)' }} />
                     </div>
                     <div>
-                      <p className="font-bold text-sm" style={{ color: '#ffffff' }}>Maintenance Mode</p>
-                      <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Disable platform for users</p>
+                      <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Maintenance Mode</p>
+                      <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Disable platform for users</p>
                     </div>
                   </div>
                   <button
@@ -325,7 +328,7 @@ const SettingsPage = () => {
                     style={{ 
                       background: settings.general.maintenanceMode 
                         ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
-                        : 'linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                        : 'var(--bg-input)',
                       boxShadow: settings.general.maintenanceMode ? '0 4px 16px rgba(239, 68, 68, 0.4)' : 'none'
                     }}
                   >
@@ -350,7 +353,7 @@ const SettingsPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                 >
-                  <label htmlFor="sessionTimeout" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  <label htmlFor="sessionTimeout" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
                     <div 
                       className="w-6 h-6 rounded-lg flex items-center justify-center"
                       style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(168, 85, 247, 0.1) 100%)' }}
@@ -364,10 +367,11 @@ const SettingsPage = () => {
                     type="number"
                     value={settings.security.sessionTimeout}
                     onChange={(e) => handleChange('security', 'sessionTimeout', parseInt(e.target.value))}
-                    className="w-full px-4 py-3.5 rounded-xl text-white outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-purple-500/30"
+                    className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-purple-500/30"
                     style={{ 
-                      background: 'linear-gradient(180deg, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0.02) 100%)', 
-                      border: '1px solid rgba(168, 85, 247, 0.2)'
+                      background: 'var(--bg-input)', 
+                      border: '1px solid var(--border-primary)',
+                      color: 'var(--text-primary)'
                     }}
                   />
                 </motion.div>
@@ -379,7 +383,7 @@ const SettingsPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}
                 >
-                  <label htmlFor="minPasswordLength" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  <label htmlFor="minPasswordLength" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
                     <div 
                       className="w-6 h-6 rounded-lg flex items-center justify-center"
                       style={{ background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(249, 115, 22, 0.1) 100%)' }}
@@ -393,10 +397,11 @@ const SettingsPage = () => {
                     type="number"
                     value={settings.security.minPasswordLength}
                     onChange={(e) => handleChange('security', 'minPasswordLength', parseInt(e.target.value))}
-                    className="w-full px-4 py-3.5 rounded-xl text-white outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-orange-500/30"
+                    className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-orange-500/30"
                     style={{ 
-                      background: 'linear-gradient(180deg, rgba(249, 115, 22, 0.08) 0%, rgba(249, 115, 22, 0.02) 100%)', 
-                      border: '1px solid rgba(249, 115, 22, 0.2)'
+                      background: 'var(--bg-input)', 
+                      border: '1px solid var(--border-primary)',
+                      color: 'var(--text-primary)'
                     }}
                   />
                 </motion.div>
@@ -432,8 +437,8 @@ const SettingsPage = () => {
                     <FiShield className="text-lg" style={{ color: '#34d399' }} />
                   </div>
                   <div>
-                    <h3 className="font-bold" style={{ color: '#ffffff' }}>Two-Factor Authentication</h3>
-                    <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Add an extra layer of security</p>
+                    <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>Two-Factor Authentication</h3>
+                    <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Add an extra layer of security</p>
                   </div>
                 </div>
                 <TwoFactorSetup 
@@ -449,8 +454,8 @@ const SettingsPage = () => {
             <div 
               className="px-6 lg:px-8 py-5 flex justify-end gap-4 relative"
               style={{ 
-                borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)'
+                borderTop: '1px solid var(--border-secondary)',
+                background: 'var(--bg-button)'
               }}
             >
               <motion.button 
@@ -458,9 +463,9 @@ const SettingsPage = () => {
                 whileTap={{ scale: 0.97 }}
                 className="px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all relative overflow-hidden group"
                 style={{ 
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)', 
-                  border: '1px solid rgba(255, 255, 255, 0.1)', 
-                  color: 'rgba(255,255,255,0.7)'
+                  background: 'var(--bg-button)', 
+                  border: '1px solid var(--border-primary)', 
+                  color: 'var(--text-muted)'
                 }}
               >
                 <div 

@@ -132,7 +132,7 @@ const OwnerMachines = () => {
         {/* Filters */}
         <div className="filters-bar-new mb-6">
           <div className="search-box-new">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
             <input
               id="machine-search"
               name="machine-search"
@@ -146,7 +146,7 @@ const OwnerMachines = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <FiFilter style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <FiFilter style={{ color: 'var(--text-muted)' }} />
             <select
               id="status-filter"
               name="status-filter"
@@ -188,8 +188,8 @@ const OwnerMachines = () => {
                       e.target.nextSibling.nextSibling.style.display = 'flex';
                     }}
                   />
-                  <div className="absolute inset-0 hidden items-center justify-center" style={{ backgroundColor: '#0a0a0a' }}>
-                    <FiTruck className="w-12 h-12" style={{ color: 'rgba(255,255,255,0.2)' }} />
+                  <div className="absolute inset-0 hidden items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
+                    <FiTruck className="w-12 h-12" style={{ color: 'var(--text-muted)' }} />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   <div className="absolute top-3 right-3">
@@ -209,10 +209,10 @@ const OwnerMachines = () => {
                 <h3 className="card-title">{machine.name}</h3>
                 <p className="card-subtitle">{machine.type}</p>
                 
-                <div className="flex items-center justify-between pt-4" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <div className="flex items-center justify-between pt-4" style={{ borderTop: '1px solid var(--border-secondary)' }}>
                   <div>
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Rate</p>
-                    <p className="text-lg font-bold" style={{ color: '#10b981' }}>Rs.{machine.rate}<span className="text-xs font-normal" style={{ color: 'rgba(255,255,255,0.5)' }}>/hr</span></p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Rate</p>
+                    <p className="text-lg font-bold" style={{ color: '#10b981' }}>Rs.{machine.rate}<span className="text-xs font-normal" style={{ color: 'var(--text-muted)' }}>/hr</span></p>
                   </div>
                   <div className="flex gap-2">
                     <motion.button

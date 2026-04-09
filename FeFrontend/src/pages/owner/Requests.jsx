@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiCalendar, FiUser, FiTruck, FiClock, FiCheck, FiX, FiInfo, FiMapPin, FiCheckCircle } from 'react-icons/fi';
 import Modal from '../../components/Modal';
@@ -177,7 +178,7 @@ const OwnerRequests = () => {
                       </div>
                       <div>
                         <h3 className="card-title">{request.farmerName}</h3>
-                        <div className="flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        <div className="flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
                           <FiTruck className="text-sm" />
                           <span className="text-sm">Requested {request.machineName}</span>
                         </div>
@@ -207,7 +208,7 @@ const OwnerRequests = () => {
                         </div>
                         <div>
                           <p className="input-label">Requested Period</p>
-                          <p className="font-semibold" style={{ color: '#ffffff' }}>{new Date(request.createdAt).toLocaleDateString()} (Last {request.hours} hours)</p>
+                          <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{new Date(request.createdAt).toLocaleDateString()} (Last {request.hours} hours)</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -222,7 +223,7 @@ const OwnerRequests = () => {
                         </div>
                         <div>
                           <p className="input-label">Duration</p>
-                          <p className="font-semibold" style={{ color: '#ffffff' }}>{request.hours} Hours</p>
+                          <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{request.hours} Hours</p>
                         </div>
                       </div>
                     </div>
@@ -233,7 +234,7 @@ const OwnerRequests = () => {
                       <p className="input-label mb-1">Your Earnings</p>
                       <p className="text-3xl font-bold" style={{ color: '#10b981' }}>Rs.{(request.baseAmount || request.totalAmount).toLocaleString()}</p>
                       {request.platformFee > 0 && (
-                        <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>(after Rs.{request.platformFee} platform fee)</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>(after Rs.{request.platformFee} platform fee)</p>
                       )}
                     </div>
                     
@@ -328,7 +329,7 @@ const OwnerRequests = () => {
 
         {/* Request Details Modal */}
         <Modal isOpen={!!selectedRequest} onClose={() => setSelectedRequest(null)}>
-          <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid var(--border-primary)' }}>
             <h2 className="card-title">Request Details</h2>
             <motion.button 
               whileHover={{ scale: 1.1 }}
@@ -343,20 +344,20 @@ const OwnerRequests = () => {
           <div className="space-y-4 px-4">
             <div>
               <p className="input-label">Farmer</p>
-              <p className="font-semibold" style={{ color: '#ffffff' }}>{selectedRequest?.farmerName}</p>
+              <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{selectedRequest?.farmerName}</p>
             </div>
             <div>
               <p className="input-label">Equipment</p>
-              <p className="font-semibold" style={{ color: '#ffffff' }}>{selectedRequest?.machineName}</p>
+              <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{selectedRequest?.machineName}</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="input-label">Duration</p>
-                <p className="font-semibold" style={{ color: '#ffffff' }}>{selectedRequest?.hours} Hours</p>
+                <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{selectedRequest?.hours} Hours</p>
               </div>
               <div>
                 <p className="input-label">Requested</p>
-                <p className="font-semibold" style={{ color: '#ffffff' }}>{selectedRequest?.createdAt ? new Date(selectedRequest.createdAt).toLocaleDateString() : 'N/A'}</p>
+                <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{selectedRequest?.createdAt ? new Date(selectedRequest.createdAt).toLocaleDateString() : 'N/A'}</p>
               </div>
             </div>
             <div>
@@ -376,12 +377,12 @@ const OwnerRequests = () => {
               <p className="input-label">Your Earnings (Net)</p>
               <p className="text-2xl font-bold" style={{ color: '#10b981' }}>Rs.{(selectedRequest?.baseAmount || selectedRequest?.totalAmount)?.toLocaleString()}</p>
               {selectedRequest?.platformFee > 0 && (
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>Platform fee: Rs.{selectedRequest?.platformFee}</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)', marginTop: '4px' }}>Platform fee: Rs.{selectedRequest?.platformFee}</p>
               )}
             </div>
             <div>
               <p className="input-label">Request ID</p>
-              <p style={{ fontFamily: 'monospace', color: '#ffffff' }}>#{selectedRequest?.id}</p>
+              <p style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>#{selectedRequest?.id}</p>
             </div>
           </div>
 

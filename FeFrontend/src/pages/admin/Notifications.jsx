@@ -52,7 +52,7 @@ const NotificationsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#050505' }}>
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="relative">
           <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(168, 85, 247, 0.2)', borderTopColor: '#a855f7' }} />
           <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%)' }} />
@@ -62,7 +62,7 @@ const NotificationsPage = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: '#050505' }}>
+    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -83,8 +83,8 @@ const NotificationsPage = () => {
               <FiBell className="text-xl text-white relative z-10" />
             </motion.div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#ffffff' }}>Notifications</h1>
-              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>System alerts and messages</p>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Notifications</h1>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>System alerts and messages</p>
             </div>
           </div>
           <motion.button
@@ -93,9 +93,9 @@ const NotificationsPage = () => {
             onClick={fetchNotifications}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm"
             style={{ 
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)', 
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              color: '#ffffff'
+              background: 'var(--bg-button)', 
+              border: '1px solid var(--border-primary)',
+              color: 'var(--text-primary)'
             }}
           >
             <FiRefreshCw className="text-sm" />
@@ -116,7 +116,7 @@ const NotificationsPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ scale: 1.02, y: -4 }}
-              className="p-5 rounded-2xl relative overflow-hidden group"
+              className="p-5 rounded-2xl text-center relative overflow-hidden group"
               style={{ 
                 background: `linear-gradient(135deg, ${stat.color}10 0%, ${stat.color}05 100%)`,
                 border: `1px solid ${stat.color}20`
@@ -124,7 +124,7 @@ const NotificationsPage = () => {
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}15 0%, transparent 60%)` }} />
               <p className="text-2xl font-bold relative" style={{ color: stat.color }}>{stat.value}</p>
-              <p className="text-xs font-medium relative" style={{ color: 'rgba(255,255,255,0.8)' }}>{stat.label}</p>
+              <p className="text-xs font-medium relative" style={{ color: 'var(--text-secondary)' }}>{stat.label}</p>
             </motion.div>
           ))}
         </div>
@@ -132,18 +132,18 @@ const NotificationsPage = () => {
         {/* Notifications List */}
         <div className="space-y-3">
           {notifications.length === 0 ? (
-            <div className="text-center py-16 rounded-3xl relative overflow-hidden" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            <div className="flex flex-col items-center justify-center min-h-[300px] rounded-3xl relative overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)' }}>
               <div 
                 className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden"
                 style={{ 
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)'
+                  background: 'var(--bg-button)',
+                  border: '1px solid var(--border-secondary)'
                 }}
               >
-                <FiBell className="text-4xl" style={{ color: 'rgba(255,255,255,0.6)' }} />
+                <FiBell className="text-4xl" style={{ color: 'var(--text-muted)' }} />
               </div>
-              <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>No notifications found</p>
-              <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>You're all caught up!</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>No notifications found</p>
+              <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>You're all caught up!</p>
             </div>
           ) : (
             notifications.map((notification, index) => {
@@ -159,10 +159,10 @@ const NotificationsPage = () => {
                   className="p-5 rounded-2xl transition-all relative overflow-hidden group"
                   style={{ 
                     background: notification.isRead 
-                      ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%)' 
-                      : 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                      ? 'var(--bg-button)' 
+                      : 'var(--bg-card)',
                     border: notification.isRead 
-                      ? '1px solid rgba(255, 255, 255, 0.04)' 
+                      ? '1px solid var(--border-tertiary)' 
                       : `1px solid ${config.color}30`,
                     opacity: notification.isRead ? 0.6 : 1
                   }}
@@ -180,15 +180,15 @@ const NotificationsPage = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold text-sm" style={{ color: '#ffffff' }}>
+                        <h3 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
                           {notification.title}
                         </h3>
-                        <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                        <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
                           <FiClock />
                           <span>{new Date(notification.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
-                      <p className="text-sm mb-3 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                      <p className="text-sm mb-3 font-medium" style={{ color: 'var(--text-muted)' }}>
                         {notification.message}
                       </p>
                       <div className="flex items-center gap-3">

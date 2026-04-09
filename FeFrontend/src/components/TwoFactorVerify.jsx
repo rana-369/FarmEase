@@ -115,10 +115,10 @@ const TwoFactorVerify = ({ email, onVerify, onBack, loading: parentLoading }) =>
           <FiShield className="text-2xl text-white" />
         </motion.div>
         
-        <h2 className="text-xl font-bold mb-2" style={{ color: '#ffffff' }}>
+        <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
           Two-Factor Authentication
         </h2>
-        <p className="text-sm" style={{ color: '#888888' }}>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
           Enter the 6-digit code sent to
         </p>
         <p className="text-sm font-medium mt-1" style={{ color: '#22c55e' }}>
@@ -160,9 +160,9 @@ const TwoFactorVerify = ({ email, onVerify, onBack, loading: parentLoading }) =>
             transition={{ delay: index * 0.05 }}
             className="w-11 h-12 text-center text-lg font-bold rounded-xl transition-all duration-200 focus:outline-none"
             style={{
-              backgroundColor: digit ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-              border: digit ? '2px solid #22c55e' : '1px solid rgba(255, 255, 255, 0.1)',
-              color: '#ffffff',
+              backgroundColor: digit ? 'rgba(34, 197, 94, 0.15)' : 'var(--bg-button)',
+              border: digit ? '2px solid #22c55e' : '1px solid var(--border-primary)',
+              color: 'var(--text-primary)',
               fontFamily: 'monospace'
             }}
           />
@@ -208,7 +208,7 @@ const TwoFactorVerify = ({ email, onVerify, onBack, loading: parentLoading }) =>
             Resend Code
           </motion.button>
         ) : (
-          <p className="text-sm" style={{ color: '#888888' }}>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             Resend code in <span className="font-mono font-semibold" style={{ color: '#22c55e' }}>{resendTimer}s</span>
           </p>
         )}
@@ -222,9 +222,9 @@ const TwoFactorVerify = ({ email, onVerify, onBack, loading: parentLoading }) =>
         disabled={isLoading}
         className="w-full py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50"
         style={{ 
-          backgroundColor: 'rgba(255, 255, 255, 0.05)',
-          color: '#888888',
-          border: '1px solid rgba(255, 255, 255, 0.08)'
+          backgroundColor: 'var(--bg-button)',
+          color: 'var(--text-muted)',
+          border: '1px solid var(--border-primary)'
         }}
       >
         <FiArrowLeft />
@@ -233,7 +233,7 @@ const TwoFactorVerify = ({ email, onVerify, onBack, loading: parentLoading }) =>
 
       {/* Security Notice */}
       <div className="mt-6 text-center">
-        <div className="flex items-center justify-center gap-2 text-xs" style={{ color: '#666666' }}>
+        <div className="flex items-center justify-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
           <FiLock />
           <span>Protected by Two-Factor Authentication</span>
         </div>
