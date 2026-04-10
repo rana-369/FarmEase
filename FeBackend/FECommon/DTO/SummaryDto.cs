@@ -68,7 +68,7 @@ namespace FECommon.DTO
         public int CompletedBookings { get; init; }
         public decimal TotalRevenue { get; init; }
         public decimal PlatformRevenue { get; init; }
-        public List<RecentBookingDto> RecentBookings { get; init; } = new();
+        public List<RecentBookingDto> RecentBookings { get; init; } = [];
     }
 
     /// <summary>

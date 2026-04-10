@@ -39,9 +39,9 @@ namespace FEServices.Service
                     .ToListAsync();
 
                 var bookingIds = bookings.Select(b => b.Id).ToList();
-                var payments = bookingIds.Any()
+                var payments = bookingIds.Count > 0
                     ? await _unitOfWork.Payments.Query().AsNoTracking().Where(p => bookingIds.Contains(p.BookingId)).ToListAsync()
-                    : new List<Payment>();
+                    : [];
 
                 return bookings.Select(b => {
                     var payment = payments.FirstOrDefault(p => p.BookingId == b.Id);
@@ -49,17 +49,17 @@ namespace FEServices.Service
                     {
                         Id = b.Id,
                         MachineId = b.MachineId,
-                        MachineName = b.MachineName,
-                        FarmerId = b.FarmerId,
-                        FarmerName = b.FarmerName,
-                        OwnerId = b.OwnerId,
+                        MachineName = b.MachineName ?? "Unknown",
+                        FarmerId = b.FarmerId ?? string.Empty,
+                        FarmerName = b.FarmerName ?? "Unknown",
+                        OwnerId = b.OwnerId ?? string.Empty,
                         OwnerName = "Owner",
                         Location = "",
                         Hours = b.Hours,
                         BaseAmount = b.BaseAmount,
                         PlatformFee = b.PlatformFee,
                         TotalAmount = b.TotalAmount,
-                        Status = b.Status,
+                        Status = b.Status ?? "Unknown",
                         CreatedAt = b.CreatedAt,
                         IsRefunded = payment?.RefundAmount > 0
                     };
@@ -80,7 +80,7 @@ namespace FEServices.Service
                     .AsNoTracking();
 
                 // Apply status filter at DB level - compare as string
-                if (!string.IsNullOrEmpty(status) && status.ToLower() != "all")
+                if (!string.IsNullOrEmpty(status) && !status.Equals("all", StringComparison.OrdinalIgnoreCase))
                 {
                     query = query.Where(b => b.Status.ToLower() == status.ToLower());
                 }
@@ -124,17 +124,17 @@ namespace FEServices.Service
                     {
                         Id = b.Id,
                         MachineId = b.MachineId,
-                        MachineName = b.MachineName,
-                        FarmerId = b.FarmerId,
-                        FarmerName = b.FarmerName,
-                        OwnerId = b.OwnerId,
+                        MachineName = b.MachineName ?? "Unknown",
+                        FarmerId = b.FarmerId ?? string.Empty,
+                        FarmerName = b.FarmerName ?? "Unknown",
+                        OwnerId = b.OwnerId ?? string.Empty,
                         OwnerName = "Owner",
                         Location = "",
                         Hours = b.Hours,
                         BaseAmount = b.BaseAmount,
                         PlatformFee = b.PlatformFee,
                         TotalAmount = b.TotalAmount,
-                        Status = b.Status,
+                        Status = b.Status ?? "Unknown",
                         CreatedAt = b.CreatedAt,
                         IsRefunded = isRefunded
                     };
@@ -179,9 +179,9 @@ namespace FEServices.Service
                     .ToListAsync();
 
                 var bookingIds = bookings.Select(b => b.Id).ToList();
-                var payments = bookingIds.Any()
+                var payments = bookingIds.Count > 0
                     ? await _unitOfWork.Payments.Query().AsNoTracking().Where(p => bookingIds.Contains(p.BookingId)).ToListAsync()
-                    : new List<Payment>();
+                    : [];
 
                 return bookings.Select(b => {
                     var payment = payments.FirstOrDefault(p => p.BookingId == b.Id);
@@ -189,17 +189,17 @@ namespace FEServices.Service
                     {
                         Id = b.Id,
                         MachineId = b.MachineId,
-                        MachineName = b.MachineName,
-                        FarmerId = b.FarmerId,
-                        FarmerName = b.FarmerName,
-                        OwnerId = b.OwnerId,
+                        MachineName = b.MachineName ?? "Unknown",
+                        FarmerId = b.FarmerId ?? string.Empty,
+                        FarmerName = b.FarmerName ?? "Unknown",
+                        OwnerId = b.OwnerId ?? string.Empty,
                         OwnerName = "Owner",
                         Location = "",
                         Hours = b.Hours,
                         BaseAmount = b.BaseAmount,
                         PlatformFee = b.PlatformFee,
                         TotalAmount = b.TotalAmount,
-                        Status = b.Status,
+                        Status = b.Status ?? "Unknown",
                         CreatedAt = b.CreatedAt,
                         IsRefunded = payment?.RefundAmount > 0
                     };
@@ -223,9 +223,9 @@ namespace FEServices.Service
                     .ToListAsync();
 
                 var bookingIds = farmerBookings.Select(b => b.Id).ToList();
-                var payments = bookingIds.Any()
+                var payments = bookingIds.Count > 0
                     ? await _unitOfWork.Payments.Query().AsNoTracking().Where(p => bookingIds.Contains(p.BookingId)).ToListAsync()
-                    : new List<Payment>();
+                    : [];
                 
                 var result = new List<BookingSummaryDto>();
                 foreach (var b in farmerBookings)
@@ -298,10 +298,10 @@ namespace FEServices.Service
                 var booking = new Booking
                 {
                     MachineId = machine.Id,
-                    MachineName = machine.Name,
+                    MachineName = machine.Name ?? "Unknown",
                     FarmerId = farmerId,
                     FarmerName = farmerName,
-                    OwnerId = machine.OwnerId,
+                    OwnerId = machine.OwnerId ?? string.Empty,
                     Hours = safeHours,
                     BaseAmount = rate * safeHours,
                     PlatformFee = (rate * safeHours) * _commissionRate,
@@ -322,9 +322,9 @@ namespace FEServices.Service
 
                 var ownerNotification = new Notification
                 {
-                    UserId = machine.OwnerId,
+                    UserId = machine.OwnerId ?? string.Empty,
                     Title = "New Booking Request",
-                    Message = $"New rental request from {farmerName} for your {machine.Name}.",
+                    Message = $"New rental request from {farmerName} for your {machine.Name ?? "equipment"}.",
                     Type = "info",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -360,9 +360,9 @@ namespace FEServices.Service
 
                 var notification = new Notification
                 {
-                    UserId = booking.FarmerId,
+                    UserId = booking.FarmerId ?? string.Empty,
                     Title = "Booking Accepted",
-                    Message = $"Your request for {booking.MachineName} was ACCEPTED!",
+                    Message = $"Your request for {booking.MachineName ?? "equipment"} was ACCEPTED!",
                     Type = "success",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -412,9 +412,9 @@ namespace FEServices.Service
 
                 var notification = new Notification
                 {
-                    UserId = booking.FarmerId,
+                    UserId = booking.FarmerId ?? string.Empty,
                     Title = "Booking Completed",
-                    Message = $"The job for {booking.MachineName} has been marked as COMPLETED.",
+                    Message = $"The job for {booking.MachineName ?? "equipment"} has been marked as COMPLETED.",
                     Type = "success",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -483,9 +483,9 @@ namespace FEServices.Service
                             
                             var notification = new Notification
                             {
-                                UserId = booking.OwnerId,
+                                UserId = booking.OwnerId ?? string.Empty,
                                 Title = "Booking Cancelled & Refunded",
-                                Message = $"Booking for {booking.MachineName} has been cancelled by the farmer. Refund processed.",
+                                Message = $"Booking for {booking.MachineName ?? "equipment"} has been cancelled by the farmer. Refund processed.",
                                 Type = "info",
                                 IsRead = false,
                                 CreatedAt = DateTime.UtcNow
@@ -504,9 +504,9 @@ namespace FEServices.Service
                     
                     var notification2 = new Notification
                     {
-                        UserId = booking.OwnerId,
+                        UserId = booking.OwnerId ?? string.Empty,
                         Title = "Booking Cancelled & Refunded",
-                        Message = $"Booking for {booking.MachineName} has been cancelled by the farmer. Refund processed.",
+                        Message = $"Booking for {booking.MachineName ?? "equipment"} has been cancelled by the farmer. Refund processed.",
                         Type = "info",
                         IsRead = false,
                         CreatedAt = DateTime.UtcNow
@@ -546,9 +546,9 @@ namespace FEServices.Service
                                 
                                 var notification = new Notification
                                 {
-                                    UserId = booking.OwnerId,
+                                    UserId = booking.OwnerId ?? string.Empty,
                                     Title = "Booking Cancelled & Refunded",
-                                    Message = $"Booking for {booking.MachineName} has been cancelled by the farmer. Refund processed.",
+                                    Message = $"Booking for {booking.MachineName ?? "equipment"} has been cancelled by the farmer. Refund processed.",
                                     Type = "info",
                                     IsRead = false,
                                     CreatedAt = DateTime.UtcNow
@@ -567,9 +567,9 @@ namespace FEServices.Service
                         
                         var notification3 = new Notification
                         {
-                            UserId = booking.OwnerId,
+                            UserId = booking.OwnerId ?? string.Empty,
                             Title = "Booking Cancelled & Refunded",
-                            Message = $"Booking for {booking.MachineName} has been cancelled by the farmer. Refund processed.",
+                            Message = $"Booking for {booking.MachineName ?? "equipment"} has been cancelled by the farmer. Refund processed.",
                             Type = "info",
                             IsRead = false,
                             CreatedAt = DateTime.UtcNow
@@ -586,9 +586,9 @@ namespace FEServices.Service
                     
                     var notification4 = new Notification
                     {
-                        UserId = booking.OwnerId,
+                        UserId = booking.OwnerId ?? string.Empty,
                         Title = "Booking Cancelled",
-                        Message = $"Booking for {booking.MachineName} has been cancelled by the farmer.",
+                        Message = $"Booking for {booking.MachineName ?? "equipment"} has been cancelled by the farmer.",
                         Type = "info",
                         IsRead = false,
                         CreatedAt = DateTime.UtcNow
@@ -623,9 +623,9 @@ namespace FEServices.Service
 
                 var notification = new Notification
                 {
-                    UserId = booking.OwnerId,
+                    UserId = booking.OwnerId ?? string.Empty,
                     Title = "Payment Received",
-                    Message = $"Payment successful! The rental for {booking.MachineName} is now ACTIVE.",
+                    Message = $"Payment successful! The rental for {booking.MachineName ?? "equipment"} is now ACTIVE.",
                     Type = "success",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -758,10 +758,10 @@ namespace FEServices.Service
                 var recentBookings = recentBookingsData.Select(b => new RecentBookingDto
                 {
                     Id = b.Id,
-                    MachineName = b.MachineName,
-                    FarmerName = b.FarmerName,
+                    MachineName = b.MachineName ?? "Unknown",
+                    FarmerName = b.FarmerName ?? "Unknown",
                     OwnerName = "",
-                    Status = b.Status,
+                    Status = b.Status ?? "Unknown",
                     TotalAmount = b.TotalAmount,
                     CreatedAt = b.CreatedAt
                 }).ToList();
@@ -806,7 +806,7 @@ namespace FEServices.Service
                     .ThenBy(x => x.MonthNum)
                     .ToListAsync();
 
-                if (!rawData.Any())
+                if (rawData.Count == 0)
                 {
                     var months = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
                     var today = DateTime.UtcNow;

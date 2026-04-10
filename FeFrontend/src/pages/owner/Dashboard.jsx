@@ -182,22 +182,21 @@ const OwnerDashboard = () => {
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.02, y: -4 }}
                 className="stat-card-new"
+                style={{ textAlign: 'center', flexDirection: 'column', alignItems: 'center' }}
               >
-                <div className="stat-info">
-                  <p className="stat-title-new">{stat.title}</p>
-                  <h3 className="stat-value-new">{stat.value}</h3>
-                  <div className="stat-trend-new up">
-                    <span>{stat.change}</span>
-                  </div>
-                </div>
                 <div 
                   className="stat-icon-new"
                   style={{ 
                     background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`,
-                    color: stat.color 
+                    color: stat.color,
+                    marginBottom: '12px'
                   }}
                 >
                   <Icon />
+                </div>
+                <div className="stat-info" style={{ textAlign: 'center' }}>
+                  <h3 className="stat-value-new" style={{ color: stat.color }}>{stat.value}</h3>
+                  <p className="stat-title-new">{stat.title}</p>
                 </div>
               </motion.div>
             );

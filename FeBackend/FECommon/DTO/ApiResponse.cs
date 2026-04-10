@@ -53,7 +53,7 @@ namespace FECommon.DTO
             {
                 Success = false,
                 Message = message,
-                Errors = new List<string> { error }
+                Errors = [error]
             };
         }
 

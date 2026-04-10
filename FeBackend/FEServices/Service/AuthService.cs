@@ -67,8 +67,7 @@ namespace FEServices.Service
             // Validate selected role matches actual role
             if (!string.IsNullOrEmpty(model.SelectedRole))
             {
-                var selectedRoleLower = model.SelectedRole.ToLower();
-                if (actualRole != selectedRoleLower)
+                if (!string.Equals(actualRole, model.SelectedRole, StringComparison.OrdinalIgnoreCase))
                 {
                     return (false, $"This account is registered as '{actualRole}'. Please select '{actualRole}' to login.", null, null, null, false, null);
                 }
@@ -92,17 +91,17 @@ namespace FEServices.Service
                     await _userManager.UpdateAsync(user);
 
                     // Send OTP email
-                    await _emailService.Send2FAOtpEmailAsync(user.Email, otp);
+                    await _emailService.Send2FAOtpEmailAsync(user.Email ?? string.Empty, otp);
                     _logger.LogInformation("2FA OTP generated for {Email}", user.Email);
                 }
                 
-                var displayRole = char.ToUpper(actualRole[0]) + actualRole.Substring(1);
+                var displayRole = char.ToUpper(actualRole[0]) + actualRole[1..];
                 return (true, "Two-factor authentication required.", null, displayRole, user.Id, true, user.TwoFactorMethod);
             }
 
             // No 2FA - proceed with normal login
             var token = GenerateJwtToken(user, actualRole);
-            var displayRoleFinal = char.ToUpper(actualRole[0]) + actualRole.Substring(1);
+            var displayRoleFinal = char.ToUpper(actualRole[0]) + actualRole[1..];
             return (true, "Login successful", token, displayRoleFinal, user.Id, false, null);
         }
 
@@ -138,7 +137,7 @@ namespace FEServices.Service
 
             var actualRole = !string.IsNullOrEmpty(user.Role) ? user.Role.ToLower() : "farmer";
             var token = GenerateJwtToken(user, actualRole);
-            var displayRole = char.ToUpper(actualRole[0]) + actualRole.Substring(1);
+            var displayRole = char.ToUpper(actualRole[0]) + actualRole[1..];
             return (true, "Verification successful.", token, displayRole, user.Id);
         }
 
@@ -159,7 +158,7 @@ namespace FEServices.Service
             user.TwoFactorOtpExpiry = DateTime.UtcNow.AddMinutes(5);
             await _userManager.UpdateAsync(user);
 
-            await _emailService.Send2FAOtpEmailAsync(user.Email, otp);
+            await _emailService.Send2FAOtpEmailAsync(user.Email ?? string.Empty, otp);
             _logger.LogInformation("2FA OTP resent for {Email}", user.Email);
 
             return (true, "Verification code sent successfully.");
@@ -184,8 +183,8 @@ namespace FEServices.Service
                 user.TwoFactorEnabled = true;
                 await _userManager.UpdateAsync(user);
 
-                var issuer = Uri.EscapeDataString("AgriConnect");
-                var account = Uri.EscapeDataString(user.Email);
+                var issuer = Uri.EscapeDataString("AgriConnect" ?? string.Empty);
+                var account = Uri.EscapeDataString(user.Email ?? string.Empty);
                 var qrCodeUrl = $"otpauth://totp/{issuer}:{account}?secret={base32Secret}&issuer={issuer}&digits=6&period=30";
 
                 return (true, "Authenticator setup initiated.", qrCodeUrl, backupCodes);
@@ -250,8 +249,8 @@ namespace FEServices.Service
             user.TwoFactorBackupCodes = JsonSerializer.Serialize(backupCodes.Select(HashCode).ToList());
             await _userManager.UpdateAsync(user);
 
-            var issuer = Uri.EscapeDataString("AgriConnect");
-            var account = Uri.EscapeDataString(user.Email);
+            var issuer = Uri.EscapeDataString("AgriConnect" ?? string.Empty);
+            var account = Uri.EscapeDataString(user.Email ?? string.Empty);
             var qrCodeUrl = $"otpauth://totp/{issuer}:{account}?secret={base32Secret}&issuer={issuer}&digits=6&period=30";
 
             return (true, "Authenticator setup initiated.", qrCodeUrl, backupCodes);
@@ -283,7 +282,7 @@ namespace FEServices.Service
             if (user == null || string.IsNullOrEmpty(user.TwoFactorBackupCodes))
                 return (false, "Invalid request.", null, null, null);
 
-            var hashedCodes = JsonSerializer.Deserialize<List<string>>(user.TwoFactorBackupCodes) ?? new List<string>();
+            var hashedCodes = JsonSerializer.Deserialize<List<string>>(user.TwoFactorBackupCodes) ?? [];
             var inputHash = HashCode(model.Code);
 
             var codeIndex = hashedCodes.FindIndex(c => c == inputHash);
@@ -297,7 +296,7 @@ namespace FEServices.Service
 
             var actualRole = !string.IsNullOrEmpty(user.Role) ? user.Role.ToLower() : "farmer";
             var token = GenerateJwtToken(user, actualRole);
-            var displayRole = char.ToUpper(actualRole[0]) + actualRole.Substring(1);
+            var displayRole = char.ToUpper(actualRole[0]) + actualRole[1..];
             return (true, "Backup code verified.", token, displayRole, user.Id);
         }
 
@@ -327,7 +326,7 @@ namespace FEServices.Service
 
             _logger.LogInformation("Password reset OTP generated for {Email}", user.Email);
 
-            var emailSent = await _emailService.SendOtpEmailAsync(user.Email, otp);
+            _ = await _emailService.SendOtpEmailAsync(user.Email ?? string.Empty, otp);
             
             // Always return same message to prevent email enumeration
             return (true, "If that email exists, an OTP has been sent.");
@@ -384,9 +383,9 @@ namespace FEServices.Service
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private List<string> GenerateBackupCodes(int count = 8)
+        private static List<string> GenerateBackupCodes(int count = 8)
         {
-            var codes = new List<string>();
+            var codes = new List<string>(count);
             
             for (int i = 0; i < count; i++)
             {
@@ -401,7 +400,7 @@ namespace FEServices.Service
                     .Replace("/", "")
                     .Replace("=", "");
                 // Take first 8 chars, pad with 'X' if needed
-                var code = (base64.Length >= 8 ? base64.Substring(0, 8) : base64.PadRight(8, 'X'))
+                var code = (base64.Length >= 8 ? base64[..8] : base64.PadRight(8, 'X'))
                     .ToUpper();
                 codes.Add(code);
             }
@@ -409,14 +408,13 @@ namespace FEServices.Service
             return codes;
         }
 
-        private string HashCode(string code)
+        private static string HashCode(string code)
         {
-            using var sha256 = SHA256.Create();
-            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(code));
+            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(code));
             return Convert.ToBase64String(bytes);
         }
 
-        private string GenerateSecureOtp()
+        private static string GenerateSecureOtp()
         {
             // Cryptographically secure 6-digit OTP
             var bytes = RandomNumberGenerator.GetBytes(4);

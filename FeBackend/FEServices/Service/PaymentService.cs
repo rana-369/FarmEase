@@ -119,9 +119,9 @@ namespace FEServices.Service
             // Notification for Owner
             var ownerNotification = new Notification
             {
-                UserId = booking.OwnerId,
+                UserId = booking.OwnerId ?? string.Empty,
                 Title = "Payment Received",
-                Message = $"Payment successful! The rental for {booking.MachineName} is now ACTIVE.",
+                Message = $"Payment successful! The rental for {booking.MachineName ?? "equipment"} is now ACTIVE.",
                 Type = "success",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
@@ -130,9 +130,9 @@ namespace FEServices.Service
             // Notification for Farmer
             var farmerNotification = new Notification
             {
-                UserId = booking.FarmerId,
+                UserId = booking.FarmerId ?? string.Empty,
                 Title = "Payment Successful",
-                Message = $"Your payment of ₹{booking.TotalAmount} for {booking.MachineName} was successful. The rental is now ACTIVE.",
+                Message = $"Your payment of ₹{booking.TotalAmount} for {booking.MachineName ?? "equipment"} was successful. The rental is now ACTIVE.",
                 Type = "success",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
@@ -143,7 +143,7 @@ namespace FEServices.Service
             {
                 UserId = "admin",
                 Title = "Payment Received",
-                Message = $"Payment of ₹{booking.TotalAmount} received for {booking.MachineName} booking (ID: {booking.Id}). Farmer: {booking.FarmerId}, Owner: {booking.OwnerId}.",
+                Message = $"Payment of ₹{booking.TotalAmount} received for {booking.MachineName ?? "equipment"} booking (ID: {booking.Id}). Farmer: {booking.FarmerId ?? "unknown"}, Owner: {booking.OwnerId ?? "unknown"}.",
                 Type = "payment",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
@@ -206,7 +206,7 @@ namespace FEServices.Service
                 var refundOptions = new Dictionary<string, object>
                 {
                     { "amount", (int)(payment.Amount * 100) }, // Convert to paise
-                    { "notes", new Dictionary<string, string> { { "reason", reason ?? "Booking cancelled" } } }
+                    { "notes", new Dictionary<string, string> { ["reason"] = reason ?? "Booking cancelled" } }
                 };
 
                 var refund = client.Payment.Fetch(payment.RazorpayPaymentId).Refund(refundOptions);
@@ -229,9 +229,9 @@ namespace FEServices.Service
                 // Create notifications for both parties
                 var farmerNotification = new Notification
                 {
-                    UserId = booking.FarmerId,
+                    UserId = booking.FarmerId ?? string.Empty,
                     Title = "Refund Processed",
-                    Message = $"Your payment of ₹{payment.Amount} for {booking.MachineName} has been refunded.",
+                    Message = $"Your payment of ¥{payment.Amount} for {booking.MachineName ?? "equipment"} has been refunded.",
                     Type = "info",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -239,9 +239,9 @@ namespace FEServices.Service
 
                 var ownerNotification = new Notification
                 {
-                    UserId = booking.OwnerId,
+                    UserId = booking.OwnerId ?? string.Empty,
                     Title = "Booking Cancelled & Refunded",
-                    Message = $"Booking for {booking.MachineName} has been cancelled. Payment refunded to farmer.",
+                    Message = $"Booking for {booking.MachineName ?? "equipment"} has been cancelled. Payment refunded to farmer.",
                     Type = "info",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -252,7 +252,7 @@ namespace FEServices.Service
                 {
                     UserId = "admin",
                     Title = "Refund Processed",
-                    Message = $"Refund of ₹{payment.Amount} processed for {booking.MachineName} booking (ID: {booking.Id}). Reason: {reason ?? "Booking cancelled"}. Farmer: {booking.FarmerId}, Owner: {booking.OwnerId}.",
+                    Message = $"Refund of ¥{payment.Amount} processed for {booking.MachineName ?? "equipment"} booking (ID: {booking.Id}). Reason: {reason ?? "Booking cancelled"}. Farmer: {booking.FarmerId ?? "unknown"}, Owner: {booking.OwnerId ?? "unknown"}.",
                     Type = "payment",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow

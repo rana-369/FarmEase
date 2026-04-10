@@ -150,8 +150,7 @@ namespace FarmEase.Controllers
         {
             var userId = GetUserId();
             
-            var status = model.Status?.ToLower();
-            var (success, message) = status switch
+            var (success, message) = model.Status?.ToLower() switch
             {
                 "accepted" or "accept" => await _bookingService.AcceptAsync(id, userId ?? ""),
                 "rejected" or "reject" => await _bookingService.RejectAsync(id, userId ?? ""),

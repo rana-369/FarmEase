@@ -25,6 +25,9 @@ namespace FEServices.Service
 
         public async Task<bool> SendOtpEmailAsync(string toEmail, string otp)
         {
+            if (string.IsNullOrEmpty(toEmail))
+                return false;
+            
             try
             {
                 var smtpSettings = _configuration.GetSection("SmtpSettings");
@@ -112,6 +115,9 @@ namespace FEServices.Service
 
         public async Task<bool> Send2FAOtpEmailAsync(string toEmail, string otp)
         {
+            if (string.IsNullOrEmpty(toEmail))
+                return false;
+            
             try
             {
                 var smtpSettings = _configuration.GetSection("SmtpSettings");

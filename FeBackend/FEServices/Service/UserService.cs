@@ -49,7 +49,7 @@ namespace FEServices.Service
             var query = _unitOfWork.Users.Query();
 
             // Apply role filter at DB level
-            if (!string.IsNullOrEmpty(role) && role.ToLower() != "all")
+            if (!string.IsNullOrEmpty(role) && !role.Equals("all", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(u => u.Role == role);
             }
@@ -160,7 +160,7 @@ namespace FEServices.Service
             if (user.Id == currentUserId) return (false, "You cannot delete your own admin account.");
 
             // Delete user's machines if they are an owner
-            if (user.Role?.ToLower() == "owner")
+            if (string.Equals(user.Role, "owner", StringComparison.OrdinalIgnoreCase))
             {
                 var machines = await _unitOfWork.Machines.Query()
                     .Where(m => m.OwnerId == id)
@@ -267,8 +267,8 @@ namespace FEServices.Service
                 return (false, "No file was uploaded.", null);
 
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-            var extension = Path.GetExtension(file.FileName).ToLower();
-            if (!allowedExtensions.Contains(extension))
+            var extension = Path.GetExtension(file.FileName);
+            if (!allowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
                 return (false, "Only JPG, PNG, and GIF files are allowed.", null);
 
             var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "profiles");

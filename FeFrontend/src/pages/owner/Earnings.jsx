@@ -124,20 +124,19 @@ const OwnerEarnings = () => {
                 className="p-5 rounded-2xl relative overflow-hidden group"
                 style={{ 
                   background: `linear-gradient(135deg, ${stat.color}10 0%, ${stat.color}05 100%)`,
-                  border: `1px solid ${stat.color}20`
+                  border: `1px solid ${stat.color}20`,
+                  textAlign: 'center'
                 }}
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}15 0%, transparent 60%)` }} />
-                <div className="flex items-center justify-between mb-2 relative">
-                  <div 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}15 100%)`,
-                      border: `1px solid ${stat.color}30`
-                    }}
-                  >
-                    <Icon className="text-lg" style={{ color: stat.color }} />
-                  </div>
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}15 100%)`,
+                    border: `1px solid ${stat.color}30`
+                  }}
+                >
+                  <Icon className="text-lg" style={{ color: stat.color }} />
                 </div>
                 <p className="text-2xl font-bold relative" style={{ color: stat.color }}>{stat.value}</p>
                 <p className="text-xs font-medium relative" style={{ color: 'var(--text-secondary)' }}>{stat.label}</p>

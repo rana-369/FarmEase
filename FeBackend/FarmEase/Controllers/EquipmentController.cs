@@ -64,7 +64,7 @@ namespace FarmEase.Controllers
             if (image != null)
             {
                 var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/webp" };
-                if (!allowedTypes.Contains(image.ContentType.ToLower()))
+                if (!allowedTypes.Contains(image.ContentType, StringComparer.OrdinalIgnoreCase))
                     return BadRequest(new { Message = "Only JPEG, PNG, and WebP images are allowed." });
                 
                 if (image.Length > 5 * 1024 * 1024) // 5MB limit

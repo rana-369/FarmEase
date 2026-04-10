@@ -441,10 +441,20 @@ const Login = () => {
 
                   {/* Password */}
                   <div className="space-y-2">
-                    <label htmlFor="password" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
-                      <FiLock style={{ color: '#3b82f6' }} />
-                      Password
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="password" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                        <FiLock style={{ color: '#3b82f6' }} />
+                        Password
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/forgot-password')}
+                        className="text-xs font-medium animated-underline"
+                        style={{ color: '#10b981' }}
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
                     <div className="relative">
                       <input
                         id="password"
@@ -460,24 +470,12 @@ const Login = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors hover:opacity-80"
-                        style={{ color: 'var(--text-secondary)' }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all hover:bg-gray-500/10"
+                        style={{ color: '#6b7280' }}
                       >
-                        {showPassword ? <FiEyeOff /> : <FiEye />}
+                        {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                       </button>
                     </div>
-                  </div>
-
-                  {/* Forgot Password */}
-                  <div className="text-right">
-                    <button
-                      type="button"
-                      onClick={() => navigate('/forgot-password')}
-                      className="text-sm font-semibold animated-underline"
-                      style={{ color: '#10b981' }}
-                    >
-                      Forgot password?
-                    </button>
                   </div>
 
                   {/* Submit */}
@@ -486,7 +484,7 @@ const Login = () => {
                     disabled={loading}
                     whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(16, 185, 129, 0.5)' }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50 relative overflow-hidden"
+                    className="w-full mx-auto py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50 relative overflow-hidden"
                     style={{ 
                       background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
                       color: '#ffffff',

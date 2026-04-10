@@ -26,7 +26,7 @@ namespace FEServices.Service
             var query = _unitOfWork.Machines.Query().AsNoTracking();
 
             // Apply status filter at DB level
-            if (!string.IsNullOrEmpty(status) && status.ToLower() != "all")
+            if (!string.IsNullOrEmpty(status) && !status.Equals("all", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(m => m.Status == status);
             }
@@ -52,9 +52,9 @@ namespace FEServices.Service
 
             // Get owner data only for this page
             var ownerIds = machines.Select(m => m.OwnerId).Where(id => !string.IsNullOrEmpty(id)).Distinct().ToList();
-            var users = ownerIds.Any()
+            var users = ownerIds.Count > 0
                 ? await _unitOfWork.Users.Query().AsNoTracking().Where(u => ownerIds.Contains(u.Id)).ToListAsync()
-                : new List<ApplicationUser>();
+                : [];
 
             // Map data to DTO
             var result = machines.Select(m =>
@@ -63,15 +63,15 @@ namespace FEServices.Service
                 return new MachineSummaryDto
                 {
                     Id = m.Id,
-                    Name = m.Name ?? "Unknown",
-                    Type = m.Type ?? "Unknown",
+                    Name = m.Name,
+                    Type = m.Type,
                     Rate = m.Rate,
-                    Status = m.Status ?? "Unknown",
+                    Status = m.Status,
                     ImageUrl = m.ImageUrl,
                     CreatedAt = m.CreatedAt,
                     Location = m.Location ?? owner?.Location ?? "N/A",
                     Description = m.Description,
-                    OwnerId = m.OwnerId ?? "",
+                    OwnerId = m.OwnerId,
                     OwnerName = owner?.FullName ?? "Unknown",
                     OwnerLocation = owner?.Location
                 };
@@ -140,9 +140,9 @@ namespace FEServices.Service
         {
             var machines = await _unitOfWork.Machines.GetVerifiedAsync();
             var ownerIds = machines.Select(m => m.OwnerId).Where(id => !string.IsNullOrEmpty(id)).Distinct().ToList();
-            var users = ownerIds.Any()
+            var users = ownerIds.Count > 0
                 ? await _unitOfWork.Users.Query().Where(u => ownerIds.Contains(u.Id)).ToListAsync()
-                : new List<ApplicationUser>();
+                : [];
 
             return machines.Select(m =>
             {
@@ -150,15 +150,15 @@ namespace FEServices.Service
                 return new MachineSummaryDto
                 {
                     Id = m.Id,
-                    Name = m.Name ?? "Unknown",
-                    Type = m.Type ?? "Unknown",
+                    Name = m.Name,
+                    Type = m.Type,
                     Rate = m.Rate,
-                    Status = m.Status ?? "Unknown",
+                    Status = m.Status,
                     ImageUrl = m.ImageUrl,
                     CreatedAt = m.CreatedAt,
                     Location = m.Location ?? owner?.Location ?? "N/A",
                     Description = m.Description,
-                    OwnerId = m.OwnerId ?? "",
+                    OwnerId = m.OwnerId,
                     OwnerName = owner?.FullName ?? "Unknown",
                     OwnerLocation = owner?.Location
                 };
@@ -170,8 +170,8 @@ namespace FEServices.Service
             var owners = await _unitOfWork.Users.GetOwnersAsync();
             var cities = owners.Select(u => u.Location).Where(l => !string.IsNullOrEmpty(l)).Cast<string>().Distinct().ToList();
 
-            if (!cities.Any())
-                cities = new List<string> { "Mohali", "Chandigarh", "Panchkula", "Ludhiana" };
+            if (cities.Count == 0)
+                cities = ["Mohali", "Chandigarh", "Panchkula", "Ludhiana"];
 
             return cities;
         }
