@@ -10,6 +10,7 @@ namespace FEServices.Service
     {
         Task<bool> SendOtpEmailAsync(string toEmail, string otp);
         Task<bool> Send2FAOtpEmailAsync(string toEmail, string otp);
+        Task<bool> SendEmailAsync(string toEmail, string subject, string htmlBody);
     }
 
     public class EmailService : IEmailService
@@ -201,6 +202,50 @@ namespace FEServices.Service
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to send 2FA email to {Email}", toEmail);
+                return false;
+            }
+        }
+
+        public async Task<bool> SendEmailAsync(string toEmail, string subject, string htmlBody)
+        {
+            if (string.IsNullOrEmpty(toEmail))
+                return false;
+            
+            try
+            {
+                var smtpSettings = _configuration.GetSection("SmtpSettings");
+                var host = smtpSettings["Host"] ?? "smtp.gmail.com";
+                var port = int.Parse(smtpSettings["Port"] ?? "587");
+                var email = smtpSettings["Email"] ?? "";
+                var password = smtpSettings["Password"] ?? "";
+                var useSsl = bool.Parse(smtpSettings["UseSsl"] ?? "false");
+
+                if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+                {
+                    _logger.LogWarning("SMTP settings not configured. Email not sent.");
+                    return false;
+                }
+
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress("FarmEase", email));
+                message.To.Add(new MailboxAddress(toEmail, toEmail));
+                message.Subject = subject;
+
+                var bodyBuilder = new BodyBuilder { HtmlBody = htmlBody };
+                message.Body = bodyBuilder.ToMessageBody();
+
+                using var client = new SmtpClient();
+                await client.ConnectAsync(host, port, useSsl ? MailKit.Security.SecureSocketOptions.SslOnConnect : MailKit.Security.SecureSocketOptions.StartTls);
+                await client.AuthenticateAsync(email, password);
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+                
+                _logger.LogInformation("Email sent successfully to {Email}", toEmail);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send email to {Email}", toEmail);
                 return false;
             }
         }

@@ -19,5 +19,9 @@ namespace FEServices.Interface
         Task<(bool Success, string Message)> VerifyAuthenticatorSetupAsync(string userId, TwoFactorVerifySetupDto model);
         Task<(bool Success, string Message, string? Token, string? Role, string? UserId)> VerifyBackupCodeAsync(TwoFactorBackupVerifyDto model);
         Task<(bool Success, string Message, List<string>? BackupCodes)> RegenerateBackupCodesAsync(string userId);
+
+        // OTP for Sensitive Actions
+        Task<(bool Success, string Message)> SendOtpAsync(string userId, string purpose);
+        Task<(bool Success, string Message)> VerifyOtpAsync(string userId, string otp, string purpose);
     }
 }

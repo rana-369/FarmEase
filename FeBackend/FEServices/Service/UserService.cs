@@ -1,5 +1,6 @@
 using FEDomain;
 using FEDomain.Interfaces;
+using FEDomain.Data;
 using FEDTO.DTOs;
 using FEServices.Interface;
 using Microsoft.AspNetCore.Http;

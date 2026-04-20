@@ -29,6 +29,8 @@ import OwnerRequests from './pages/owner/Requests';
 import OwnerEarnings from './pages/owner/Earnings';
 import OwnerNotifications from './pages/owner/Notifications';
 import OwnerProfile from './pages/owner/Profile';
+import OwnerPaymentSettings from './pages/owner/PaymentSettings';
+import PaymentOnboarding from './pages/owner/PaymentOnboarding';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -128,6 +130,8 @@ const AppRoutes = () => {
               <Route path="earnings" element={<OwnerEarnings />} />
               <Route path="notifications" element={<OwnerNotifications />} />
               <Route path="profile" element={<OwnerProfile />} />
+              <Route path="payment-settings" element={<OwnerPaymentSettings />} />
+              <Route path="payment-onboarding" element={<PaymentOnboarding />} />
             </Route>
 
             {/* Admin Routes */}

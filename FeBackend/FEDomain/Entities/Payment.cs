@@ -24,14 +24,30 @@ namespace FEDomain
 
         public string Status { get; set; } = "Pending"; // Pending, Captured, Refunded, Failed
 
+        public string? FailureReason { get; set; } // Reason for payment failure
+
         [Column(TypeName = "decimal(18,2)")]
         public decimal? RefundAmount { get; set; }
 
         public string? RefundId { get; set; } // Razorpay refund ID
 
+        public string? RazorpayRefundId { get; set; } // Razorpay refund ID from webhook
+
         public DateTime? RefundedAt { get; set; }
 
         public string? RefundReason { get; set; }
+
+        // Route API Settlement Fields - Track automatic splits to owner
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal OwnerAmount { get; set; }           // Amount transferred to owner (after platform fee)
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal PlatformFeeAmount { get; set; }     // Platform fee collected
+
+        public string? RazorpayTransferId { get; set; }    // Transfer ID from Route API
+        public string SettlementStatus { get; set; } = "Pending"; // Pending, Settled, Failed
+        public DateTime? SettledAt { get; set; }           // When settled to owner's account
+        public string? SettlementFailureReason { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }

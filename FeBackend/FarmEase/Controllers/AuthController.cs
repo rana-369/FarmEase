@@ -203,5 +203,57 @@ namespace FarmEase.Controllers
         }
 
         #endregion
+
+        #region OTP Verification for Sensitive Actions
+
+        /// <summary>
+        /// Send OTP for verifying sensitive actions like payment update
+        /// </summary>
+        [HttpPost("send-otp")]
+        [Authorize]
+        public async Task<IActionResult> SendOtp([FromBody] SendOtpDto model)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { Message = "User not authenticated." });
+
+            var (success, message) = await _authService.SendOtpAsync(userId, model.Purpose);
+            if (!success)
+                return BadRequest(new { Message = message });
+
+            return Ok(new { Success = true, Message = message });
+        }
+
+        /// <summary>
+        /// Verify OTP for sensitive actions
+        /// </summary>
+        [HttpPost("verify-otp")]
+        [Authorize]
+        public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpDto model)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { Message = "User not authenticated." });
+
+            var (success, message) = await _authService.VerifyOtpAsync(userId, model.Otp, model.Purpose);
+            if (!success)
+                return BadRequest(new { Success = false, Message = message });
+
+            return Ok(new { Success = true, Message = message });
+        }
+
+        #endregion
+    }
+
+    // DTOs for OTP
+    public class SendOtpDto
+    {
+        public string Purpose { get; set; } = string.Empty;
+    }
+
+    public class VerifyOtpDto
+    {
+        public string Otp { get; set; } = string.Empty;
+        public string Purpose { get; set; } = string.Empty;
     }
 }

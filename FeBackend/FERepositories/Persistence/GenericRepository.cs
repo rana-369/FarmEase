@@ -1,8 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using FEDomain.Interfaces;
+using FEDomain.Data;
 
-namespace FERepositories
+namespace FERepositories.Persistence
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {

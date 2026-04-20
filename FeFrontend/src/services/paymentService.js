@@ -180,9 +180,95 @@ export const processPayment = async (bookingId, machineName) => {
     console.error('!!! PAYMENT ERROR:', error);
     console.error('Error message:', error.message);
     console.error('Error response:', error.response?.data);
-    return { 
-      success: false, 
-      message: error.response?.data?.message || error.message || 'Payment failed' 
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message || 'Payment failed'
+    };
+  }
+};
+
+// ============================================
+// Razorpay Route API - Owner Payment Settings
+// ============================================
+
+/**
+ * Get owner's payment settings status
+ * @returns {Promise<{isOnboardingComplete: boolean, onboardingCompletedAt: string, accountStatus: string, canReceivePayments: boolean}>}
+ */
+export const getOwnerPaymentSettings = async () => {
+  const { data } = await api.get('/payments/owner/settings');
+  return data;
+};
+
+/**
+ * Initiate Razorpay onboarding for owner to receive payments directly
+ * @returns {Promise<{success: boolean, message: string, data?: {onboardingUrl: string, accountId: string}}>}
+ */
+export const initiateOwnerOnboarding = async () => {
+  try {
+    const { data } = await api.post('/payments/owner/onboarding');
+    return {
+      success: true,
+      message: data.message,
+      data: data.data
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Failed to initiate onboarding'
+    };
+  }
+};
+
+/**
+ * Complete owner onboarding after KYC verification
+ * @param {string} accountId - Razorpay account ID from onboarding
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+export const completeOwnerOnboarding = async (accountId) => {
+  try {
+    const { data } = await api.post('/payments/owner/onboarding/complete', { accountId });
+    return {
+      success: true,
+      message: data.message
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Failed to complete onboarding'
+    };
+  }
+};
+
+// ============================================
+// Admin - Platform Earnings
+// ============================================
+
+/**
+ * Get platform earnings summary for admin dashboard
+ * @returns {Promise<{totalPlatformFees: number, totalSettled: number, totalPending: number, totalTransactions: number, recentSettlements: Array}>}
+ */
+export const getPlatformEarnings = async () => {
+  const { data } = await api.get('/payments/admin/earnings');
+  return data;
+};
+
+/**
+ * Manually process pending settlement for a payment
+ * @param {number} paymentId - Payment ID to settle
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+export const processSettlement = async (paymentId) => {
+  try {
+    const { data } = await api.post(`/payments/admin/settlements/${paymentId}`);
+    return {
+      success: true,
+      message: data.message
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Failed to process settlement'
     };
   }
 };

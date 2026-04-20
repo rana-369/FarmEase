@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using FEDomain;
 using FEDomain.Interfaces;
+using FEDomain.Data;
 using FEDTO.DTOs;
 using FEServices.Interface;
 using Microsoft.AspNetCore.Identity;
@@ -421,5 +422,91 @@ namespace FEServices.Service
             var number = BitConverter.ToUInt32(bytes, 0) % 900000 + 100000;
             return number.ToString();
         }
+
+        #region OTP for Sensitive Actions
+
+        // In-memory storage for OTPs (in production, use Redis or database)
+        private static readonly Dictionary<string, (string OtpHash, DateTime Expiry)> _otpStore = new();
+
+        public async Task<(bool Success, string Message)> SendOtpAsync(string userId, string purpose)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return (false, "User not found.");
+
+            // Generate 6-digit OTP
+            var otp = GenerateSecureOtp();
+            var otpHash = HashCode(otp);
+            var key = $"{userId}_{purpose}";
+            
+            // Store OTP with 5-minute expiry
+            _otpStore[key] = (otpHash, DateTime.UtcNow.AddMinutes(5));
+
+            // Send OTP via email
+            var purposeText = purpose switch
+            {
+                "payment_update" => "update your payment details",
+                "password_change" => "change your password",
+                _ => "verify your identity"
+            };
+
+            var emailBody = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                    <h2 style='color: #10b981;'>FarmEase - Verification Code</h2>
+                    <p>Hello {user.FullName},</p>
+                    <p>You requested to {purposeText}. Please use the following verification code:</p>
+                    <div style='background: #f3f4f6; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;'>
+                        {otp}
+                    </div>
+                    <p style='color: #6b7280; font-size: 14px;'>This code will expire in 5 minutes. If you didn't request this, please ignore this email.</p>
+                </div>";
+
+            var emailResult = await _emailService.SendEmailAsync(
+                user.Email!,
+                "FarmEase - Verification Code",
+                emailBody
+            );
+
+            if (!emailResult)
+            {
+                _logger.LogError("Failed to send OTP email to {Email}", user.Email);
+                return (false, "Failed to send verification email. Please try again.");
+            }
+
+            _logger.LogInformation("OTP sent to user {UserId} for purpose {Purpose}", userId, purpose);
+            return (true, "Verification code sent to your email.");
+        }
+
+        public async Task<(bool Success, string Message)> VerifyOtpAsync(string userId, string otp, string purpose)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return (false, "User not found.");
+
+            var key = $"{userId}_{purpose}";
+            
+            if (!_otpStore.TryGetValue(key, out var stored))
+                return (false, "No verification code found. Please request a new one.");
+
+            // Check expiry
+            if (DateTime.UtcNow > stored.Expiry)
+            {
+                _otpStore.Remove(key);
+                return (false, "Verification code has expired. Please request a new one.");
+            }
+
+            // Verify OTP
+            var otpHash = HashCode(otp);
+            if (otpHash != stored.OtpHash)
+                return (false, "Invalid verification code. Please try again.");
+
+            // Remove used OTP
+            _otpStore.Remove(key);
+            
+            _logger.LogInformation("OTP verified for user {UserId}, purpose {Purpose}", userId, purpose);
+            return (true, "Verification successful.");
+        }
+
+        #endregion
     }
 }

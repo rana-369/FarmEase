@@ -1,5 +1,6 @@
 using FEDomain;
 using FEDomain.Interfaces;
+using FEDomain.Data;
 using FEServices.Interface;
 
 namespace FEServices.Service

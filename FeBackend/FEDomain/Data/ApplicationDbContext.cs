@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using FECommon.Enums;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace FERepositories
+namespace FEDomain.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
@@ -76,6 +76,10 @@ namespace FERepositories
                 .HasIndex(p => p.Status)
                 .HasDatabaseName("IX_Payments_Status");
 
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.SettlementStatus)
+                .HasDatabaseName("IX_Payments_SettlementStatus");
+
             // Notification indexes
             modelBuilder.Entity<Notification>()
                 .HasIndex(n => n.UserId)
@@ -93,6 +97,12 @@ namespace FERepositories
             modelBuilder.Entity<ApplicationUser>()
                 .HasIndex(u => u.Role)
                 .HasDatabaseName("IX_Users_Role");
+
+            // ApplicationUser Razorpay indexes
+            modelBuilder.Entity<ApplicationUser>()
+                .HasIndex(u => u.RazorpayAccountId)
+                .HasDatabaseName("IX_Users_RazorpayAccountId")
+                .HasFilter("[RazorpayAccountId] IS NOT NULL");
         }
 
         private static BookingStatus ParseBookingStatusSafe(string value)

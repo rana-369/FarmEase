@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FiUsers, FiTruck, FiPackage, FiTrendingUp, FiActivity, FiAlertCircle, FiCheckCircle, FiRefreshCw, FiShield, FiArrowRight, FiBarChart2, FiClock } from 'react-icons/fi';
 import { RupeeIcon } from '../../components/RupeeIcon';
 import { getAdminDashboardData, getRevenueData } from '../../services/dashboardService';
+import PlatformEarnings from '../../components/admin/PlatformEarnings';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -432,6 +433,15 @@ const AdminDashboard = () => {
               </motion.div>
             ))}
           </div>
+        </motion.div>
+
+        {/* Platform Earnings - Route API Settlements */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          <PlatformEarnings />
         </motion.div>
     </div>
   );

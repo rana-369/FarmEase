@@ -3,19 +3,20 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { 
-  FiHome, 
-  FiTruck, 
-  FiPackage, 
-  FiBell, 
-  FiSettings, 
+import {
+  FiHome,
+  FiTruck,
+  FiPackage,
+  FiBell,
+  FiSettings,
   FiUsers,
   FiLogOut,
   FiPlus,
   FiUser,
   FiChevronRight,
   FiSun,
-  FiMoon
+  FiMoon,
+  FiCreditCard
 } from 'react-icons/fi';
 import { RupeeIcon } from './RupeeIcon';
 import ThemeToggle from './ThemeToggle';
@@ -50,6 +51,7 @@ const Sidebar = () => {
     { icon: FiPlus, label: 'Add Machinery', path: '/owner/add-machine' },
     { icon: FiPackage, label: 'Rental Requests', path: '/owner/requests' },
     { icon: RupeeIcon, label: 'Fleet Earnings', path: '/owner/earnings' },
+    { icon: FiCreditCard, label: 'Payment Settings', path: '/owner/payment-settings' },
     { icon: FiBell, label: 'Notifications', path: '/owner/notifications' },
     { icon: FiSettings, label: 'Profile Settings', path: '/owner/profile' },
   ];

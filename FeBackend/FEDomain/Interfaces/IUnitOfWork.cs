@@ -1,3 +1,5 @@
+using FEDomain;
+
 namespace FEDomain.Interfaces
 {
     public interface IUnitOfWork : IDisposable

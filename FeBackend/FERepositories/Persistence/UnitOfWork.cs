@@ -1,7 +1,8 @@
 using FEDomain;
 using FEDomain.Interfaces;
+using FEDomain.Data;
 
-namespace FERepositories
+namespace FERepositories.Persistence
 {
     public class UnitOfWork : IUnitOfWork
     {

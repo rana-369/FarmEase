@@ -11,7 +11,8 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 // --- ARCHITECTURE NAMESPACES ---
 using FEDomain;
-using FERepositories;
+using FEDomain.Data;
+using FERepositories.Persistence;
 using FEServices.Interface;
 using FEServices.Service;
 using FarmEase.Middleware;

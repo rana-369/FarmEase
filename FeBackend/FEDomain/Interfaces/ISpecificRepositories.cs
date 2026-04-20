@@ -1,4 +1,4 @@
-﻿// We don't need 'using FEDomain;' anymore because we are already inside it!
+﻿using FEDomain;
 
 namespace FEDomain.Interfaces
 {

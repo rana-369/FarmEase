@@ -2,8 +2,9 @@
 using FEDomain;
 using FECommon.Enums;
 using Microsoft.EntityFrameworkCore;
+using FEDomain.Data;
 
-namespace FERepositories
+namespace FERepositories.Persistence
 {
     public class UserRepository : GenericRepository<ApplicationUser>, IUserRepository
     {
