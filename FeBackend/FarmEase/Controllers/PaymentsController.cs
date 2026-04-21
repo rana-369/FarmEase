@@ -19,6 +19,12 @@ namespace FarmEase.Controllers
         private readonly IConfiguration _configuration;
         private readonly ILogger<PaymentsController> _logger;
 
+        // Cached JsonSerializerOptions for reuse
+        private static readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
         public PaymentsController(
             IPaymentService paymentService,
             IBookingService bookingService,
@@ -223,10 +229,7 @@ namespace FarmEase.Controllers
                 }
 
                 // Parse webhook payload
-                var webhookPayload = JsonSerializer.Deserialize<RazorpayWebhookPayload>(requestBody, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                var webhookPayload = JsonSerializer.Deserialize<RazorpayWebhookPayload>(requestBody, _jsonOptions);
 
                 if (webhookPayload == null || string.IsNullOrEmpty(webhookPayload.Event))
                 {
@@ -263,14 +266,14 @@ namespace FarmEase.Controllers
             }
         }
 
-        private bool VerifyWebhookSignature(string payload, string signature, string secret)
+        private static bool VerifyWebhookSignature(string payload, string signature, string secret)
         {
             try
             {
                 using var hmac = new System.Security.Cryptography.HMACSHA256(System.Text.Encoding.UTF8.GetBytes(secret));
                 var hash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(payload));
                 var computedSignature = Convert.ToHexString(hash).ToLower();
-                return computedSignature == signature.ToLower();
+                return string.Equals(computedSignature, signature, StringComparison.OrdinalIgnoreCase);
             }
             catch
             {

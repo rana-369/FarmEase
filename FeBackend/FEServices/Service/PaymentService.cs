@@ -165,10 +165,6 @@ namespace FEServices.Service
 
             _logger.LogInformation("Payment split - Owner: {OwnerAmount}, Platform Fee: {PlatformFee}", ownerAmount, platformFeeAmount);
 
-            // Get owner's Razorpay account ID for tracking
-            var owner = await _userManager.FindByIdAsync(booking.OwnerId ?? "");
-            string? ownerAccountId = owner?.RazorpayAccountId;
-
             // Save payment details with settlement tracking
             // Settlement is automatic via Razorpay Route API - status will be updated by webhook
             var payment = new PaymentEntity
@@ -391,7 +387,7 @@ namespace FEServices.Service
             return (true, "Payment saved successfully.");
         }
 
-        private string GenerateRazorpaySignature(string orderId, string paymentId, string secret)
+        private static string GenerateRazorpaySignature(string orderId, string paymentId, string secret)
         {
             string payload = orderId + "|" + paymentId;
 
@@ -440,7 +436,7 @@ namespace FEServices.Service
                 }
 
                 // Generate a unique reference ID for this owner's onboarding
-                string referenceId = $"owner_{userId}_{Guid.NewGuid():N}".Substring(0, 40);
+                string referenceId = $"owner_{userId}_{Guid.NewGuid():N}"[..40];
 
                 _logger.LogInformation("Initiating onboarding for owner: {UserId}, Reference: {RefId}", userId, referenceId);
 
