@@ -1,3 +1,5 @@
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using FEDomain;
 using FEDomain.Interfaces;
 using FEDomain.Data;
@@ -11,10 +13,12 @@ namespace FEServices.Service
     public class MachineService : IMachineService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public MachineService(IUnitOfWork unitOfWork)
+        public MachineService(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<Machine>> GetAllMachinesAsync()
@@ -57,26 +61,20 @@ namespace FEServices.Service
                 ? await _unitOfWork.Users.Query().AsNoTracking().Where(u => ownerIds.Contains(u.Id)).ToListAsync()
                 : [];
 
-            // Map data to DTO
-            var result = machines.Select(m =>
+            // Map data to DTO using AutoMapper for base properties, then enrich with owner data
+            var result = _mapper.Map<List<MachineSummaryDto>>(machines);
+            
+            // Enrich with owner data (preserving existing logic)
+            for (int i = 0; i < machines.Count; i++)
             {
-                var owner = users.FirstOrDefault(u => u.Id == m.OwnerId);
-                return new MachineSummaryDto
+                var owner = users.FirstOrDefault(u => u.Id == machines[i].OwnerId);
+                result[i] = result[i] with
                 {
-                    Id = m.Id,
-                    Name = m.Name,
-                    Type = m.Type,
-                    Rate = m.Rate,
-                    Status = m.Status,
-                    ImageUrl = m.ImageUrl,
-                    CreatedAt = m.CreatedAt,
-                    Location = m.Location ?? owner?.Location ?? "N/A",
-                    Description = m.Description,
-                    OwnerId = m.OwnerId,
+                    Location = machines[i].Location ?? owner?.Location ?? "N/A",
                     OwnerName = owner?.FullName ?? "Unknown",
                     OwnerLocation = owner?.Location
                 };
-            }).ToList();
+            }
 
             return new PagedResult<MachineSummaryDto>(result, totalItems, page, limit);
         }
@@ -145,25 +143,21 @@ namespace FEServices.Service
                 ? await _unitOfWork.Users.Query().Where(u => ownerIds.Contains(u.Id)).ToListAsync()
                 : [];
 
-            return machines.Select(m =>
+            // Map using AutoMapper for base properties, then enrich with owner data
+            var result = _mapper.Map<List<MachineSummaryDto>>(machines);
+            
+            for (int i = 0; i < machines.Count(); i++)
             {
-                var owner = users.FirstOrDefault(u => u.Id == m.OwnerId);
-                return new MachineSummaryDto
+                var owner = users.FirstOrDefault(u => u.Id == machines.ElementAt(i).OwnerId);
+                result[i] = result[i] with
                 {
-                    Id = m.Id,
-                    Name = m.Name,
-                    Type = m.Type,
-                    Rate = m.Rate,
-                    Status = m.Status,
-                    ImageUrl = m.ImageUrl,
-                    CreatedAt = m.CreatedAt,
-                    Location = m.Location ?? owner?.Location ?? "N/A",
-                    Description = m.Description,
-                    OwnerId = m.OwnerId,
+                    Location = machines.ElementAt(i).Location ?? owner?.Location ?? "N/A",
                     OwnerName = owner?.FullName ?? "Unknown",
                     OwnerLocation = owner?.Location
                 };
-            });
+            }
+            
+            return result;
         }
 
         public async Task<IEnumerable<string>> GetActiveCitiesAsync()

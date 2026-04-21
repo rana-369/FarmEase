@@ -48,7 +48,7 @@ namespace FEDTO.DTOs
         public string? Message { get; set; }
     }
 
-    public class SettlementStatusDto
+    public record SettlementStatusDto
     {
         public int PaymentId { get; set; }
         public decimal OwnerAmount { get; set; }

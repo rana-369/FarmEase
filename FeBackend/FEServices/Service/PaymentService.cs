@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using AutoMapper;
 using FEDomain;
 using FEDomain.Interfaces;
 using FEDomain.Data;
@@ -21,13 +22,15 @@ namespace FEServices.Service
         private readonly IConfiguration _configuration;
         private readonly ILogger<PaymentService> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IMapper _mapper;
 
-        public PaymentService(IUnitOfWork unitOfWork, IConfiguration configuration, ILogger<PaymentService> logger, UserManager<ApplicationUser> userManager)
+        public PaymentService(IUnitOfWork unitOfWork, IConfiguration configuration, ILogger<PaymentService> logger, UserManager<ApplicationUser> userManager, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _configuration = configuration;
             _logger = logger;
             _userManager = userManager;
+            _mapper = mapper;
         }
 
         public async Task<(bool Success, string Message, object? OrderData)> CreateOrderAsync(int bookingId)
@@ -546,14 +549,13 @@ namespace FEServices.Service
                 TotalSettled = totalSettled,
                 TotalPending = totalPending,
                 TotalTransactions = payments.Count,
-                RecentSettlements = payments.Take(10).Select(p => new SettlementStatusDto
+                RecentSettlements = payments.Take(10).Select(p =>
                 {
-                    PaymentId = p.Id,
-                    OwnerAmount = p.OwnerAmount,
-                    PlatformFeeAmount = p.PlatformFeeAmount,
-                    SettlementStatus = p.SettlementStatus,
-                    SettledAt = p.SettledAt,
-                    TransferId = p.RazorpayTransferId
+                    var dto = _mapper.Map<SettlementStatusDto>(p);
+                    return dto with
+                    {
+                        SettlementStatus = p.SettlementStatus ?? "Pending"
+                    };
                 }).ToList()
             };
         }

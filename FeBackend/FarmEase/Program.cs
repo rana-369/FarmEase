@@ -16,6 +16,7 @@ using FERepositories.Persistence;
 using FEServices.Interface;
 using FEServices.Service;
 using FarmEase.Middleware;
+using FEServices.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -153,6 +154,9 @@ builder.Services.AddScoped<IMachineService, MachineService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+
+// --- 5.1. AUTOMAPPER ---
+builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 
 // --- 6. CORS ---
 builder.Services.AddCors(options =>

@@ -1,3 +1,4 @@
+using AutoMapper;
 using FEDomain;
 using FEDomain.Interfaces;
 using FEDomain.Data;
@@ -17,12 +18,14 @@ namespace FEServices.Service
         private readonly IPaymentService _paymentService;
         private readonly IConfiguration _configuration;
         private readonly decimal _commissionRate;
+        private readonly IMapper _mapper;
 
-        public BookingService(IUnitOfWork unitOfWork, IPaymentService paymentService, IConfiguration configuration)
+        public BookingService(IUnitOfWork unitOfWork, IPaymentService paymentService, IConfiguration configuration, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _paymentService = paymentService;
             _configuration = configuration;
+            _mapper = mapper;
             
             // Get commission rate from config, default to 0.10 (10%)
             var commissionStr = configuration["PlatformSettings:CommissionRate"];
@@ -116,30 +119,21 @@ namespace FEServices.Service
                     .Select(p => p.BookingId)
                     .ToHashSet();
 
-                // Map data to DTO using denormalized fields
-                var result = bookings.Select(b =>
+                // Map data to DTO using AutoMapper, then enrich with computed properties
+                var result = _mapper.Map<List<BookingSummaryDto>>(bookings);
+                
+                for (int i = 0; i < bookings.Count; i++)
                 {
-                    var isRefunded = refundedBookingIds.Contains(b.Id);
-
-                    return new BookingSummaryDto
+                    var isRefunded = refundedBookingIds.Contains(bookings[i].Id);
+                    result[i] = result[i] with
                     {
-                        Id = b.Id,
-                        MachineId = b.MachineId,
-                        MachineName = b.MachineName ?? "Unknown",
-                        FarmerId = b.FarmerId ?? string.Empty,
-                        FarmerName = b.FarmerName ?? "Unknown",
-                        OwnerId = b.OwnerId ?? string.Empty,
+                        MachineName = bookings[i].MachineName ?? "Unknown",
+                        FarmerName = bookings[i].FarmerName ?? "Unknown",
                         OwnerName = "Owner",
                         Location = "",
-                        Hours = b.Hours,
-                        BaseAmount = b.BaseAmount,
-                        PlatformFee = b.PlatformFee,
-                        TotalAmount = b.TotalAmount,
-                        Status = b.Status ?? "Unknown",
-                        CreatedAt = b.CreatedAt,
                         IsRefunded = isRefunded
                     };
-                }).ToList();
+                }
 
                 // Combined stats query - single DB roundtrip
                 var stats = await _unitOfWork.Bookings.Query()
@@ -186,22 +180,13 @@ namespace FEServices.Service
 
                 return bookings.Select(b => {
                     var payment = payments.FirstOrDefault(p => p.BookingId == b.Id);
-                    return new BookingSummaryDto
+                    var dto = _mapper.Map<BookingSummaryDto>(b);
+                    return dto with
                     {
-                        Id = b.Id,
-                        MachineId = b.MachineId,
                         MachineName = b.MachineName ?? "Unknown",
-                        FarmerId = b.FarmerId ?? string.Empty,
                         FarmerName = b.FarmerName ?? "Unknown",
-                        OwnerId = b.OwnerId ?? string.Empty,
                         OwnerName = "Owner",
                         Location = "",
-                        Hours = b.Hours,
-                        BaseAmount = b.BaseAmount,
-                        PlatformFee = b.PlatformFee,
-                        TotalAmount = b.TotalAmount,
-                        Status = b.Status ?? "Unknown",
-                        CreatedAt = b.CreatedAt,
                         IsRefunded = payment?.RefundAmount > 0
                     };
                 });
@@ -234,22 +219,13 @@ namespace FEServices.Service
                     try
                     {
                         var payment = payments.FirstOrDefault(p => p.BookingId == b.Id);
-                        result.Add(new BookingSummaryDto
+                        var dto = _mapper.Map<BookingSummaryDto>(b);
+                        result.Add(dto with
                         {
-                            Id = b.Id,
-                            MachineId = b.MachineId,
                             MachineName = b.MachineName ?? "Unknown",
-                            FarmerId = b.FarmerId,
                             FarmerName = b.FarmerName ?? "Unknown",
-                            OwnerId = b.OwnerId,
                             OwnerName = "Owner",
                             Location = "",
-                            Hours = b.Hours,
-                            BaseAmount = b.BaseAmount,
-                            PlatformFee = b.PlatformFee,
-                            TotalAmount = b.TotalAmount,
-                            Status = b.Status,
-                            CreatedAt = b.CreatedAt,
                             IsRefunded = payment?.RefundAmount > 0
                         });
                     }

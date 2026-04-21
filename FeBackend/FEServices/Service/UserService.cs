@@ -1,3 +1,5 @@
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using FEDomain;
 using FEDomain.Interfaces;
 using FEDomain.Data;
@@ -15,31 +17,25 @@ namespace FEServices.Service
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public UserService(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IUnitOfWork unitOfWork)
+        public UserService(
+            UserManager<ApplicationUser> userManager, 
+            RoleManager<IdentityRole> roleManager, 
+            IUnitOfWork unitOfWork,
+            IMapper mapper)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<UserProfileDto>> GetAllUsersAsync()
         {
+            // Using AutoMapper ProjectTo for efficient EF projection
             var users = await _unitOfWork.Users.Query()
-                .Select(user => new UserProfileDto
-                {
-                    Id = user.Id ?? string.Empty,
-                    FullName = user.FullName ?? string.Empty,
-                    Email = user.Email ?? string.Empty,
-                    Role = user.Role ?? "farmer",
-                    IsSuspended = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow,
-                    CreatedAt = user.CreatedAt,
-                    ProfileImageUrl = user.ProfileImageUrl,
-                    Location = user.Location,
-                    PhoneNumber = user.PhoneNumber,
-                    FarmSize = user.FarmSize,
-                    CompanyName = user.CompanyName
-                })
+                .ProjectTo<UserProfileDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
             return users;
@@ -66,25 +62,12 @@ namespace FEServices.Service
             // Total count
             var totalItems = await query.CountAsync();
 
-            // Get paged users
+            // Get paged users using AutoMapper ProjectTo
             var users = await query
                 .OrderByDescending(u => u.CreatedAt)
                 .Skip((page - 1) * limit)
                 .Take(limit)
-                .Select(user => new UserProfileDto
-                {
-                    Id = user.Id ?? string.Empty,
-                    FullName = user.FullName ?? string.Empty,
-                    Email = user.Email ?? string.Empty,
-                    Role = user.Role ?? "farmer",
-                    IsSuspended = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow,
-                    CreatedAt = user.CreatedAt,
-                    ProfileImageUrl = user.ProfileImageUrl,
-                    Location = user.Location,
-                    PhoneNumber = user.PhoneNumber,
-                    FarmSize = user.FarmSize,
-                    CompanyName = user.CompanyName
-                })
+                .ProjectTo<UserProfileDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
             return new PagedResult<UserProfileDto>(users, totalItems, page, limit);
@@ -95,20 +78,8 @@ namespace FEServices.Service
             var user = await _unitOfWork.Users.GetByIdAsync(id);
             if (user == null) return null;
 
-            return new UserProfileDto
-            {
-                Id = user.Id ?? string.Empty,
-                FullName = user.FullName ?? string.Empty,
-                Email = user.Email ?? string.Empty,
-                Role = user.Role ?? "farmer",
-                IsSuspended = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow,
-                CreatedAt = user.CreatedAt,
-                ProfileImageUrl = user.ProfileImageUrl,
-                Location = user.Location,
-                PhoneNumber = user.PhoneNumber,
-                FarmSize = user.FarmSize,
-                CompanyName = user.CompanyName
-            };
+            // Using AutoMapper for single entity mapping
+            return _mapper.Map<UserProfileDto>(user);
         }
 
         public async Task<(bool Success, string Message, bool IsSuspended)> ToggleSuspensionAsync(string id, string currentUserId)
@@ -203,16 +174,8 @@ namespace FEServices.Service
         public async Task<IEnumerable<FarmerSummaryDto>> GetFarmersAsync()
         {
             var farmers = await _unitOfWork.Users.GetFarmersAsync();
-            return farmers.Select(u => new FarmerSummaryDto
-            {
-                Id = u.Id ?? string.Empty,
-                FullName = u.FullName ?? string.Empty,
-                Email = u.Email ?? string.Empty,
-                Location = u.Location,
-                ProfileImageUrl = u.ProfileImageUrl,
-                PhoneNumber = u.PhoneNumber,
-                CreatedAt = u.CreatedAt
-            });
+            // Using AutoMapper for collection mapping
+            return _mapper.Map<IEnumerable<FarmerSummaryDto>>(farmers);
         }
 
         public async Task<IEnumerable<OwnerSummaryDto>> GetOwnersAsync()
@@ -225,17 +188,20 @@ namespace FEServices.Service
                 .Select(g => new { OwnerId = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.OwnerId, x => x.Count);
 
-            return owners.Select(u => new OwnerSummaryDto
+            // Using AutoMapper with AfterMap for MachineCount calculation
+            var ownerDtos = _mapper.Map<List<OwnerSummaryDto>>(owners);
+            
+            // Set MachineCount for each owner
+            for (int i = 0; i < owners.Count(); i++)
             {
-                Id = u.Id ?? string.Empty,
-                FullName = u.FullName ?? string.Empty,
-                Email = u.Email ?? string.Empty,
-                Location = u.Location,
-                ProfileImageUrl = u.ProfileImageUrl,
-                PhoneNumber = u.PhoneNumber,
-                CreatedAt = u.CreatedAt,
-                MachineCount = machineCounts.TryGetValue(u.Id ?? "", out var count) ? count : 0
-            });
+                var owner = owners.ElementAt(i);
+                ownerDtos[i] = ownerDtos[i] with 
+                { 
+                    MachineCount = machineCounts.TryGetValue(owner.Id ?? "", out var count) ? count : 0 
+                };
+            }
+            
+            return ownerDtos;
         }
 
         public async Task<(bool Success, string Message)> UpdateProfileAsync(string userId, UserProfileUpdateDto model)
@@ -243,13 +209,8 @@ namespace FEServices.Service
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return (false, "User not found.");
 
-            user.FullName = model.FullName;
-            user.PhoneNumber = model.PhoneNumber;
-            user.Email = model.Email;
-            user.UserName = model.Email;
-            user.Location = model.Location;
-            user.FarmSize = model.FarmSize;
-            user.CompanyName = model.CompanyName;
+            // Using AutoMapper to map DTO to entity
+            _mapper.Map(model, user);
 
             var result = await _userManager.UpdateAsync(user);
 
