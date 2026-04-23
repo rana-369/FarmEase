@@ -357,11 +357,16 @@ const PaymentSettings = () => {
             </div>
 
             <div className="mb-4">
+              <label htmlFor="verify-otp" className="sr-only">Enter 6-digit OTP</label>
               <input
+                id="verify-otp"
+                name="verifyOtp"
                 type="text"
                 value={verifyOtp}
                 onChange={(e) => setVerifyOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="Enter 6-digit OTP"
+                maxLength={6}
+                autoComplete="one-time-code"
                 className="w-full px-4 py-3 text-center text-xl tracking-widest rounded-lg border focus:outline-none focus:ring-2"
                 style={{
                   background: 'var(--bg-secondary)',

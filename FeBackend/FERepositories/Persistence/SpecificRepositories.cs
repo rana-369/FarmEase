@@ -80,4 +80,24 @@ namespace FERepositories.Persistence
             }
         }
     }
+
+    public class ReviewRepository : GenericRepository<Review>, IReviewRepository
+    {
+        public ReviewRepository(ApplicationDbContext context) : base(context) { }
+
+        public async Task<IEnumerable<Review>> GetByMachineIdAsync(int machineId)
+            => await _dbSet.Where(r => r.MachineId == machineId).OrderByDescending(r => r.CreatedAt).ToListAsync();
+
+        public async Task<IEnumerable<Review>> GetByFarmerIdAsync(string farmerId)
+            => await _dbSet.Where(r => r.FarmerId == farmerId).OrderByDescending(r => r.CreatedAt).ToListAsync();
+
+        public async Task<IEnumerable<Review>> GetByOwnerIdAsync(string ownerId)
+            => await _dbSet.Where(r => r.OwnerId == ownerId).OrderByDescending(r => r.CreatedAt).ToListAsync();
+
+        public async Task<Review?> GetByBookingIdAsync(int bookingId)
+            => await _dbSet.FirstOrDefaultAsync(r => r.BookingId == bookingId);
+
+        public async Task<bool> HasReviewedAsync(int bookingId)
+            => await _dbSet.AnyAsync(r => r.BookingId == bookingId);
+    }
 }

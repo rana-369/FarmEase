@@ -15,6 +15,8 @@ namespace FEDomain.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<Testimonial> Testimonials { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -103,6 +105,37 @@ namespace FEDomain.Data
                 .HasIndex(u => u.RazorpayAccountId)
                 .HasDatabaseName("IX_Users_RazorpayAccountId")
                 .HasFilter("[RazorpayAccountId] IS NOT NULL");
+
+            // Review indexes
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => r.MachineId)
+                .HasDatabaseName("IX_Reviews_MachineId");
+            
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => r.FarmerId)
+                .HasDatabaseName("IX_Reviews_FarmerId");
+            
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => r.OwnerId)
+                .HasDatabaseName("IX_Reviews_OwnerId");
+            
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => r.BookingId)
+                .IsUnique()
+                .HasDatabaseName("IX_Reviews_BookingId_Unique");
+            
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => r.CreatedAt)
+                .HasDatabaseName("IX_Reviews_CreatedAt");
+
+            // Testimonial indexes
+            modelBuilder.Entity<Testimonial>()
+                .HasIndex(t => t.IsActive)
+                .HasDatabaseName("IX_Testimonials_IsActive");
+            
+            modelBuilder.Entity<Testimonial>()
+                .HasIndex(t => t.DisplayOrder)
+                .HasDatabaseName("IX_Testimonials_DisplayOrder");
         }
 
         private static BookingStatus ParseBookingStatusSafe(string value)

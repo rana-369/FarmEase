@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiTruck, FiSearch, FiFilter, FiMapPin, FiClock, FiStar, FiX, FiCheckCircle, FiTool } from 'react-icons/fi';
+import { FiTruck, FiSearch, FiFilter, FiMapPin, FiClock, FiStar, FiX, FiCheckCircle, FiTool, FiUser } from 'react-icons/fi';
 import { RupeeIcon } from '../../components/RupeeIcon';
 import Modal from '../../components/Modal';
+import RatingSummary from '../../components/RatingSummary';
+import ReviewList from '../../components/ReviewList';
 import { getAvailableMachines } from '../../services/machineService';
 import { createBooking } from '../../services/bookingService';
 
@@ -16,6 +18,7 @@ const FarmerMachines = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState('');
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [detailModal, setDetailModal] = useState({ open: false, machine: null });
 
   const categories = ['All', 'Tractor', 'Harvester', 'Plow', 'Seeder', 'Irrigation', 'Other'];
 
@@ -155,11 +158,12 @@ const FarmerMachines = () => {
             </div>
 
             <div className="mb-6 px-4">
-              <label className="input-label block mb-2">Number of Hours</label>
+              <label htmlFor="booking-hours" className="input-label block mb-2">Number of Hours</label>
               <div className="search-box-new">
                 <FiClock className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
                 <input
                   id="booking-hours"
+                  name="hours"
                   type="number"
                   min="1"
                   max="24"
@@ -167,6 +171,7 @@ const FarmerMachines = () => {
                   onChange={(e) => setBookingModal({ ...bookingModal, hours: e.target.value })}
                   className="input-field"
                   style={{ paddingLeft: '40px' }}
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -301,7 +306,8 @@ const FarmerMachines = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.03 }}
               whileHover={{ y: -4 }}
-              className="card overflow-hidden"
+              onClick={() => setDetailModal({ open: true, machine })}
+              className="card overflow-hidden cursor-pointer"
             >
               <div className="h-40 overflow-hidden relative" style={{ backgroundColor: 'var(--bg-primary)' }}>
                 <img
@@ -328,9 +334,8 @@ const FarmerMachines = () => {
                     {machine.category}
                   </span>
                 </div>
-                <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold" style={{ background: 'linear-gradient(135deg, rgba(250, 204, 21, 0.2) 0%, rgba(245, 158, 11, 0.15) 100%)', border: '1px solid rgba(250, 204, 21, 0.25)', color: '#facc15' }}>
-                  <FiStar className="w-3 h-3" />
-                  <span>{machine.rating}</span>
+                <div className="absolute top-3 right-3">
+                  <RatingSummary machineId={machine.id} />
                 </div>
               </div>
 
@@ -351,7 +356,7 @@ const FarmerMachines = () => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => handleBookNow(machine)}
+                    onClick={(e) => { e.stopPropagation(); handleBookNow(machine); }}
                     disabled={!machine.available}
                     className="primary-button"
                     style={{ 
@@ -388,6 +393,90 @@ const FarmerMachines = () => {
           </div>
         )}
     </div>
+
+      {/* Machine Detail Modal with Reviews */}
+      <Modal isOpen={detailModal.open} onClose={() => setDetailModal({ open: false, machine: null })}>
+        <div className="flex justify-between items-center mb-4 p-4" style={{ borderBottom: '1px solid var(--border-secondary)' }}>
+          <h3 className="card-title">{detailModal.machine?.name}</h3>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setDetailModal({ open: false, machine: null })}
+            className="icon-button"
+          >
+            <FiX />
+          </motion.button>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {/* Machine Info */}
+          <div className="flex items-start gap-4">
+            <div className="w-20 h-20 rounded-xl flex items-center justify-center" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+              <FiTruck className="w-8 h-8" style={{ color: '#10b981' }} />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
+                  {detailModal.machine?.category}
+                </span>
+                <RatingSummary machineId={detailModal.machine?.id} />
+              </div>
+              <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                <FiUser className="w-3 h-3" />
+                <span>{detailModal.machine?.ownerName}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                <FiMapPin className="w-3 h-3" />
+                <span>{detailModal.machine?.location}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="p-3 rounded-xl" style={{ background: 'var(--bg-secondary)' }}>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              {detailModal.machine?.description}
+            </p>
+          </div>
+
+          {/* Pricing */}
+          <div className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+            <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Hourly Rate</span>
+            <span className="text-xl font-bold" style={{ color: '#10b981' }}>
+              Rs.{Math.round((detailModal.machine?.rate || 0) * 1.1)}
+              <span className="text-xs font-normal" style={{ color: 'var(--text-secondary)' }}>/hr</span>
+            </span>
+          </div>
+
+          {/* Reviews Section */}
+          <div>
+            <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+              Reviews
+            </h4>
+            <ReviewList machineId={detailModal.machine?.id} />
+          </div>
+
+          {/* Book Button */}
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            onClick={() => {
+              setDetailModal({ open: false, machine: null });
+              handleBookNow(detailModal.machine);
+            }}
+            disabled={!detailModal.machine?.available}
+            className="primary-button w-full"
+            style={{ 
+              background: detailModal.machine?.available 
+                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                : 'rgba(255, 255, 255, 0.05)',
+              color: detailModal.machine?.available ? '#ffffff' : 'rgba(255,255,255,0.7)'
+            }}
+          >
+            {detailModal.machine?.available ? 'Book This Equipment' : 'Currently Unavailable'}
+          </motion.button>
+        </div>
+      </Modal>
     </>
   );
 };

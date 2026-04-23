@@ -54,6 +54,9 @@ namespace FEDomain.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsPaymentOnboardingComplete")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Location")
                         .HasColumnType("nvarchar(max)");
 
@@ -74,6 +77,9 @@ namespace FEDomain.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("PaymentOnboardingCompletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
@@ -81,6 +87,15 @@ namespace FEDomain.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("ProfileImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RazorpayAccountId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("RazorpayContactId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RazorpayFundAccountId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ResetOtp")
@@ -91,28 +106,28 @@ namespace FEDomain.Migrations
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TwoFactorBackupCodes")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
                     b.Property<string>("TwoFactorMethod")
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("TwoFactorSecret")
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("TwoFactorBackupCodes")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TwoFactorOtp")
-                        .HasColumnType("nvarchar(10)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("TwoFactorOtpExpiry")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("TwoFactorSecret")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
@@ -127,6 +142,13 @@ namespace FEDomain.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("RazorpayAccountId")
+                        .HasDatabaseName("IX_Users_RazorpayAccountId")
+                        .HasFilter("[RazorpayAccountId] IS NOT NULL");
+
+                    b.HasIndex("Role")
+                        .HasDatabaseName("IX_Users_Role");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -178,11 +200,20 @@ namespace FEDomain.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MachineId");
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_Bookings_CreatedAt");
 
-                    b.HasIndex("FarmerId");
+                    b.HasIndex("FarmerId")
+                        .HasDatabaseName("IX_Bookings_FarmerId");
 
-                    b.HasIndex("OwnerId");
+                    b.HasIndex("MachineId")
+                        .HasDatabaseName("IX_Bookings_MachineId");
+
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("IX_Bookings_OwnerId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_Bookings_Status");
 
                     b.ToTable("Bookings");
                 });
@@ -221,7 +252,7 @@ namespace FEDomain.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -229,7 +260,14 @@ namespace FEDomain.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OwnerId");
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_Machines_CreatedAt");
+
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("IX_Machines_OwnerId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_Machines_Status");
 
                     b.ToTable("Machines");
                 });
@@ -266,9 +304,18 @@ namespace FEDomain.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_Notifications_CreatedAt");
+
+                    b.HasIndex("IsRead")
+                        .HasDatabaseName("IX_Notifications_IsRead");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_Notifications_UserId");
 
                     b.ToTable("Notifications");
                 });
@@ -294,6 +341,15 @@ namespace FEDomain.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("FailureReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("OwnerAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PlatformFeeAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("RazorpayOrderId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -302,8 +358,14 @@ namespace FEDomain.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("RazorpayRefundId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("RazorpaySignature")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RazorpayTransferId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("RefundAmount")
@@ -318,15 +380,95 @@ namespace FEDomain.Migrations
                     b.Property<DateTime?>("RefundedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("SettledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SettlementFailureReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SettlementStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BookingId");
+                    b.HasIndex("BookingId")
+                        .HasDatabaseName("IX_Payments_BookingId");
+
+                    b.HasIndex("SettlementStatus")
+                        .HasDatabaseName("IX_Payments_SettlementStatus");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_Payments_Status");
 
                     b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("FEDomain.Review", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BookingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FarmerId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("FarmerName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("MachineId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MachineName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("OwnerId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Reviews_BookingId_Unique");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_Reviews_CreatedAt");
+
+                    b.HasIndex("FarmerId")
+                        .HasDatabaseName("IX_Reviews_FarmerId");
+
+                    b.HasIndex("MachineId")
+                        .HasDatabaseName("IX_Reviews_MachineId");
+
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("IX_Reviews_OwnerId");
+
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("FEDomain.SystemSetting", b =>
@@ -344,6 +486,61 @@ namespace FEDomain.Migrations
                     b.HasKey("Category");
 
                     b.ToTable("SystemSettings");
+                });
+
+            modelBuilder.Entity("FEDomain.Testimonial", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AuthorLocation")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AuthorName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AuthorRole")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SubmittedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DisplayOrder")
+                        .HasDatabaseName("IX_Testimonials_DisplayOrder");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_Testimonials_IsActive");
+
+                    b.ToTable("Testimonials");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -477,53 +674,6 @@ namespace FEDomain.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("FEDomain.Booking", b =>
-                {
-                    b.HasOne("FEDomain.ApplicationUser", "Farmer")
-                        .WithMany()
-                        .HasForeignKey("FarmerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FEDomain.Machine", "Machine")
-                        .WithMany()
-                        .HasForeignKey("MachineId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FEDomain.ApplicationUser", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Farmer");
-                    b.Navigation("Machine");
-                    b.Navigation("Owner");
-                });
-
-            modelBuilder.Entity("FEDomain.Machine", b =>
-                {
-                    b.HasOne("FEDomain.ApplicationUser", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Owner");
-                });
-
-            modelBuilder.Entity("FEDomain.Payment", b =>
-                {
-                    b.HasOne("FEDomain.Booking", "Booking")
-                        .WithMany()
-                        .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Booking");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

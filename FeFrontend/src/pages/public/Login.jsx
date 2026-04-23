@@ -258,7 +258,7 @@ const Login = () => {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 relative" style={{ backgroundColor: 'var(--bg-primary)', transition: 'background-color 0.3s ease' }}>
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-12 relative" style={{ backgroundColor: 'var(--bg-primary)', transition: 'background-color 0.3s ease' }}>
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -269,7 +269,8 @@ const Login = () => {
           <motion.button
             onClick={() => navigate('/', { replace: true })}
             whileHover={{ x: -4 }}
-            className="flex items-center gap-2 mb-8 text-sm font-semibold transition-colors px-4 py-2 rounded-xl"
+            whileTap={{ scale: 0.98 }}
+            className="flex items-center gap-2 mb-6 sm:mb-8 text-sm font-semibold transition-colors px-4 py-2 rounded-xl min-h-[44px]"
             style={{ 
               color: '#10b981',
               background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
@@ -281,54 +282,90 @@ const Login = () => {
           </motion.button>
 
           {/* Mobile Logo */}
-          <div className="lg:hidden mb-8">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="lg:hidden mb-6 sm:mb-8">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
               <div 
-                className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
                 style={{ 
                   background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
                   boxShadow: '0 4px 20px rgba(16, 185, 129, 0.35)'
                 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-                <FiTruck className="text-xl text-white relative z-10" />
+                <FiTruck className="text-lg sm:text-xl text-white relative z-10" />
               </div>
               <div>
-                <h1 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>FarmEase</h1>
+                <h1 className="text-lg sm:text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>FarmEase</h1>
                 <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Farm Equipment Platform</p>
               </div>
             </div>
           </div>
 
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Welcome Back</h2>
+              <h2 className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Welcome Back</h2>
+              {/* Theme Toggle - Modern Switch */}
               <motion.button
                 onClick={toggleTheme}
+                className="relative flex items-center w-16 h-8 rounded-full p-1 transition-all duration-500"
+                style={{
+                  background: isDark 
+                    ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' 
+                    : 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
+                  boxShadow: isDark
+                    ? 'inset 0 2px 10px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                    : 'inset 0 2px 10px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.1)'
+                }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
-                style={{ 
-                  color: 'var(--text-secondary)',
-                  backgroundColor: 'var(--bg-button)',
-                  border: '1px solid var(--border-primary)'
-                }}
-                title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                aria-label="Toggle theme"
               >
-                {isDark ? <FiSun size={14} /> : <FiMoon size={14} />}
-                <span className="text-xs font-medium">{isDark ? 'Light' : 'Dark'}</span>
+                {/* Toggle Ball */}
+                <motion.div
+                  className="relative z-10 w-6 h-6 rounded-full flex items-center justify-center"
+                  animate={{ x: isDark ? 32 : 0 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  style={{
+                    background: isDark 
+                      ? 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'
+                      : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                    boxShadow: isDark
+                      ? '0 0 15px rgba(251, 191, 36, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)'
+                      : '0 0 15px rgba(251, 191, 36, 0.6), 0 2px 8px rgba(0, 0, 0, 0.15)'
+                  }}
+                >
+                  {isDark ? (
+                    <FiMoon size={12} style={{ color: '#fbbf24' }} />
+                  ) : (
+                    <FiSun size={12} style={{ color: '#f59e0b' }} />
+                  )}
+                </motion.div>
+                
+                {/* Static Icons */}
+                <motion.div 
+                  className="absolute left-1.5"
+                  animate={{ opacity: isDark ? 0.3 : 0.7 }}
+                >
+                  <FiSun size={10} style={{ color: '#fbbf24' }} />
+                </motion.div>
+                <motion.div 
+                  className="absolute right-1.5"
+                  animate={{ opacity: isDark ? 0.7 : 0.3 }}
+                >
+                  <FiMoon size={10} style={{ color: '#94a3b8' }} />
+                </motion.div>
               </motion.button>
             </div>
-            <p style={{ color: 'var(--text-secondary)' }}>Sign in to access your dashboard</p>
+            <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>Sign in to access your dashboard</p>
           </div>
 
           {/* Role Selection */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-tertiary)' }}>
+          <div className="mb-4 sm:mb-6">
+            <label className="block text-xs sm:text-sm font-medium mb-2 sm:mb-3" style={{ color: 'var(--text-tertiary)' }}>
               Select your role
             </label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {['Farmer', 'Owner', 'Admin'].map((role) => {
                 const activeRole = requires2FA ? pending2FARole : selectedRole;
                 const isActive = activeRole === role;
@@ -343,7 +380,7 @@ const Login = () => {
                     disabled={requires2FA}
                     whileHover={{ scale: 1.03, y: -2 }}
                     whileTap={{ scale: 0.97 }}
-                    className="flex flex-col items-center gap-2 p-4 rounded-2xl transition-all relative overflow-hidden group"
+                    className="flex flex-col items-center gap-1 sm:gap-2 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all relative overflow-hidden group min-h-[60px] sm:min-h-[80px]"
                     style={{ 
                       backgroundColor: isActive ? `${config.color}15` : 'var(--bg-card)',
                       border: isActive ? `2px solid ${config.color}40` : '2px solid var(--border-primary)',
@@ -359,8 +396,8 @@ const Login = () => {
                         }}
                       />
                     )}
-                    <Icon className="text-xl relative z-10" style={{ color: isActive ? config.color : 'var(--text-secondary)' }} />
-                    <span className="text-sm font-semibold relative z-10" style={{ color: isActive ? config.color : 'var(--text-muted)' }}>
+                    <Icon className="text-lg sm:text-xl relative z-10" style={{ color: isActive ? config.color : 'var(--text-secondary)' }} />
+                    <span className="text-xs sm:text-sm font-semibold relative z-10" style={{ color: isActive ? config.color : 'var(--text-muted)' }}>
                       {role}
                     </span>
                   </motion.button>
@@ -371,7 +408,7 @@ const Login = () => {
 
           {/* Login Form Card */}
           <div 
-            className="p-6 rounded-3xl relative overflow-hidden"
+            className="p-4 sm:p-6 rounded-xl sm:rounded-2xl lg:rounded-3xl relative overflow-hidden"
             style={{ 
               background: 'var(--bg-card)',
               border: '1px solid var(--border-primary)',

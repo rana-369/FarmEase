@@ -159,20 +159,56 @@ const Register = () => {
             <div className="mb-4">
               <div className="flex items-center justify-center gap-4 mb-2">
                 <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Create Account</h1>
+                {/* Theme Toggle - Modern Switch */}
                 <motion.button
                   onClick={toggleTheme}
+                  className="relative flex items-center w-16 h-8 rounded-full p-1 transition-all duration-500"
+                  style={{
+                    background: isDark 
+                      ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' 
+                      : 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
+                    boxShadow: isDark
+                      ? 'inset 0 2px 10px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                      : 'inset 0 2px 10px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.1)'
+                  }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
-                  style={{ 
-                    color: 'var(--text-secondary)',
-                    backgroundColor: 'var(--bg-button)',
-                    border: '1px solid var(--border-primary)'
-                  }}
-                  title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  aria-label="Toggle theme"
                 >
-                  {isDark ? <FiSun size={14} /> : <FiMoon size={14} />}
-                  <span className="text-xs font-medium">{isDark ? 'Light' : 'Dark'}</span>
+                  {/* Toggle Ball */}
+                  <motion.div
+                    className="relative z-10 w-6 h-6 rounded-full flex items-center justify-center"
+                    animate={{ x: isDark ? 32 : 0 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    style={{
+                      background: isDark 
+                        ? 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'
+                        : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                      boxShadow: isDark
+                        ? '0 0 15px rgba(251, 191, 36, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)'
+                        : '0 0 15px rgba(251, 191, 36, 0.6), 0 2px 8px rgba(0, 0, 0, 0.15)'
+                    }}
+                  >
+                    {isDark ? (
+                      <FiMoon size={12} style={{ color: '#fbbf24' }} />
+                    ) : (
+                      <FiSun size={12} style={{ color: '#f59e0b' }} />
+                    )}
+                  </motion.div>
+                  
+                  {/* Static Icons */}
+                  <motion.div 
+                    className="absolute left-1.5"
+                    animate={{ opacity: isDark ? 0.3 : 0.7 }}
+                  >
+                    <FiSun size={10} style={{ color: '#fbbf24' }} />
+                  </motion.div>
+                  <motion.div 
+                    className="absolute right-1.5"
+                    animate={{ opacity: isDark ? 0.7 : 0.3 }}
+                  >
+                    <FiMoon size={10} style={{ color: '#94a3b8' }} />
+                  </motion.div>
                 </motion.button>
               </div>
               <p className="text-base" style={{ color: 'var(--text-muted)' }}>Join the FarmEase platform</p>

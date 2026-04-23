@@ -10,6 +10,8 @@ namespace FEDomain.Interfaces
         INotificationRepository Notifications { get; }
         IGenericRepository<Payment> Payments { get; }
         IGenericRepository<SystemSetting> SystemSettings { get; }
+        IReviewRepository Reviews { get; }
+        IGenericRepository<Testimonial> Testimonials { get; }
         
         Task<int> SaveChangesAsync();
         int SaveChanges();

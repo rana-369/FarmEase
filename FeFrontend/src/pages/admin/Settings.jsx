@@ -213,8 +213,10 @@ const SettingsPage = () => {
                   <input
                     id="siteName"
                     type="text"
+                    name="siteName"
                     value={settings.general.siteName}
                     onChange={(e) => handleChange('general', 'siteName', e.target.value)}
+                    autoComplete="organization"
                     className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-blue-500/30"
                     style={{ 
                       background: 'var(--bg-input)', 
@@ -243,8 +245,10 @@ const SettingsPage = () => {
                   <input
                     id="supportEmail"
                     type="email"
+                    name="supportEmail"
                     value={settings.general.supportEmail}
                     onChange={(e) => handleChange('general', 'supportEmail', e.target.value)}
+                    autoComplete="email"
                     className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-purple-500/30"
                     style={{ 
                       background: 'var(--bg-input)', 
@@ -273,8 +277,10 @@ const SettingsPage = () => {
                   <input
                     id="platformFee"
                     type="number"
+                    name="platformFee"
                     value={settings.general.platformFee}
                     onChange={(e) => handleChange('general', 'platformFee', parseInt(e.target.value))}
+                    autoComplete="off"
                     className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-amber-500/30"
                     style={{ 
                       background: 'var(--bg-input)', 
@@ -365,8 +371,10 @@ const SettingsPage = () => {
                   <input
                     id="sessionTimeout"
                     type="number"
+                    name="sessionTimeout"
                     value={settings.security.sessionTimeout}
                     onChange={(e) => handleChange('security', 'sessionTimeout', parseInt(e.target.value))}
+                    autoComplete="off"
                     className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-purple-500/30"
                     style={{ 
                       background: 'var(--bg-input)', 
@@ -395,8 +403,10 @@ const SettingsPage = () => {
                   <input
                     id="minPasswordLength"
                     type="number"
+                    name="minPasswordLength"
                     value={settings.security.minPasswordLength}
                     onChange={(e) => handleChange('security', 'minPasswordLength', parseInt(e.target.value))}
+                    autoComplete="off"
                     className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-orange-500/30"
                     style={{ 
                       background: 'var(--bg-input)', 

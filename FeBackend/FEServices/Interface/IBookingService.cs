@@ -21,5 +21,13 @@ namespace FEServices.Interface
         Task<FarmerDashboardStatsDto> GetFarmerStatsAsync(string farmerId);
         Task<AdminDashboardStatsDto> GetAdminStatsAsync(CancellationToken cancellationToken = default);
         Task<IEnumerable<MonthlyRevenueDto>> GetRevenueByMonthAsync();
+        
+        // Analytics methods
+        Task<OwnerAnalyticsDto> GetOwnerAnalyticsAsync(string ownerId, string period = "month");
+        Task<AdminAnalyticsDto> GetAdminAnalyticsAsync(string period = "month");
+        Task<IEnumerable<UserGrowthDto>> GetUserGrowthAsync();
+        Task<IEnumerable<BookingTrendDto>> GetBookingTrendsAsync();
+        Task<IEnumerable<CategoryDistributionDto>> GetCategoryDistributionAsync();
+        Task<IEnumerable<EquipmentPerformanceDto>> GetOwnerEquipmentPerformanceAsync(string ownerId);
     }
 }

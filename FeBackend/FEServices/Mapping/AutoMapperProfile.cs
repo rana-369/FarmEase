@@ -93,6 +93,19 @@ namespace FEServices.Mapping
             
             // Booking -> RecentBookingDto
             CreateMap<Booking, RecentBookingDto>();
+
+            // ==================== REVIEW MAPPINGS ====================
+            
+            // Review -> ReviewResponseDto
+            CreateMap<Review, ReviewResponseDto>()
+                .ForMember(dest => dest.MachineName, opt => opt.MapFrom(src => src.MachineName ?? "Unknown"))
+                .ForMember(dest => dest.FarmerName, opt => opt.MapFrom(src => src.FarmerName ?? "Unknown"));
+
+            // ==================== TESTIMONIAL MAPPINGS ====================
+            
+            // Testimonial -> TestimonialDto
+            CreateMap<Testimonial, TestimonialDto>()
+                .ForMember(dest => dest.IsUserSubmitted, opt => opt.MapFrom(src => src.SubmittedByUserId != null));
         }
     }
 }

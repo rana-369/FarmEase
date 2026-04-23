@@ -148,16 +148,18 @@ const PaymentOnboarding = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Account Holder Name */}
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <label htmlFor="account-holder-name" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                 <FiUser className="inline w-4 h-4 mr-1" />
                 Account Holder Name
               </label>
               <input
+                id="account-holder-name"
                 type="text"
                 name="accountHolderName"
                 value={formData.accountHolderName}
                 onChange={handleInputChange}
                 required
+                autoComplete="name"
                 className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
                 style={{
                   background: 'var(--bg-secondary)',
@@ -170,16 +172,18 @@ const PaymentOnboarding = () => {
 
             {/* IFSC Code */}
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <label htmlFor="ifsc-code" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                 IFSC Code
               </label>
               <input
+                id="ifsc-code"
                 type="text"
                 name="ifscCode"
                 value={formData.ifscCode}
                 onChange={handleInputChange}
                 required
                 maxLength={11}
+                autoComplete="off"
                 className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 uppercase"
                 style={{
                   background: 'var(--bg-secondary)',
@@ -192,15 +196,17 @@ const PaymentOnboarding = () => {
 
             {/* Account Number */}
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <label htmlFor="account-number" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                 Account Number
               </label>
               <input
+                id="account-number"
                 type="text"
                 name="accountNumber"
                 value={formData.accountNumber}
                 onChange={handleInputChange}
                 required
+                autoComplete="off"
                 className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
                 style={{
                   background: 'var(--bg-secondary)',
@@ -213,15 +219,17 @@ const PaymentOnboarding = () => {
 
             {/* Confirm Account Number */}
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <label htmlFor="confirm-account-number" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                 Confirm Account Number
               </label>
               <input
+                id="confirm-account-number"
                 type="text"
                 name="confirmAccountNumber"
                 value={formData.confirmAccountNumber}
                 onChange={handleInputChange}
                 required
+                autoComplete="off"
                 className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
                 style={{
                   background: 'var(--bg-secondary)',
@@ -234,17 +242,19 @@ const PaymentOnboarding = () => {
 
             {/* Phone Number */}
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <label htmlFor="phone-number" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                 <FiPhone className="inline w-4 h-4 mr-1" />
                 Phone Number (for OTP verification)
               </label>
               <input
+                id="phone-number"
                 type="tel"
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
                 required
                 maxLength={10}
+                autoComplete="tel"
                 className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
                 style={{
                   background: 'var(--bg-secondary)',

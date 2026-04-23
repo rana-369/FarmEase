@@ -108,33 +108,33 @@ const FarmerDashboard = () => {
   }
 
   return (
-    <div className="page-content-new">
+    <div className="page-content-new px-4 sm:px-6">
       {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="page-header-new"
+        className="page-header-new flex-col sm:flex-row gap-4 sm:gap-0"
       >
         <div>
-          <h1 className="page-title-new">Farmer Dashboard</h1>
-          <p className="page-subtitle-new">Manage your equipment rentals</p>
+          <h1 className="page-title-new text-xl sm:text-2xl">Farmer Dashboard</h1>
+          <p className="page-subtitle-new text-sm sm:text-base">Manage your equipment rentals</p>
         </div>
         <div className="flex items-center gap-3">
           <motion.div 
-            className="logo-icon-new"
+            className="logo-icon-new w-10 h-10 sm:w-12 sm:h-12"
             whileHover={{ scale: 1.05 }}
             style={{ 
               background: `linear-gradient(135deg, ${farmerColor.start} 0%, ${farmerColor.end} 100%)`,
               boxShadow: `0 8px 32px ${farmerColor.start}35`
             }}
           >
-            <FiSun />
+            <FiSun className="text-lg sm:text-xl" />
           </motion.div>
         </div>
       </motion.div>
 
         {/* Stats Grid */}
-        <div className="stats-grid">
+        <div className="stats-grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {statCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -144,17 +144,18 @@ const FarmerDashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.02, y: -4 }}
-                className="stat-card-new"
+                whileTap={{ scale: 0.98 }}
+                className="stat-card-new p-4 sm:p-5 min-h-[100px] sm:min-h-[120px]"
               >
                 <div className="stat-info">
-                  <p className="stat-title-new">{stat.title}</p>
-                  <h3 className="stat-value-new">{stat.value}</h3>
-                  <div className="stat-trend-new up">
+                  <p className="stat-title-new text-xs sm:text-sm">{stat.title}</p>
+                  <h3 className="stat-value-new text-lg sm:text-2xl">{stat.value}</h3>
+                  <div className="stat-trend-new up text-xs">
                     <span>{stat.change}</span>
                   </div>
                 </div>
                 <div 
-                  className="stat-icon-new"
+                  className="stat-icon-new w-10 h-10 sm:w-12 sm:h-12 text-lg sm:text-xl"
                   style={{ 
                     background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`,
                     color: stat.color 
@@ -172,27 +173,27 @@ const FarmerDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="table-container-new p-6 mb-8"
+          className="table-container-new p-4 sm:p-6 mb-4 sm:mb-8"
         >
-          <div className="table-header-new" style={{ border: 'none', padding: '0 0 16px 0' }}>
+          <div className="table-header-new flex-col sm:flex-row gap-3 sm:gap-0" style={{ border: 'none', padding: '0 0 16px 0' }}>
             <div className="flex items-center gap-3">
               <div 
-                className="stat-icon-new"
+                className="stat-icon-new w-10 h-10 sm:w-12 sm:h-12"
                 style={{ 
                   background: `linear-gradient(135deg, ${farmerColor.start}20 0%, ${farmerColor.end}15 100%)`,
                   color: farmerColor.start
                 }}
               >
-                <FiPackage />
+                <FiPackage className="text-lg sm:text-xl" />
               </div>
-              <h2 className="table-title-new">Recent Rentals</h2>
+              <h2 className="table-title-new text-lg sm:text-xl">Recent Rentals</h2>
             </div>
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate('/farmer/bookings')}
-              className="secondary-button" 
-              style={{ padding: '8px 16px', fontSize: '14px' }}
+              className="secondary-button w-full sm:w-auto min-h-[44px]" 
+              style={{ padding: '10px 16px', fontSize: '14px' }}
             >
               View All →
             </motion.button>
@@ -206,36 +207,37 @@ const FarmerDashboard = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 + index * 0.05 }}
                 whileHover={{ scale: 1.01, x: 4 }}
-                className="stat-card-new flex items-center justify-between"
-                style={{ padding: '16px' }}
+                whileTap={{ scale: 0.98 }}
+                className="stat-card-new flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
+                style={{ padding: '12px sm:16px' }}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
                   <div 
-                    className="nav-item-icon"
+                    className="nav-item-icon w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0"
                     style={{ 
                       background: `linear-gradient(135deg, ${farmerColor.start}15 0%, ${farmerColor.end}10 100%)`,
                       color: farmerColor.start
                     }}
                   >
-                    <FiTruck />
+                    <FiTruck className="text-base sm:text-lg" />
                   </div>
                   <div>
-                    <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>{booking.machineName}</h3>
+                    <h3 className="font-semibold text-sm sm:text-base" style={{ color: 'var(--text-primary)' }}>{booking.machineName}</h3>
                     <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{booking.ownerName}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
-                    <FiCalendar className="text-sm" />
+                <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 pl-13 sm:pl-0">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+                    <FiCalendar className="text-xs sm:text-sm" />
                     <span>{booking.startDate}</span>
                   </div>
                   <span 
-                    className={`badge ${booking.status.toLowerCase() === 'active' ? 'badge-success' : 'badge-info'}`}
+                    className={`badge text-xs ${booking.status.toLowerCase() === 'active' ? 'badge-success' : 'badge-info'}`}
                   >
                     {booking.status}
                   </span>
-                  <span className="font-bold text-lg" style={{ color: farmerColor.start }}>₹{booking.totalCost.toLocaleString()}</span>
+                  <span className="font-bold text-base sm:text-lg" style={{ color: farmerColor.start }}>₹{booking.totalCost.toLocaleString()}</span>
                 </div>
               </motion.div>
             )) : (

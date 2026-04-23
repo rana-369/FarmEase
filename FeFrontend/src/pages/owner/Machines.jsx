@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiTruck, FiPlus, FiEdit2, FiTrash2, FiSearch, FiFilter, FiCheckCircle, FiClock, FiAlertCircle, FiTool } from 'react-icons/fi';
+import { FiTruck, FiPlus, FiEdit2, FiTrash2, FiSearch, FiFilter, FiCheckCircle, FiClock, FiAlertCircle, FiTool, FiX, FiMapPin, FiStar, FiUser } from 'react-icons/fi';
 import { getOwnerEquipment } from '../../services/dashboardService';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import Modal from '../../components/Modal';
+import RatingSummary from '../../components/RatingSummary';
+import ReviewList from '../../components/ReviewList';
 
 const OwnerMachines = () => {
   const navigate = useNavigate();
@@ -11,6 +14,7 @@ const OwnerMachines = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [detailModal, setDetailModal] = useState({ open: false, machine: null });
 
   useEffect(() => {
     fetchMachines();
@@ -69,6 +73,7 @@ const OwnerMachines = () => {
   const totalEarnings = machines.reduce((sum, m) => sum + (m.totalEarnings || 0), 0);
 
   return (
+    <>
     <div className="page-content-new">
       {/* Header */}
       <motion.div 
@@ -176,7 +181,8 @@ const OwnerMachines = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.03 }}
                 whileHover={{ scale: 1.02, y: -4 }}
-                className="card overflow-hidden"
+                onClick={() => setDetailModal({ open: true, machine })}
+                className="card overflow-hidden cursor-pointer"
               >
                 <div className="h-40 overflow-hidden relative -mx-6 -mt-6 mb-4">
                   <img 
@@ -192,6 +198,9 @@ const OwnerMachines = () => {
                     <FiTruck className="w-12 h-12" style={{ color: 'var(--text-muted)' }} />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="absolute top-3 left-3">
+                    <RatingSummary machineId={machine.id} />
+                  </div>
                   <div className="absolute top-3 right-3">
                     <span 
                       className="badge"
@@ -218,6 +227,7 @@ const OwnerMachines = () => {
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
+                      onClick={(e) => { e.stopPropagation(); navigate('/owner/add-machine'); }}
                       className="icon-button"
                     >
                       <FiEdit2 className="w-4 h-4" />
@@ -225,7 +235,7 @@ const OwnerMachines = () => {
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => handleDelete(machine.id)}
+                      onClick={(e) => { e.stopPropagation(); handleDelete(machine.id); }}
                       className="icon-button"
                       style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171' }}
                     >
@@ -248,6 +258,70 @@ const OwnerMachines = () => {
           </div>
         )}
     </div>
+
+      {/* Machine Detail Modal with Reviews */}
+      <Modal isOpen={detailModal.open} onClose={() => setDetailModal({ open: false, machine: null })}>
+        <div className="flex justify-between items-center mb-4 p-4" style={{ borderBottom: '1px solid var(--border-secondary)' }}>
+          <h3 className="card-title">{detailModal.machine?.name}</h3>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setDetailModal({ open: false, machine: null })}
+            className="icon-button"
+          >
+            <FiX />
+          </motion.button>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {/* Machine Info */}
+          <div className="flex items-start gap-4">
+            <div className="w-20 h-20 rounded-xl flex items-center justify-center" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+              <FiTruck className="w-8 h-8" style={{ color: '#10b981' }} />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
+                  {detailModal.machine?.type}
+                </span>
+                <RatingSummary machineId={detailModal.machine?.id} />
+              </div>
+              <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                <FiMapPin className="w-3 h-3" />
+                <span>{detailModal.machine?.location || 'Location not specified'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="p-3 rounded-xl" style={{ background: 'var(--bg-secondary)' }}>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              {detailModal.machine?.description || 'No description available'}
+            </p>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-xl text-center" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Hourly Rate</p>
+              <p className="text-lg font-bold" style={{ color: '#10b981' }}>Rs.{detailModal.machine?.rate}</p>
+            </div>
+            <div className="p-3 rounded-xl text-center" style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Status</p>
+              <p className="text-lg font-bold" style={{ color: '#3b82f6' }}>{detailModal.machine?.status}</p>
+            </div>
+          </div>
+
+          {/* Reviews Section */}
+          <div>
+            <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+              Customer Reviews
+            </h4>
+            <ReviewList machineId={detailModal.machine?.id} />
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };
 

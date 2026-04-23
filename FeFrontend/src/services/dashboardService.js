@@ -255,3 +255,76 @@ export const getFeaturedEquipment = async () => {
 export const getTestimonials = async () => {
   return [];
 };
+
+// ==================== ANALYTICS SERVICES ====================
+
+// Get owner analytics data
+export const getOwnerAnalytics = async (period = 'month') => {
+  try {
+    const response = await api.get(`owner/analytics?period=${period}`);
+    return response.data;
+  } catch (error) {
+    // Silently return null - mock data will be used
+    return null;
+  }
+};
+
+// Get owner earnings breakdown
+export const getOwnerEarningsBreakdown = async () => {
+  try {
+    const response = await api.get('owner/analytics/equipment-performance');
+    return response.data;
+  } catch (error) {
+    return null;
+  }
+};
+
+// Get owner equipment performance
+export const getOwnerEquipmentPerformance = async () => {
+  try {
+    const response = await api.get('owner/analytics/equipment-performance');
+    return response.data;
+  } catch (error) {
+    return null;
+  }
+};
+
+// Get admin platform analytics
+export const getAdminAnalytics = async (period = 'month') => {
+  try {
+    const response = await api.get(`admin/analytics?period=${period}`);
+    return response.data;
+  } catch (error) {
+    return null;
+  }
+};
+
+// Get admin user growth data
+export const getAdminUserGrowth = async () => {
+  try {
+    const response = await api.get('admin/analytics/user-growth');
+    return response.data;
+  } catch (error) {
+    return null;
+  }
+};
+
+// Get admin booking trends
+export const getAdminBookingTrends = async () => {
+  try {
+    const response = await api.get('admin/analytics/booking-trends');
+    return response.data;
+  } catch (error) {
+    return null;
+  }
+};
+
+// Get admin category distribution
+export const getAdminCategoryDistribution = async () => {
+  try {
+    const response = await api.get('admin/analytics/category-distribution');
+    return response.data;
+  } catch (error) {
+    return null;
+  }
+};

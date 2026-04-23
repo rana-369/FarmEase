@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiCamera, FiSave, FiRefreshCw, FiGrid, FiCheck, FiEdit2, FiX } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiMapPin, FiCamera, FiSave, FiRefreshCw, FiGrid, FiCheck, FiEdit2, FiX, FiStar, FiMessageSquare } from 'react-icons/fi';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import TwoFactorSetup from '../../components/TwoFactorSetup';
+import SubmitTestimonial from '../../components/SubmitTestimonial';
 
 const FarmerProfile = () => {
   const { get2FASettings, update2FASettings } = useAuth();
@@ -23,6 +24,7 @@ const FarmerProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [twoFASettings, setTwoFASettings] = useState({ enabled: false, method: 'email' });
+  const [showTestimonial, setShowTestimonial] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -273,6 +275,8 @@ const FarmerProfile = () => {
                 </motion.button>
                 <input
                   ref={fileInputRef}
+                  id="profile-image"
+                  name="profileImage"
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
@@ -510,6 +514,58 @@ const FarmerProfile = () => {
                     currentSettings={twoFASettings}
                     onUpdate={handle2FAUpdate}
                   />
+                </div>
+              </div>
+
+              {/* Write a Review Section */}
+              <div 
+                className="px-6 pb-6 relative"
+                style={{ borderTop: '1px solid var(--border-secondary)' }}
+              >
+                <div className="pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                        style={{ background: 'rgba(245, 158, 11, 0.15)' }}
+                      >
+                        <FiStar className="w-5 h-5" style={{ color: '#f59e0b' }} />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                          Share Your Experience
+                        </h3>
+                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                          Write a review about FarmEase platform
+                        </p>
+                      </div>
+                    </div>
+                    {!showTestimonial && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setShowTestimonial(true)}
+                        className="px-4 py-2 rounded-xl font-medium flex items-center gap-2"
+                        style={{ 
+                          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                          color: '#fff'
+                        }}
+                      >
+                        <FiMessageSquare className="w-4 h-4" />
+                        Write a Review
+                      </motion.button>
+                    )}
+                  </div>
+
+                  {showTestimonial && (
+                    <SubmitTestimonial 
+                      onClose={() => setShowTestimonial(false)}
+                      onSubmitSuccess={() => {
+                        setShowTestimonial(false);
+                        setMessage({ type: 'success', text: 'Thank you for your review!' });
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             </div>

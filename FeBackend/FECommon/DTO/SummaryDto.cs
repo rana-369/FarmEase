@@ -136,4 +136,82 @@ namespace FECommon.DTO
         public string OwnerName { get; init; } = string.Empty;
         public string? OwnerLocation { get; init; }
     }
+
+    /// <summary>
+    /// Analytics data for owner dashboard
+    /// </summary>
+    public record OwnerAnalyticsDto
+    {
+        public List<MonthlyRevenueDto> RevenueData { get; init; } = [];
+        public List<EquipmentPerformanceDto> EquipmentPerformance { get; init; } = [];
+        public List<CategoryDistributionDto> CategoryDistribution { get; init; } = [];
+        public List<InsightDto> Insights { get; init; } = [];
+    }
+
+    /// <summary>
+    /// Analytics data for admin dashboard
+    /// </summary>
+    public record AdminAnalyticsDto
+    {
+        public List<MonthlyRevenueDto> RevenueData { get; init; } = [];
+        public List<UserGrowthDto> UserGrowth { get; init; } = [];
+        public List<BookingTrendDto> BookingTrends { get; init; } = [];
+        public List<CategoryDistributionDto> CategoryDistribution { get; init; } = [];
+        public List<InsightDto> Insights { get; init; } = [];
+    }
+
+    /// <summary>
+    /// Equipment performance data
+    /// </summary>
+    public record EquipmentPerformanceDto
+    {
+        public string Name { get; init; } = string.Empty;
+        public int Bookings { get; init; }
+        public decimal Revenue { get; init; }
+        public string? Color { get; init; }
+    }
+
+    /// <summary>
+    /// Category distribution data
+    /// </summary>
+    public record CategoryDistributionDto
+    {
+        public string Category { get; init; } = string.Empty;
+        public int Count { get; init; }
+        public string? Color { get; init; }
+    }
+
+    /// <summary>
+    /// User growth data
+    /// </summary>
+    public record UserGrowthDto
+    {
+        public string Month { get; init; } = string.Empty;
+        public int Farmers { get; init; }
+        public int Owners { get; init; }
+        public int Total { get; init; }
+    }
+
+    /// <summary>
+    /// Booking trend data
+    /// </summary>
+    public record BookingTrendDto
+    {
+        public string Month { get; init; } = string.Empty;
+        public int Bookings { get; init; }
+        public string? Color { get; init; }
+    }
+
+    /// <summary>
+    /// Insight card data
+    /// </summary>
+    public record InsightDto
+    {
+        public string Title { get; init; } = string.Empty;
+        public string Value { get; init; } = string.Empty;
+        public string Change { get; init; } = string.Empty;
+        public string Trend { get; init; } = string.Empty;
+        public string Description { get; init; } = string.Empty;
+        public string Color { get; init; } = string.Empty;
+    }
 }

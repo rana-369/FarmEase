@@ -63,9 +63,12 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IMachineRepository, MachineRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 // --- 1.6. SERVICE REGISTRATIONS ---
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<ITestimonialService, TestimonialService>();
 
 // --- 1.7. RATE LIMITING ---
 builder.Services.AddRateLimiter(options =>
@@ -286,6 +289,32 @@ using (var scope = app.Services.CreateScope())
                 END";
             await command.ExecuteNonQueryAsync();
             Console.WriteLine("[Startup] Payments table verified/created.");
+            
+            // Ensure Reviews table exists
+            command.CommandText = @"
+                IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Reviews')
+                BEGIN
+                    CREATE TABLE Reviews (
+                        Id INT IDENTITY(1,1) PRIMARY KEY,
+                        BookingId INT NOT NULL,
+                        MachineId INT NOT NULL,
+                        MachineName NVARCHAR(100) NULL,
+                        FarmerId NVARCHAR(450) NOT NULL,
+                        FarmerName NVARCHAR(100) NULL,
+                        OwnerId NVARCHAR(450) NOT NULL,
+                        Rating INT NOT NULL CHECK (Rating >= 1 AND Rating <= 5),
+                        Comment NVARCHAR(500) NULL,
+                        CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+                    );
+                    CREATE UNIQUE INDEX IX_Reviews_BookingId_Unique ON Reviews(BookingId);
+                    CREATE INDEX IX_Reviews_MachineId ON Reviews(MachineId);
+                    CREATE INDEX IX_Reviews_FarmerId ON Reviews(FarmerId);
+                    CREATE INDEX IX_Reviews_OwnerId ON Reviews(OwnerId);
+                    CREATE INDEX IX_Reviews_CreatedAt ON Reviews(CreatedAt);
+                    PRINT 'Reviews table created';
+                END";
+            await command.ExecuteNonQueryAsync();
+            Console.WriteLine("[Startup] Reviews table verified/created.");
         }
         await connection.CloseAsync();
     }

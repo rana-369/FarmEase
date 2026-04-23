@@ -16,7 +16,8 @@ import {
   FiChevronRight,
   FiSun,
   FiMoon,
-  FiCreditCard
+  FiCreditCard,
+  FiStar
 } from 'react-icons/fi';
 import { RupeeIcon } from './RupeeIcon';
 import ThemeToggle from './ThemeToggle';
@@ -33,6 +34,7 @@ const Sidebar = () => {
     { icon: FiTruck, label: 'Products', path: '/admin/machines' },
     { icon: RupeeIcon, label: 'Earnings', path: '/admin/revenue' },
     { icon: FiUsers, label: 'Users', path: '/admin/users' },
+    { icon: FiStar, label: 'Testimonials', path: '/admin/testimonials' },
     { icon: FiBell, label: 'Notifications', path: '/admin/notifications' },
     { icon: FiSettings, label: 'Settings', path: '/admin/settings' },
   ];

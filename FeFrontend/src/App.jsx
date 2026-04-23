@@ -40,6 +40,7 @@ import BookingsManagement from './pages/admin/Bookings';
 import EarningsPage from './pages/admin/Earnings';
 import NotificationsPage from './pages/admin/Notifications';
 import SettingsPage from './pages/admin/Settings';
+import AdminTestimonials from './pages/admin/Testimonials';
 
 // Route components must be inside AuthProvider, so we define them inside AppRoutes
 const AppRoutes = () => {
@@ -146,6 +147,7 @@ const AppRoutes = () => {
               <Route path="bookings" element={<BookingsManagement key="admin-bookings" />} />
               <Route path="revenue" element={<EarningsPage key="admin-revenue" />} />
               <Route path="notifications" element={<NotificationsPage key="admin-notifications" />} />
+              <Route path="testimonials" element={<AdminTestimonials key="admin-testimonials" />} />
               <Route path="settings" element={<SettingsPage key="admin-settings" />} />
               <Route path="analytics" element={<div className="page-content-new"><h2 className="page-title-new">Analytics</h2><p className="page-subtitle-new">Analytics page coming soon...</p></div>} />
             </Route>

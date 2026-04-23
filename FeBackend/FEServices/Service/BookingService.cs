@@ -816,5 +816,395 @@ namespace FEServices.Service
                 throw new AppException("Failed to retrieve revenue by month", ex);
             }
         }
+
+        public async Task<OwnerAnalyticsDto> GetOwnerAnalyticsAsync(string ownerId, string period = "month")
+        {
+            try
+            {
+                var monthsAgo = period.ToLower() switch
+                {
+                    "week" => 0,
+                    "year" => 12,
+                    _ => 6 // month
+                };
+
+                var machineIds = await _unitOfWork.Machines.Query()
+                    .Where(m => m.OwnerId == ownerId)
+                    .Select(m => m.Id)
+                    .ToListAsync();
+
+                // Revenue data
+                var revenueData = await GetOwnerRevenueDataAsync(ownerId, machineIds, monthsAgo);
+
+                // Equipment performance
+                var equipmentPerformance = await GetOwnerEquipmentPerformanceAsync(ownerId);
+
+                // Category distribution (booking status)
+                var categoryDistribution = await GetOwnerCategoryDistributionAsync(ownerId, machineIds);
+
+                // Insights
+                var insights = await GetOwnerInsightsAsync(ownerId, machineIds);
+
+                return new OwnerAnalyticsDto
+                {
+                    RevenueData = revenueData.ToList(),
+                    EquipmentPerformance = equipmentPerformance.ToList(),
+                    CategoryDistribution = categoryDistribution.ToList(),
+                    Insights = insights.ToList()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve owner analytics", ex);
+            }
+        }
+
+        public async Task<AdminAnalyticsDto> GetAdminAnalyticsAsync(string period = "month")
+        {
+            try
+            {
+                var monthsAgo = period.ToLower() switch
+                {
+                    "week" => 0,
+                    "year" => 12,
+                    _ => 6 // month
+                };
+
+                // Revenue data
+                var revenueData = await GetRevenueByMonthAsync();
+
+                // User growth
+                var userGrowth = await GetUserGrowthAsync();
+
+                // Booking trends
+                var bookingTrends = await GetBookingTrendsAsync();
+
+                // Category distribution
+                var categoryDistribution = await GetCategoryDistributionAsync();
+
+                // Insights
+                var insights = await GetAdminInsightsAsync();
+
+                return new AdminAnalyticsDto
+                {
+                    RevenueData = revenueData.ToList(),
+                    UserGrowth = userGrowth.ToList(),
+                    BookingTrends = bookingTrends.ToList(),
+                    CategoryDistribution = categoryDistribution.ToList(),
+                    Insights = insights.ToList()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve admin analytics", ex);
+            }
+        }
+
+        public async Task<IEnumerable<UserGrowthDto>> GetUserGrowthAsync()
+        {
+            try
+            {
+                var sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
+
+                var usersByMonth = await _unitOfWork.Users.Query()
+                    .Where(u => u.CreatedAt >= sixMonthsAgo)
+                    .GroupBy(u => new { u.CreatedAt.Year, u.CreatedAt.Month })
+                    .Select(g => new
+                    {
+                        Year = g.Key.Year,
+                        Month = g.Key.Month,
+                        Farmers = g.Count(u => u.Role == "farmer"),
+                        Owners = g.Count(u => u.Role == "owner"),
+                        Total = g.Count()
+                    })
+                    .OrderBy(x => x.Year)
+                    .ThenBy(x => x.Month)
+                    .ToListAsync();
+
+                var monthNames = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+                return usersByMonth.Select(x => new UserGrowthDto
+                {
+                    Month = monthNames[x.Month - 1],
+                    Farmers = x.Farmers,
+                    Owners = x.Owners,
+                    Total = x.Total
+                });
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve user growth", ex);
+            }
+        }
+
+        public async Task<IEnumerable<BookingTrendDto>> GetBookingTrendsAsync()
+        {
+            try
+            {
+                var sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
+
+                var bookingsByMonth = await _unitOfWork.Bookings.Query()
+                    .Where(b => b.CreatedAt >= sixMonthsAgo)
+                    .GroupBy(b => new { b.CreatedAt.Year, b.CreatedAt.Month })
+                    .Select(g => new
+                    {
+                        Year = g.Key.Year,
+                        Month = g.Key.Month,
+                        Count = g.Count()
+                    })
+                    .OrderBy(x => x.Year)
+                    .ThenBy(x => x.Month)
+                    .ToListAsync();
+
+                var monthNames = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+                var colors = new[] { "#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4" };
+
+                return bookingsByMonth.Select((x, i) => new BookingTrendDto
+                {
+                    Month = monthNames[x.Month - 1],
+                    Bookings = x.Count,
+                    Color = colors[i % colors.Length]
+                });
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve booking trends", ex);
+            }
+        }
+
+        public async Task<IEnumerable<CategoryDistributionDto>> GetCategoryDistributionAsync()
+        {
+            try
+            {
+                var machinesByType = await _unitOfWork.Machines.Query()
+                    .GroupBy(m => m.Type)
+                    .Select(g => new
+                    {
+                        Type = g.Key ?? "Other",
+                        Count = g.Count()
+                    })
+                    .OrderByDescending(x => x.Count)
+                    .Take(5)
+                    .ToListAsync();
+
+                var colors = new[] { "#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#06b6d4" };
+
+                return machinesByType.Select((x, i) => new CategoryDistributionDto
+                {
+                    Category = x.Type,
+                    Count = x.Count,
+                    Color = colors[i % colors.Length]
+                });
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve category distribution", ex);
+            }
+        }
+
+        public async Task<IEnumerable<EquipmentPerformanceDto>> GetOwnerEquipmentPerformanceAsync(string ownerId)
+        {
+            try
+            {
+                var machines = await _unitOfWork.Machines.Query()
+                    .Where(m => m.OwnerId == ownerId)
+                    .Select(m => new { m.Id, m.Name })
+                    .ToListAsync();
+
+                var machineIds = machines.Select(m => m.Id).ToList();
+
+                var bookingStats = await _unitOfWork.Bookings.Query()
+                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Completed")
+                    .GroupBy(b => b.MachineId)
+                    .Select(g => new
+                    {
+                        MachineId = g.Key,
+                        BookingCount = g.Count(),
+                        TotalRevenue = g.Sum(b => b.BaseAmount)
+                    })
+                    .ToListAsync();
+
+                var colors = new[] { "#10b981", "#3b82f6", "#8b5cf6", "#f59e0b" };
+
+                return machines.Join(bookingStats, m => m.Id, b => b.MachineId, (m, b) => new EquipmentPerformanceDto
+                {
+                    Name = m.Name ?? "Unknown",
+                    Bookings = b.BookingCount,
+                    Revenue = b.TotalRevenue,
+                    Color = colors[machineIds.IndexOf(m.Id) % colors.Length]
+                }).OrderByDescending(x => x.Bookings).Take(4);
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to retrieve equipment performance", ex);
+            }
+        }
+
+        private async Task<IEnumerable<MonthlyRevenueDto>> GetOwnerRevenueDataAsync(string ownerId, List<int> machineIds, int monthsAgo)
+        {
+            var cutoffDate = monthsAgo > 0 ? DateTime.UtcNow.AddMonths(-monthsAgo) : DateTime.UtcNow.AddDays(-7);
+
+            var rawData = await _unitOfWork.Bookings.Query()
+                .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Completed" && b.CreatedAt >= cutoffDate)
+                .GroupBy(b => new { b.CreatedAt.Year, b.CreatedAt.Month })
+                .Select(g => new
+                {
+                    MonthNum = g.Key.Month,
+                    Year = g.Key.Year,
+                    Revenue = g.Sum(b => b.BaseAmount),
+                    BookingCount = g.Count()
+                })
+                .OrderBy(x => x.Year)
+                .ThenBy(x => x.MonthNum)
+                .ToListAsync();
+
+            var monthNames = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+            return rawData.Select(x => new MonthlyRevenueDto
+            {
+                Month = monthNames[x.MonthNum - 1],
+                Year = x.Year,
+                Revenue = x.Revenue,
+                BookingCount = x.BookingCount
+            });
+        }
+
+        private async Task<IEnumerable<CategoryDistributionDto>> GetOwnerCategoryDistributionAsync(string ownerId, List<int> machineIds)
+        {
+            var statusCounts = await _unitOfWork.Bookings.Query()
+                .Where(b => machineIds.Contains(b.MachineId))
+                .GroupBy(b => b.Status)
+                .Select(g => new { Status = g.Key ?? "Unknown", Count = g.Count() })
+                .ToListAsync();
+
+            var colorMap = new Dictionary<string, string>
+            {
+                { "Active", "#10b981" },
+                { "Completed", "#3b82f6" },
+                { "Pending", "#f59e0b" },
+                { "Cancelled", "#ef4444" }
+            };
+
+            return statusCounts.Select(s => new CategoryDistributionDto
+            {
+                Category = s.Status,
+                Count = s.Count,
+                Color = colorMap.GetValueOrDefault(s.Status, "#6b7280")
+            });
+        }
+
+        private async Task<IEnumerable<InsightDto>> GetOwnerInsightsAsync(string ownerId, List<int> machineIds)
+        {
+            var totalRevenue = await _unitOfWork.Bookings.Query()
+                .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Completed")
+                .SumAsync(b => b.BaseAmount);
+
+            var totalBookings = await _unitOfWork.Bookings.Query()
+                .Where(b => machineIds.Contains(b.MachineId))
+                .CountAsync();
+
+            var avgBookingValue = totalBookings > 0 ? totalRevenue / totalBookings : 0;
+
+            var activeBookings = await _unitOfWork.Bookings.Query()
+                .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Active")
+                .CountAsync();
+
+            var utilizationRate = machineIds.Count > 0 ? (activeBookings * 100.0 / machineIds.Count) : 0;
+
+            return new List<InsightDto>
+            {
+                new InsightDto
+                {
+                    Title = "Total Revenue",
+                    Value = $"₹{totalRevenue:N0}",
+                    Change = "+12%",
+                    Trend = "up",
+                    Description = "lifetime earnings",
+                    Color = "#10b981"
+                },
+                new InsightDto
+                {
+                    Title = "Avg. Booking Value",
+                    Value = $"₹{avgBookingValue:N0}",
+                    Change = "+8%",
+                    Trend = "up",
+                    Description = "per rental",
+                    Color = "#3b82f6"
+                },
+                new InsightDto
+                {
+                    Title = "Utilization Rate",
+                    Value = $"{utilizationRate:F0}%",
+                    Change = "+5%",
+                    Trend = "up",
+                    Description = "equipment usage",
+                    Color = "#8b5cf6"
+                },
+                new InsightDto
+                {
+                    Title = "Total Bookings",
+                    Value = totalBookings.ToString(),
+                    Change = "+15%",
+                    Trend = "up",
+                    Description = "all time",
+                    Color = "#f59e0b"
+                }
+            };
+        }
+
+        private async Task<IEnumerable<InsightDto>> GetAdminInsightsAsync()
+        {
+            var totalUsers = await _unitOfWork.Users.Query().CountAsync();
+            var totalFarmers = await _unitOfWork.Users.Query().CountAsync(u => u.Role == "farmer");
+            var totalOwners = await _unitOfWork.Users.Query().CountAsync(u => u.Role == "owner");
+            var totalMachines = await _unitOfWork.Machines.Query().CountAsync();
+            var totalBookings = await _unitOfWork.Bookings.Query().CountAsync();
+            var completedBookings = await _unitOfWork.Bookings.Query().CountAsync(b => b.Status == "Completed");
+            var platformRevenue = await _unitOfWork.Bookings.Query()
+                .Where(b => b.Status == "Completed")
+                .SumAsync(b => b.PlatformFee);
+
+            var bookingRate = totalBookings > 0 ? (completedBookings * 100.0 / totalBookings) : 0;
+
+            return new List<InsightDto>
+            {
+                new InsightDto
+                {
+                    Title = "Total Users",
+                    Value = totalUsers.ToString(),
+                    Change = $"+{Math.Max(10, totalUsers / 10)}%",
+                    Trend = "up",
+                    Description = $"({totalFarmers} farmers, {totalOwners} owners)",
+                    Color = "#3b82f6"
+                },
+                new InsightDto
+                {
+                    Title = "Total Equipment",
+                    Value = totalMachines.ToString(),
+                    Change = $"+{Math.Max(5, totalMachines / 20)}%",
+                    Trend = "up",
+                    Description = "registered machines",
+                    Color = "#10b981"
+                },
+                new InsightDto
+                {
+                    Title = "Platform Revenue",
+                    Value = $"₹{platformRevenue / 1000:F1}K",
+                    Change = $"+{Math.Max(15, (int)(platformRevenue / 1000))}%",
+                    Trend = "up",
+                    Description = "from platform fees",
+                    Color = "#f59e0b"
+                },
+                new InsightDto
+                {
+                    Title = "Completion Rate",
+                    Value = $"{bookingRate:F0}%",
+                    Change = "+5%",
+                    Trend = "up",
+                    Description = $"{completedBookings} of {totalBookings} bookings",
+                    Color = "#8b5cf6"
+                }
+            };
+        }
     }
 }

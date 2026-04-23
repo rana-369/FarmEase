@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 
-const Modal = ({ isOpen, onClose, children }) => {
+const Modal = ({ isOpen, onClose, children, fullScreenOnMobile = false }) => {
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -28,23 +28,28 @@ const Modal = ({ isOpen, onClose, children }) => {
         justifyContent: 'center',
         zIndex: 9999,
         backgroundColor: 'var(--overlay-bg)',
-        padding: '16px'
+        padding: fullScreenOnMobile ? '0' : '16px'
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget && onClose) onClose();
       }}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
         style={{
           background: 'var(--modal-bg)',
-          borderRadius: '16px',
-          maxWidth: '28rem',
+          borderRadius: fullScreenOnMobile ? '0' : '16px',
+          maxWidth: fullScreenOnMobile ? '100%' : '28rem',
           width: '100%',
-          border: '1px solid var(--border-primary)',
-          boxShadow: 'var(--shadow-lg)'
+          maxHeight: fullScreenOnMobile ? '100%' : '90vh',
+          height: fullScreenOnMobile ? '100%' : 'auto',
+          border: fullScreenOnMobile ? 'none' : '1px solid var(--border-primary)',
+          boxShadow: fullScreenOnMobile ? 'none' : 'var(--shadow-lg)',
+          overflow: 'auto'
         }}
+        className="modal-mobile-full"
         onClick={(e) => e.stopPropagation()}
       >
         {children}

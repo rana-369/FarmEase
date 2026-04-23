@@ -33,4 +33,13 @@ namespace FEDomain.Interfaces
         Task<IEnumerable<Notification>> GetUnreadByUserAsync(string userId);
         Task MarkAsReadAsync(int notificationId);
     }
+
+    public interface IReviewRepository : IGenericRepository<Review>
+    {
+        Task<IEnumerable<Review>> GetByMachineIdAsync(int machineId);
+        Task<IEnumerable<Review>> GetByFarmerIdAsync(string farmerId);
+        Task<IEnumerable<Review>> GetByOwnerIdAsync(string ownerId);
+        Task<Review?> GetByBookingIdAsync(int bookingId);
+        Task<bool> HasReviewedAsync(int bookingId);
+    }
 }

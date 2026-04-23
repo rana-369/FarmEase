@@ -153,5 +153,61 @@ namespace FarmEase.Controllers
                 return StatusCode(500, new { Message = ex.Message, InnerException = ex.InnerException?.Message, StackTrace = ex.StackTrace });
             }
         }
+
+        [HttpGet("analytics")]
+        public async Task<IActionResult> GetAnalytics([FromQuery] string period = "month")
+        {
+            try
+            {
+                var analytics = await _bookingService.GetAdminAnalyticsAsync(period);
+                return Ok(analytics);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = ex.Message, InnerException = ex.InnerException?.Message });
+            }
+        }
+
+        [HttpGet("analytics/user-growth")]
+        public async Task<IActionResult> GetUserGrowth()
+        {
+            try
+            {
+                var data = await _bookingService.GetUserGrowthAsync();
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = ex.Message, InnerException = ex.InnerException?.Message });
+            }
+        }
+
+        [HttpGet("analytics/booking-trends")]
+        public async Task<IActionResult> GetBookingTrends()
+        {
+            try
+            {
+                var data = await _bookingService.GetBookingTrendsAsync();
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = ex.Message, InnerException = ex.InnerException?.Message });
+            }
+        }
+
+        [HttpGet("analytics/category-distribution")]
+        public async Task<IActionResult> GetCategoryDistribution()
+        {
+            try
+            {
+                var data = await _bookingService.GetCategoryDistributionAsync();
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = ex.Message, InnerException = ex.InnerException?.Message });
+            }
+        }
     }
 }

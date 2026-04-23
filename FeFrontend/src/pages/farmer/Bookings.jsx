@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiPackage, FiTruck, FiCalendar, FiClock, FiCheckCircle, FiAlertCircle, FiXCircle, FiFilter, FiSearch, FiArrowUpRight, FiMapPin, FiCreditCard, FiRefreshCw, FiX } from 'react-icons/fi';
+import { FiPackage, FiTruck, FiCalendar, FiClock, FiCheckCircle, FiAlertCircle, FiXCircle, FiFilter, FiSearch, FiArrowUpRight, FiMapPin, FiCreditCard, FiRefreshCw, FiX, FiStar } from 'react-icons/fi';
 import Modal from '../../components/Modal';
 import { getFarmerBookings } from '../../services/dashboardService';
 import { cancelBooking } from '../../services/bookingService';
 import { processPayment, processRefund } from '../../services/paymentService';
+import { checkReviewEligibility, getReviewByBookingId } from '../../services/reviewService';
+import ReviewForm from '../../components/ReviewForm';
 import { useNavigate } from 'react-router-dom';
 
 const FarmerBookings = () => {
@@ -16,6 +18,10 @@ const FarmerBookings = () => {
   const [paymentLoading, setPaymentLoading] = useState(null);
   const [cancelLoading, setCancelLoading] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewBooking, setReviewBooking] = useState(null);
+  const [reviewEligibility, setReviewEligibility] = useState(null);
+  const [bookingReview, setBookingReview] = useState(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -25,6 +31,7 @@ const FarmerBookings = () => {
         
         const transformedBookings = (data || []).map(booking => ({
           id: booking.id || booking.Id,
+          machineId: booking.machineId || booking.MachineId || 0,
           machineName: booking.machineName || booking.MachineName || 'Equipment',
           ownerName: booking.ownerName || booking.OwnerName || 'Owner',
           startDate: booking.startDate || (booking.createdAt || booking.CreatedAt)?.split('T')[0] || 'N/A',
@@ -37,7 +44,8 @@ const FarmerBookings = () => {
           hasRefund: booking.payment?.refundAmount || booking.Payment?.RefundAmount || booking.payment?.RefundAmount ? true : false,
           refundAmount: booking.payment?.refundAmount || booking.Payment?.RefundAmount || booking.payment?.RefundAmount || 0,
           refundDate: booking.payment?.refundedAt || booking.Payment?.RefundedAt || booking.payment?.RefundedAt || null,
-          refundReason: booking.payment?.refundReason || booking.Payment?.RefundReason || booking.payment?.RefundReason || null
+          refundReason: booking.payment?.refundReason || booking.Payment?.RefundReason || booking.payment?.RefundReason || null,
+          hasReviewed: booking.hasReviewed || booking.HasReviewed || false
         }));
         
         setBookings(transformedBookings);
@@ -50,6 +58,19 @@ const FarmerBookings = () => {
 
     fetchBookings();
   }, []);
+
+  // Fetch review when selected booking changes
+  useEffect(() => {
+    const fetchReview = async () => {
+      if (selectedBooking?.hasReviewed && selectedBooking?.id) {
+        const review = await getReviewByBookingId(selectedBooking.id);
+        setBookingReview(review);
+      } else {
+        setBookingReview(null);
+      }
+    };
+    fetchReview();
+  }, [selectedBooking]);
 
   const handlePayment = async (booking) => {
     try {
@@ -98,6 +119,43 @@ const FarmerBookings = () => {
       alert(errorMsg);
     } finally {
       setCancelLoading(null);
+    }
+  };
+
+  const handleReview = async (booking) => {
+    try {
+      const eligibility = await checkReviewEligibility(booking.id);
+      setReviewEligibility(eligibility);
+      
+      if (eligibility && eligibility.canReview) {
+        setReviewBooking(booking);
+        setShowReviewForm(true);
+        setSelectedBooking(null); // Close the details modal
+      } else {
+        // Update the booking's hasReviewed status if it was returned
+        if (eligibility?.hasReviewed) {
+          setBookings(prev => prev.map(b => 
+            b.id === booking.id ? { ...b, hasReviewed: true } : b
+          ));
+          setSelectedBooking(prev => prev ? { ...prev, hasReviewed: true } : prev);
+        }
+        alert(eligibility?.reason || 'You cannot review this booking.');
+      }
+    } catch (error) {
+      console.error('Error checking review eligibility:', error);
+      alert('Failed to check review eligibility. Please try again.');
+    }
+  };
+
+  const handleReviewSuccess = async () => {
+    setBookings(prev => prev.map(b => 
+      b.id === reviewBooking?.id ? { ...b, hasReviewed: true } : b
+    ));
+    // Fetch the new review to display
+    if (reviewBooking?.id) {
+      const review = await getReviewByBookingId(reviewBooking.id);
+      setBookingReview(review);
+      setSelectedBooking(prev => prev ? { ...prev, hasReviewed: true } : prev);
     }
   };
 
@@ -334,7 +392,7 @@ const FarmerBookings = () => {
 
         {/* Booking Details Modal */}
         <Modal isOpen={!!selectedBooking} onClose={() => setSelectedBooking(null)}>
-          <div className="flex items-center justify-between mb-6 p-4" style={{ borderBottom: '1px solid var(--border-secondary)' }}>
+          <div className="flex items-center justify-between mb-4 p-4" style={{ borderBottom: '1px solid var(--border-secondary)' }}>
             <h2 className="card-title">Booking Details</h2>
             <motion.button
               whileHover={{ scale: 1.1 }}
@@ -346,7 +404,7 @@ const FarmerBookings = () => {
             </motion.button>
           </div>
 
-          <div className="space-y-4 px-4">
+          <div className="space-y-3 px-4">
             {[
               { label: 'Equipment', value: selectedBooking?.machineName },
               { label: 'Owner', value: selectedBooking?.ownerName },
@@ -357,7 +415,7 @@ const FarmerBookings = () => {
             ].map((item) => (
               <div key={item.label}>
                 <p className="input-label">{item.label}</p>
-                <p className="font-semibold" style={{ color: item.color || '#ffffff' }}>{item.value}</p>
+                <p className="font-semibold" style={{ color: item.color || 'var(--text-primary)' }}>{item.value}</p>
               </div>
             ))}
             
@@ -376,13 +434,13 @@ const FarmerBookings = () => {
             
             {selectedBooking?.hasRefund && (
               <div 
-                className="p-4"
+                className="p-3"
                 style={{ 
                   background: 'rgba(59, 130, 246, 0.1)',
                   borderRadius: '12px'
                 }}
               >
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-2">
                   <FiRefreshCw style={{ color: '#3b82f6' }} />
                   <span className="font-semibold text-sm" style={{ color: '#3b82f6' }}>Refund Processed</span>
                 </div>
@@ -402,40 +460,114 @@ const FarmerBookings = () => {
             )}
           </div>
 
-          {['Pending', 'Accepted', 'Active'].includes(selectedBooking?.status) && (
+          {/* Action Buttons */}
+          <div className="p-4 space-y-3">
+            {['Pending', 'Accepted', 'Active'].includes(selectedBooking?.status) && (
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={() => handleCancel(selectedBooking)}
+                disabled={cancelLoading === selectedBooking?.id}
+                className="secondary-button w-full flex items-center justify-center gap-2"
+                style={{ 
+                  color: '#f87171', 
+                  background: 'rgba(239, 68, 68, 0.1)'
+                }}
+              >
+                {cancelLoading === selectedBooking?.id ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <FiXCircle /> Cancel Booking
+                  </>
+                )}
+              </motion.button>
+            )}
+
+            {selectedBooking?.status?.toLowerCase() === 'completed' && (
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={() => handleReview(selectedBooking)}
+                className="primary-button w-full flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}
+              >
+                <FiStar /> Write a Review
+              </motion.button>
+            )}
+
+            {selectedBooking?.hasReviewed && bookingReview && (
+              <div 
+                className="p-4 space-y-3"
+                style={{ 
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  borderRadius: '12px'
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <FiCheckCircle style={{ color: '#10b981' }} />
+                  <span className="text-sm font-semibold" style={{ color: '#10b981' }}>
+                    Your Review
+                  </span>
+                </div>
+                
+                {/* Rating Stars */}
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <FiStar
+                      key={star}
+                      className={star <= bookingReview.rating ? 'fill-current' : ''}
+                      style={{ 
+                        color: star <= bookingReview.rating ? '#f59e0b' : 'var(--text-muted)',
+                        fontSize: '16px'
+                      }}
+                    />
+                  ))}
+                  <span className="ml-2 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {bookingReview.rating}/5
+                  </span>
+                </div>
+
+                {/* Comment */}
+                {bookingReview.comment && (
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    "{bookingReview.comment}"
+                  </p>
+                )}
+
+                {/* Date */}
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  Reviewed on {new Date(bookingReview.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            )}
+
             <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
-              onClick={() => handleCancel(selectedBooking)}
-              disabled={cancelLoading === selectedBooking?.id}
-              className="secondary-button w-full mt-6 mx-4 flex items-center justify-center gap-2"
-              style={{ 
-                color: '#f87171', 
-                background: 'rgba(239, 68, 68, 0.1)'
-              }}
+              onClick={() => setSelectedBooking(null)}
+              className="secondary-button w-full"
             >
-              {cancelLoading === selectedBooking?.id ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <FiXCircle /> Cancel Booking
-                </>
-              )}
+              Close
             </motion.button>
-          )}
-
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            onClick={() => setSelectedBooking(null)}
-            className="secondary-button w-full mt-3 mx-4 mb-4"
-          >
-            Close
-          </motion.button>
+          </div>
         </Modal>
+
+        {/* Review Form Modal */}
+        {showReviewForm && reviewBooking && (
+          <ReviewForm
+            bookingId={reviewBooking.id}
+            machineName={reviewBooking.machineName}
+            onClose={() => {
+              setShowReviewForm(false);
+              setReviewBooking(null);
+            }}
+            onSuccess={handleReviewSuccess}
+          />
+        )}
     </div>
   );
 };

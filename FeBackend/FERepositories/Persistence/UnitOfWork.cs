@@ -14,6 +14,8 @@ namespace FERepositories.Persistence
         public INotificationRepository Notifications { get; }
         public IGenericRepository<Payment> Payments { get; }
         public IGenericRepository<SystemSetting> SystemSettings { get; }
+        public IReviewRepository Reviews { get; }
+        public IGenericRepository<Testimonial> Testimonials { get; }
 
         public UnitOfWork(ApplicationDbContext context)
         {
@@ -24,6 +26,8 @@ namespace FERepositories.Persistence
             Notifications = new NotificationRepository(_context);
             Payments = new GenericRepository<Payment>(_context);
             SystemSettings = new GenericRepository<SystemSetting>(_context);
+            Reviews = new ReviewRepository(_context);
+            Testimonials = new GenericRepository<Testimonial>(_context);
         }
 
         public async Task<int> SaveChangesAsync()
