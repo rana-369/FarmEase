@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { FiTruck, FiUsers, FiShield, FiArrowRight, FiCheck, FiClock, FiMapPin, FiStar, FiMoon, FiSun, FiZap, FiTrendingUp, FiAward, FiChevronRight, FiSearch, FiPhone, FiHeart, FiDollarSign, FiPackage, FiPlay } from 'react-icons/fi';
+import { FiTruck, FiUsers, FiShield, FiArrowRight, FiCheck, FiClock, FiMapPin, FiStar, FiMoon, FiSun, FiZap, FiTrendingUp, FiAward, FiChevronRight, FiSearch, FiPhone, FiHeart, FiPackage, FiPlay } from 'react-icons/fi';
 import { RupeeIcon } from '../../components/RupeeIcon';
 import { useNavigate } from 'react-router-dom';
 import { getPublicStats, getFeaturedEquipment } from '../../services/dashboardService';
@@ -56,17 +56,41 @@ const Landing = () => {
 
   // Equipment categories for showcase
   const equipmentCategories = [
-    { name: 'Tractors', image: 'https://images.unsplash.com/photo-1592982537447-6f2a6a0c9c0f?w=400&h=500&fit=crop', count: stats.totalMachines },
-    { name: 'Harvesters', image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=400&h=500&fit=crop', count: Math.round(stats.totalMachines * 0.3) },
-    { name: 'Plows', image: 'https://images.unsplash.com/photo-1595841055906-bd1b5ce1217b?w=400&h=500&fit=crop', count: Math.round(stats.totalMachines * 0.2) },
-    { name: 'Sprayers', image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=500&fit=crop', count: Math.round(stats.totalMachines * 0.15) }
+    { 
+      name: 'Tractors', 
+      image: '/Tractors', 
+      count: stats.totalMachines, 
+      icon: 'tractor',
+      fallback: '🚜'
+    },
+    { 
+      name: 'Harvesters', 
+      image: '/Harvester', 
+      count: Math.round(stats.totalMachines * 0.3), 
+      icon: 'harvester',
+      fallback: '🌾'
+    },
+    { 
+      name: 'Plows', 
+      image: '/Plows', 
+      count: Math.round(stats.totalMachines * 0.2), 
+      icon: 'plow',
+      fallback: '⛏️'
+    },
+    { 
+      name: 'Sprayers', 
+      image: '/Sprayers', 
+      count: Math.round(stats.totalMachines * 0.15), 
+      icon: 'sprayer',
+      fallback: '🔧'
+    }
   ];
 
   // Why Choose Us benefits
   const benefits = [
     { icon: FiCheck, title: 'Verified Equipment', desc: 'All machines inspected & certified' },
     { icon: FiClock, title: 'Instant Booking', desc: 'Book in minutes, not days' },
-    { icon: FiDollarSign, title: 'Best Prices', desc: 'Competitive rates guaranteed' },
+    { icon: RupeeIcon, title: 'Best Prices', desc: 'Competitive rates guaranteed' },
     { icon: FiShield, title: 'Secure Payments', desc: '100% secure transactions' }
   ];
 
@@ -78,12 +102,12 @@ const Landing = () => {
     { icon: FiHeart, title: 'Return', desc: 'Easy return process' }
   ];
 
-  // Locations for explore section
+  // Locations for explore section - showing regions where FarmEase operates
   const locations = [
-    { name: 'Punjab', farms: '2,500+', image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=300&h=400&fit=crop' },
-    { name: 'Haryana', farms: '1,800+', image: 'https://images.unsplash.com/photo-1500076656116-558758c991c1?w=300&h=400&fit=crop' },
-    { name: 'Uttar Pradesh', farms: '3,200+', image: 'https://images.unsplash.com/photo-1605000797499-95a96c87220e?w=300&h=400&fit=crop' },
-    { name: 'Rajasthan', farms: '1,200+', image: 'https://images.unsplash.com/photo-1560493676-04071c5f467b?w=300&h=400&fit=crop' }
+    { name: 'Punjab', image: '/Punjab', fallback: '🌾' },
+    { name: 'Haryana', image: '/Haryana', fallback: '🚜' },
+    { name: 'Uttar Pradesh', image: '/Uttar Pradesh.jpg', fallback: '🌻' },
+    { name: 'Rajasthan', image: '/Rajasthan', fallback: '🏜️' }
   ];
 
   return (
@@ -99,15 +123,24 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div 
+              <motion.div 
                 className="w-11 h-11 rounded-xl flex items-center justify-center"
                 style={{
                   background: 'linear-gradient(to bottom right, #10b981, #0d9488)',
                   boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)'
                 }}
+                animate={{ y: [0, -3, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <FiTruck style={{ color: '#ffffff' }} className="text-lg" />
-              </div>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 16H2V20H4V16Z" fill="white"/>
+                  <path d="M20 16H18V20H20V16Z" fill="white"/>
+                  <rect x="3" y="8" width="18" height="8" rx="2" fill="white"/>
+                  <rect x="6" y="4" width="8" height="4" rx="1" fill="white" opacity="0.8"/>
+                  <circle cx="6" cy="18" r="2" fill="white"/>
+                  <circle cx="18" cy="18" r="2" fill="white"/>
+                </svg>
+              </motion.div>
               <span className={`text-xl font-bold transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>FarmEase</span>
             </div>
             
@@ -337,7 +370,7 @@ const Landing = () => {
               className="text-sm font-semibold"
               style={{ color: '#34d399' }}
             >
-              {stats.totalMachines || '50+'} Equipment Available
+              {stats.totalMachines || 0} Equipment Available
             </span>
           </motion.div>
 
@@ -418,17 +451,58 @@ const Landing = () => {
                 }}
                 onClick={() => navigate('/register')}
               >
-                <div className="aspect-[4/3] bg-gray-800 relative overflow-hidden">
+                <div className="aspect-[4/3] relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%)' }}>
                   <img 
                     src={category.image} 
                     alt={category.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    onError={(e) => { e.target.style.display = 'none' }}
+                    onError={(e) => { 
+                      e.target.style.display = 'none';
+                    }}
                   />
+                  {/* Fallback emoji when image fails */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span style={{ fontSize: '48px', opacity: 0.4 }}>{category.fallback}</span>
+                  </div>
+                  {/* Category icon overlay */}
+                  <div className="absolute bottom-3 left-3 w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)' }}>
+                    {category.icon === 'tractor' && (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                        <rect x="3" y="10" width="14" height="6" rx="1"/>
+                        <rect x="5" y="6" width="6" height="4" rx="1" opacity="0.8"/>
+                        <circle cx="6" cy="18" r="2.5"/>
+                        <circle cx="14" cy="18" r="2.5"/>
+                      </svg>
+                    )}
+                    {category.icon === 'harvester' && (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                        <rect x="2" y="8" width="16" height="8" rx="1"/>
+                        <rect x="4" y="4" width="8" height="4" rx="1" opacity="0.8"/>
+                        <circle cx="5" cy="18" r="2"/>
+                        <circle cx="11" cy="18" r="2"/>
+                        <path d="M18 10h4v6h-4z" opacity="0.6"/>
+                      </svg>
+                    )}
+                    {category.icon === 'plow' && (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                        <rect x="2" y="10" width="20" height="3" rx="1"/>
+                        <path d="M5 13v6M10 13v6M15 13v6M20 13v6" stroke="white" strokeWidth="2"/>
+                      </svg>
+                    )}
+                    {category.icon === 'sprayer' && (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                        <rect x="6" y="8" width="12" height="10" rx="1"/>
+                        <rect x="9" y="4" width="6" height="4" rx="1" opacity="0.8"/>
+                        <circle cx="8" cy="20" r="1.5"/>
+                        <circle cx="12" cy="20" r="1.5"/>
+                        <circle cx="16" cy="20" r="1.5"/>
+                      </svg>
+                    )}
+                  </div>
                 </div>
                 <div className="p-8">
                   <h3 className={`text-xl font-bold mb-3 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{category.name}</h3>
-                  <p className="text-emerald-500 text-sm font-semibold">{category.count || '50+'} Available</p>
+                  <p className="text-emerald-500 text-sm font-semibold">{category.count || 0} Available</p>
                 </div>
               </motion.div>
             ))}
@@ -537,25 +611,37 @@ const Landing = () => {
               <div className="grid grid-cols-2 gap-6">
                 <motion.div 
                   whileHover={{ scale: 1.02 }}
-                  className="aspect-[3/4] rounded-2xl bg-gray-800 overflow-hidden shadow-2xl"
+                  className="aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl"
+                  style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)' }}
                 >
                   <img 
-                    src="https://images.unsplash.com/photo-1592982537447-6f2a6a0c9c0f?w=400&h=500&fit=crop"
+                    src="/Tractors"
                     alt="Tractor"
                     className="w-full h-full object-cover"
-                    onError={(e) => { e.target.style.display = 'none' }}
+                    onError={(e) => { 
+                      e.target.style.display = 'none';
+                    }}
                   />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span style={{ fontSize: '64px', opacity: 0.4 }}>🚜</span>
+                  </div>
                 </motion.div>
                 <motion.div 
                   whileHover={{ scale: 1.02 }}
-                  className="aspect-[3/4] rounded-2xl bg-gray-800 overflow-hidden mt-10 shadow-2xl"
+                  className="aspect-[3/4] rounded-2xl overflow-hidden mt-10 shadow-2xl"
+                  style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)' }}
                 >
                   <img 
-                    src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=400&h=500&fit=crop"
+                    src="/Harvester"
                     alt="Harvester"
                     className="w-full h-full object-cover"
-                    onError={(e) => { e.target.style.display = 'none' }}
+                    onError={(e) => { 
+                      e.target.style.display = 'none';
+                    }}
                   />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span style={{ fontSize: '64px', opacity: 0.4 }}>🌾</span>
+                  </div>
                 </motion.div>
               </div>
             </motion.div>
@@ -594,17 +680,23 @@ const Landing = () => {
                 }}
                 onClick={() => navigate('/register')}
               >
-                <div className="aspect-[4/3] bg-gray-800 relative overflow-hidden">
+                <div className="aspect-[4/3] relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%)' }}>
                   <img 
                     src={location.image} 
                     alt={location.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    onError={(e) => { e.target.style.display = 'none' }}
+                    onError={(e) => { 
+                      e.target.style.display = 'none';
+                    }}
                   />
+                  {/* Fallback emoji when image fails */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span style={{ fontSize: '48px', opacity: 0.4 }}>{location.fallback}</span>
+                  </div>
                 </div>
                 <div className="p-8">
                   <h3 className={`text-xl font-bold mb-2 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{location.name}</h3>
-                  <p className="text-emerald-500 text-sm font-semibold">{location.farms} Farms</p>
+                  <p className="text-emerald-500 text-sm font-semibold">Explore Region</p>
                 </div>
               </motion.div>
             ))}
@@ -633,7 +725,16 @@ const Landing = () => {
                   boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)'
                 }}
               >
-                <FiTruck style={{ color: '#ffffff' }} className="text-lg" />
+                {/* Wheat/Grain icon for footer */}
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 3C12 3 8 6 8 12C8 15 9 17 10 18.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M12 3C12 3 16 6 16 12C16 15 15 17 14 18.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                  <ellipse cx="8" cy="8" rx="2" ry="3" fill="white" opacity="0.9"/>
+                  <ellipse cx="16" cy="8" rx="2" ry="3" fill="white" opacity="0.9"/>
+                  <ellipse cx="10" cy="6" rx="1.5" ry="2" fill="white" opacity="0.7"/>
+                  <ellipse cx="14" cy="6" rx="1.5" ry="2" fill="white" opacity="0.7"/>
+                  <path d="M12 18V21" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
               </div>
               <span className={`text-xl font-bold transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>FarmEase</span>
             </div>

@@ -7,6 +7,7 @@ using FEServices.Interface;
 using FECommon.DTO;
 using FECommon.Exceptions;
 using FECommon.Enums;
+using FECommon.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -79,23 +80,29 @@ namespace FEServices.Service
         {
             try
             {
+                // Validate and sanitize pagination parameters
+                var (_, validPage, validLimit) = InputSanitizer.ValidatePagination(page, limit);
+                
+                // Sanitize search input to prevent injection
+                var sanitizedSearch = InputSanitizer.SanitizeSearchInput(search);
+                
                 // Database has no FK relationships - use denormalized data directly
                 IQueryable<Booking> query = _unitOfWork.Bookings.Query()
                     .AsNoTracking();
 
                 // Apply status filter at DB level - compare as string
-                if (!string.IsNullOrEmpty(status) && !status.Equals("all", StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrEmpty(status) && !string.Equals(status, "all", StringComparison.OrdinalIgnoreCase))
                 {
-                    query = query.Where(b => b.Status.ToLower() == status.ToLower());
+                    query = query.Where(b => string.Equals(b.Status, status, StringComparison.OrdinalIgnoreCase));
                 }
 
-                // Apply search filter at DB level BEFORE pagination - use denormalized fields
-                if (!string.IsNullOrEmpty(search))
+                // Apply search filter at DB level BEFORE pagination - use denormalized fields (sanitized)
+                if (!string.IsNullOrEmpty(sanitizedSearch))
                 {
                     query = query.Where(b => 
-                        (b.MachineName != null && b.MachineName.Contains(search)) ||
-                        (b.FarmerName != null && b.FarmerName.Contains(search)) ||
-                        (b.OwnerId != null && b.OwnerId.Contains(search)));
+                        (b.MachineName != null && b.MachineName.Contains(sanitizedSearch)) ||
+                        (b.FarmerName != null && b.FarmerName.Contains(sanitizedSearch)) ||
+                        (b.OwnerId != null && b.OwnerId.Contains(sanitizedSearch)));
                 }
 
                 // Total count AFTER all filters
@@ -104,8 +111,8 @@ namespace FEServices.Service
                 // Get paged bookings
                 var bookings = await query
                     .OrderByDescending(b => b.CreatedAt)
-                    .Skip((page - 1) * limit)
-                    .Take(limit)
+                    .Skip((validPage - 1) * validLimit)
+                    .Take(validLimit)
                     .ToListAsync(cancellationToken);
 
                 var bookingIds = bookings.Select(b => b.Id).ToList();
@@ -115,7 +122,7 @@ namespace FEServices.Service
                     .ToListAsync(cancellationToken);
 
                 var refundedBookingIds = payments
-                    .Where(p => p.RefundAmount != null && p.RefundAmount > 0)
+                    .Where(p => p.RefundAmount > 0)
                     .Select(p => p.BookingId)
                     .ToHashSet();
 
@@ -623,41 +630,47 @@ namespace FEServices.Service
         {
             try
             {
+                // Get machine IDs first
                 var machineIds = await _unitOfWork.Machines.Query()
                     .Where(m => m.OwnerId == ownerId)
                     .Select(m => m.Id)
                     .ToListAsync();
 
-                var totalMachines = machineIds.Count;
+                if (machineIds.Count == 0)
+                {
+                    return new OwnerDashboardStatsDto
+                    {
+                        TotalMachines = 0,
+                        ActiveBookings = 0,
+                        CompletedBookings = 0,
+                        TotalRevenue = 0,
+                        PlatformFeesEarned = 0,
+                        PendingBookings = 0
+                    };
+                }
 
-                var activeCount = await _unitOfWork.Bookings.Query()
-                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Active")
-                    .CountAsync();
-
-                var completedCount = await _unitOfWork.Bookings.Query()
-                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Completed")
-                    .CountAsync();
-
-                var pendingCount = await _unitOfWork.Bookings.Query()
-                    .Where(b => machineIds.Contains(b.MachineId) && (b.Status == "Pending" || b.Status == "PendingOwnerApproval"))
-                    .CountAsync();
-
-                var totalRevenue = await _unitOfWork.Bookings.Query()
-                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Completed")
-                    .SumAsync(b => b.TotalAmount);
-
-                var platformFees = await _unitOfWork.Bookings.Query()
-                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Completed")
-                    .SumAsync(b => b.PlatformFee);
+                // Single query for all booking stats
+                var bookingStats = await _unitOfWork.Bookings.Query()
+                    .Where(b => machineIds.Contains(b.MachineId))
+                    .GroupBy(_ => 1)
+                    .Select(g => new
+                    {
+                        ActiveCount = g.Count(b => b.Status == "Active"),
+                        CompletedCount = g.Count(b => b.Status == "Completed"),
+                        PendingCount = g.Count(b => b.Status == "Pending" || b.Status == "PendingOwnerApproval"),
+                        TotalRevenue = g.Where(b => b.Status == "Completed").Sum(b => b.TotalAmount),
+                        PlatformFees = g.Where(b => b.Status == "Completed").Sum(b => b.PlatformFee)
+                    })
+                    .FirstOrDefaultAsync();
 
                 return new OwnerDashboardStatsDto
                 {
-                    TotalMachines = totalMachines,
-                    ActiveBookings = activeCount,
-                    CompletedBookings = completedCount,
-                    TotalRevenue = totalRevenue - platformFees,
-                    PlatformFeesEarned = platformFees,
-                    PendingBookings = pendingCount
+                    TotalMachines = machineIds.Count,
+                    ActiveBookings = bookingStats?.ActiveCount ?? 0,
+                    CompletedBookings = bookingStats?.CompletedCount ?? 0,
+                    TotalRevenue = (bookingStats?.TotalRevenue ?? 0) - (bookingStats?.PlatformFees ?? 0),
+                    PlatformFeesEarned = bookingStats?.PlatformFees ?? 0,
+                    PendingBookings = bookingStats?.PendingCount ?? 0
                 };
             }
             catch (Exception ex)
@@ -670,29 +683,27 @@ namespace FEServices.Service
         {
             try
             {
-                var totalBookings = await _unitOfWork.Bookings.Query()
+                // Single query for all booking stats
+                var stats = await _unitOfWork.Bookings.Query()
                     .Where(b => b.FarmerId == farmerId)
-                    .CountAsync();
-                var activeBookings = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.FarmerId == farmerId && (b.Status == "Accepted" || b.Status == "Pending"))
-                    .CountAsync();
-                var completedBookings = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.FarmerId == farmerId && b.Status == "Completed")
-                    .CountAsync();
-                var pendingBookings = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.FarmerId == farmerId && b.Status == "Pending")
-                    .CountAsync();
-                var totalSpent = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.FarmerId == farmerId && b.Status == "Completed")
-                    .SumAsync(b => b.TotalAmount);
+                    .GroupBy(_ => 1)
+                    .Select(g => new
+                    {
+                        TotalBookings = g.Count(),
+                        ActiveBookings = g.Count(b => b.Status == "Accepted" || b.Status == "Pending"),
+                        CompletedBookings = g.Count(b => b.Status == "Completed"),
+                        PendingBookings = g.Count(b => b.Status == "Pending"),
+                        TotalSpent = g.Where(b => b.Status == "Completed").Sum(b => b.TotalAmount)
+                    })
+                    .FirstOrDefaultAsync();
 
                 return new FarmerDashboardStatsDto
                 {
-                    TotalBookings = totalBookings,
-                    ActiveBookings = activeBookings,
-                    CompletedBookings = completedBookings,
-                    TotalSpent = totalSpent,
-                    PendingBookings = pendingBookings
+                    TotalBookings = stats?.TotalBookings ?? 0,
+                    ActiveBookings = stats?.ActiveBookings ?? 0,
+                    CompletedBookings = stats?.CompletedBookings ?? 0,
+                    TotalSpent = stats?.TotalSpent ?? 0,
+                    PendingBookings = stats?.PendingBookings ?? 0
                 };
             }
             catch (Exception ex)
@@ -705,56 +716,62 @@ namespace FEServices.Service
         {
             try
             {
-                var totalUsers = await _unitOfWork.Users.Query().CountAsync(cancellationToken);
-                var totalFarmers = await _unitOfWork.Users.Query().CountAsync(u => u.Role == "farmer", cancellationToken);
-                var totalOwners = await _unitOfWork.Users.Query().CountAsync(u => u.Role == "owner", cancellationToken);
+                // Single query for user stats
+                var userStats = await _unitOfWork.Users.Query()
+                    .GroupBy(_ => 1)
+                    .Select(g => new
+                    {
+                        TotalUsers = g.Count(),
+                        TotalFarmers = g.Count(u => u.Role == "farmer"),
+                        TotalOwners = g.Count(u => u.Role == "owner")
+                    })
+                    .FirstOrDefaultAsync(cancellationToken);
 
+                // Single query for machine count
                 var totalMachines = await _unitOfWork.Machines.Query().CountAsync(cancellationToken);
 
-                var totalBookings = await _unitOfWork.Bookings.Query().CountAsync(cancellationToken);
-                var activeBookings = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.Status == "Active")
-                    .CountAsync(cancellationToken);
-                var completedBookings = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.Status == "Completed")
-                    .CountAsync(cancellationToken);
+                // Single query for booking stats
+                var bookingStats = await _unitOfWork.Bookings.Query()
+                    .GroupBy(_ => 1)
+                    .Select(g => new
+                    {
+                        TotalBookings = g.Count(),
+                        ActiveBookings = g.Count(b => b.Status == "Active"),
+                        CompletedBookings = g.Count(b => b.Status == "Completed"),
+                        TotalRevenue = g.Where(b => b.Status == "Completed").Sum(b => b.TotalAmount),
+                        PlatformRevenue = g.Where(b => b.Status == "Completed").Sum(b => b.PlatformFee)
+                    })
+                    .FirstOrDefaultAsync(cancellationToken);
 
-                var totalRevenue = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.Status == "Completed")
-                    .SumAsync(b => b.TotalAmount, cancellationToken);
-                var platformRevenue = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.Status == "Completed")
-                    .SumAsync(b => b.PlatformFee, cancellationToken);
-
+                // Recent bookings (separate query - needed for ordering)
                 var recentBookingsData = await _unitOfWork.Bookings.Query()
                     .AsNoTracking()
                     .OrderByDescending(b => b.CreatedAt)
+                    .Select(b => new RecentBookingDto
+                    {
+                        Id = b.Id,
+                        MachineName = b.MachineName ?? "Unknown",
+                        FarmerName = b.FarmerName ?? "Unknown",
+                        OwnerName = "",
+                        Status = b.Status ?? "Unknown",
+                        TotalAmount = b.TotalAmount,
+                        CreatedAt = b.CreatedAt
+                    })
                     .Take(5)
                     .ToListAsync(cancellationToken);
 
-                var recentBookings = recentBookingsData.Select(b => new RecentBookingDto
-                {
-                    Id = b.Id,
-                    MachineName = b.MachineName ?? "Unknown",
-                    FarmerName = b.FarmerName ?? "Unknown",
-                    OwnerName = "",
-                    Status = b.Status ?? "Unknown",
-                    TotalAmount = b.TotalAmount,
-                    CreatedAt = b.CreatedAt
-                }).ToList();
-
                 return new AdminDashboardStatsDto
                 {
-                    TotalUsers = totalUsers,
-                    TotalFarmers = totalFarmers,
-                    TotalOwners = totalOwners,
+                    TotalUsers = userStats?.TotalUsers ?? 0,
+                    TotalFarmers = userStats?.TotalFarmers ?? 0,
+                    TotalOwners = userStats?.TotalOwners ?? 0,
                     TotalMachines = totalMachines,
-                    TotalBookings = totalBookings,
-                    ActiveBookings = activeBookings,
-                    CompletedBookings = completedBookings,
-                    TotalRevenue = totalRevenue,
-                    PlatformRevenue = platformRevenue,
-                    RecentBookings = recentBookings
+                    TotalBookings = bookingStats?.TotalBookings ?? 0,
+                    ActiveBookings = bookingStats?.ActiveBookings ?? 0,
+                    CompletedBookings = bookingStats?.CompletedBookings ?? 0,
+                    TotalRevenue = bookingStats?.TotalRevenue ?? 0,
+                    PlatformRevenue = bookingStats?.PlatformRevenue ?? 0,
+                    RecentBookings = recentBookingsData
                 };
             }
             catch (Exception ex)
@@ -834,16 +851,16 @@ namespace FEServices.Service
                     .ToListAsync();
 
                 // Revenue data
-                var revenueData = await GetOwnerRevenueDataAsync(ownerId, machineIds, monthsAgo);
+                var revenueData = await GetOwnerRevenueDataAsync(machineIds, monthsAgo);
 
                 // Equipment performance
                 var equipmentPerformance = await GetOwnerEquipmentPerformanceAsync(ownerId);
 
                 // Category distribution (booking status)
-                var categoryDistribution = await GetOwnerCategoryDistributionAsync(ownerId, machineIds);
+                var categoryDistribution = await GetOwnerCategoryDistributionAsync(machineIds);
 
                 // Insights
-                var insights = await GetOwnerInsightsAsync(ownerId, machineIds);
+                var insights = await GetOwnerInsightsAsync(machineIds);
 
                 return new OwnerAnalyticsDto
                 {
@@ -1040,7 +1057,7 @@ namespace FEServices.Service
             }
         }
 
-        private async Task<IEnumerable<MonthlyRevenueDto>> GetOwnerRevenueDataAsync(string ownerId, List<int> machineIds, int monthsAgo)
+        private async Task<IEnumerable<MonthlyRevenueDto>> GetOwnerRevenueDataAsync(List<int> machineIds, int monthsAgo)
         {
             var cutoffDate = monthsAgo > 0 ? DateTime.UtcNow.AddMonths(-monthsAgo) : DateTime.UtcNow.AddDays(-7);
 
@@ -1069,7 +1086,7 @@ namespace FEServices.Service
             });
         }
 
-        private async Task<IEnumerable<CategoryDistributionDto>> GetOwnerCategoryDistributionAsync(string ownerId, List<int> machineIds)
+        private async Task<IEnumerable<CategoryDistributionDto>> GetOwnerCategoryDistributionAsync(List<int> machineIds)
         {
             var statusCounts = await _unitOfWork.Bookings.Query()
                 .Where(b => machineIds.Contains(b.MachineId))
@@ -1093,32 +1110,62 @@ namespace FEServices.Service
             });
         }
 
-        private async Task<IEnumerable<InsightDto>> GetOwnerInsightsAsync(string ownerId, List<int> machineIds)
+        private async Task<IEnumerable<InsightDto>> GetOwnerInsightsAsync(List<int> machineIds)
         {
-            var totalRevenue = await _unitOfWork.Bookings.Query()
-                .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Completed")
-                .SumAsync(b => b.BaseAmount);
-
-            var totalBookings = await _unitOfWork.Bookings.Query()
-                .Where(b => machineIds.Contains(b.MachineId))
-                .CountAsync();
-
-            var avgBookingValue = totalBookings > 0 ? totalRevenue / totalBookings : 0;
-
-            var activeBookings = await _unitOfWork.Bookings.Query()
-                .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Active")
-                .CountAsync();
-
-            var utilizationRate = machineIds.Count > 0 ? (activeBookings * 100.0 / machineIds.Count) : 0;
-
-            return new List<InsightDto>
+            if (machineIds.Count == 0)
             {
+                return
+                [
+                    new InsightDto { Title = "Total Revenue", Value = "₹0", Change = "-", Trend = "neutral", Description = "lifetime earnings", Color = "#10b981" },
+                    new InsightDto { Title = "Avg. Booking Value", Value = "₹0", Change = "-", Trend = "neutral", Description = "per rental", Color = "#3b82f6" },
+                    new InsightDto { Title = "Utilization Rate", Value = "0%", Change = "-", Trend = "neutral", Description = "equipment usage", Color = "#8b5cf6" },
+                    new InsightDto { Title = "Total Bookings", Value = "0", Change = "-", Trend = "neutral", Description = "all time", Color = "#f59e0b" }
+                ];
+            }
+
+            var now = DateTime.UtcNow;
+            var thisMonthStart = new DateTime(now.Year, now.Month, 1);
+            var lastMonthStart = thisMonthStart.AddMonths(-1);
+            
+            // Single optimized query for all booking stats
+            var stats = await _unitOfWork.Bookings.Query()
+                .Where(b => machineIds.Contains(b.MachineId))
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    TotalBookings = g.Count(),
+                    TotalRevenue = g.Where(b => b.Status == "Completed").Sum(b => b.BaseAmount),
+                    ActiveBookings = g.Count(b => b.Status == "Active"),
+                    ThisMonthRevenue = g.Where(b => b.Status == "Completed" && b.CreatedAt >= thisMonthStart).Sum(b => b.BaseAmount),
+                    ThisMonthBookings = g.Count(b => b.CreatedAt >= thisMonthStart),
+                    LastMonthRevenue = g.Where(b => b.Status == "Completed" && b.CreatedAt >= lastMonthStart && b.CreatedAt < thisMonthStart).Sum(b => b.BaseAmount),
+                    LastMonthBookings = g.Count(b => b.CreatedAt >= lastMonthStart && b.CreatedAt < thisMonthStart)
+                })
+                .FirstOrDefaultAsync() ?? new { TotalBookings = 0, TotalRevenue = 0m, ActiveBookings = 0, ThisMonthRevenue = 0m, ThisMonthBookings = 0, LastMonthRevenue = 0m, LastMonthBookings = 0 };
+
+            var avgBookingValue = stats.TotalBookings > 0 ? stats.TotalRevenue / stats.TotalBookings : 0;
+            var lastAvgBookingValue = stats.LastMonthBookings > 0 ? stats.LastMonthRevenue / stats.LastMonthBookings : 0;
+            var utilizationRate = (stats.ActiveBookings * 100.0 / machineIds.Count);
+            
+            // Calculate real percentage changes
+            var revenueChange = stats.LastMonthRevenue > 0 
+                ? (double)((stats.ThisMonthRevenue - stats.LastMonthRevenue) * 100m / stats.LastMonthRevenue) 
+                : 0;
+            var bookingChange = stats.LastMonthBookings > 0 
+                ? ((stats.ThisMonthBookings - stats.LastMonthBookings) * 100.0 / stats.LastMonthBookings) 
+                : 0;
+            var avgValueChange = lastAvgBookingValue > 0 
+                ? (double)((avgBookingValue - lastAvgBookingValue) * 100m / lastAvgBookingValue) 
+                : 0;
+
+            return
+            [
                 new InsightDto
                 {
                     Title = "Total Revenue",
-                    Value = $"₹{totalRevenue:N0}",
-                    Change = "+12%",
-                    Trend = "up",
+                    Value = $"₹{stats.TotalRevenue:N0}",
+                    Change = revenueChange >= 0 ? $"+{revenueChange:F0}%" : $"{revenueChange:F0}%",
+                    Trend = revenueChange >= 0 ? "up" : "down",
                     Description = "lifetime earnings",
                     Color = "#10b981"
                 },
@@ -1126,8 +1173,8 @@ namespace FEServices.Service
                 {
                     Title = "Avg. Booking Value",
                     Value = $"₹{avgBookingValue:N0}",
-                    Change = "+8%",
-                    Trend = "up",
+                    Change = avgValueChange >= 0 ? $"+{avgValueChange:F0}%" : $"{avgValueChange:F0}%",
+                    Trend = avgValueChange >= 0 ? "up" : "down",
                     Description = "per rental",
                     Color = "#3b82f6"
                 },
@@ -1135,63 +1182,114 @@ namespace FEServices.Service
                 {
                     Title = "Utilization Rate",
                     Value = $"{utilizationRate:F0}%",
-                    Change = "+5%",
-                    Trend = "up",
+                    Change = "-",
+                    Trend = "neutral",
                     Description = "equipment usage",
                     Color = "#8b5cf6"
                 },
                 new InsightDto
                 {
                     Title = "Total Bookings",
-                    Value = totalBookings.ToString(),
-                    Change = "+15%",
-                    Trend = "up",
+                    Value = stats.TotalBookings.ToString(),
+                    Change = bookingChange >= 0 ? $"+{bookingChange:F0}%" : $"{bookingChange:F0}%",
+                    Trend = bookingChange >= 0 ? "up" : "down",
                     Description = "all time",
                     Color = "#f59e0b"
                 }
-            };
+            ];
         }
 
         private async Task<IEnumerable<InsightDto>> GetAdminInsightsAsync()
         {
-            var totalUsers = await _unitOfWork.Users.Query().CountAsync();
-            var totalFarmers = await _unitOfWork.Users.Query().CountAsync(u => u.Role == "farmer");
-            var totalOwners = await _unitOfWork.Users.Query().CountAsync(u => u.Role == "owner");
-            var totalMachines = await _unitOfWork.Machines.Query().CountAsync();
-            var totalBookings = await _unitOfWork.Bookings.Query().CountAsync();
-            var completedBookings = await _unitOfWork.Bookings.Query().CountAsync(b => b.Status == "Completed");
-            var platformRevenue = await _unitOfWork.Bookings.Query()
-                .Where(b => b.Status == "Completed")
-                .SumAsync(b => b.PlatformFee);
+            var now = DateTime.UtcNow;
+            var lastMonthStart = now.AddMonths(-1);
+            
+            // Single optimized query for user stats
+            var userStats = await _unitOfWork.Users.Query()
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    TotalUsers = g.Count(),
+                    TotalFarmers = g.Count(u => u.Role == "farmer"),
+                    TotalOwners = g.Count(u => u.Role == "owner"),
+                    NewUsersThisMonth = g.Count(u => u.CreatedAt >= lastMonthStart),
+                    NewUsersLastMonth = g.Count(u => u.CreatedAt < lastMonthStart && u.CreatedAt >= lastMonthStart.AddMonths(-1))
+                })
+                .FirstOrDefaultAsync() ?? new { TotalUsers = 0, TotalFarmers = 0, TotalOwners = 0, NewUsersThisMonth = 0, NewUsersLastMonth = 0 };
+            
+            // Single optimized query for machine stats
+            var machineStats = await _unitOfWork.Machines.Query()
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    TotalMachines = g.Count(),
+                    NewMachinesThisMonth = g.Count(m => m.CreatedAt >= lastMonthStart),
+                    NewMachinesLastMonth = g.Count(m => m.CreatedAt < lastMonthStart && m.CreatedAt >= lastMonthStart.AddMonths(-1))
+                })
+                .FirstOrDefaultAsync() ?? new { TotalMachines = 0, NewMachinesThisMonth = 0, NewMachinesLastMonth = 0 };
+            
+            // Single optimized query for booking stats
+            var bookingStats = await _unitOfWork.Bookings.Query()
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    TotalBookings = g.Count(),
+                    CompletedBookings = g.Count(b => b.Status == "Completed"),
+                    PlatformRevenue = g.Where(b => b.Status == "Completed").Sum(b => b.PlatformFee),
+                    CompletedBeforeLastMonth = g.Count(b => b.Status == "Completed" && b.CreatedAt < lastMonthStart),
+                    TotalBeforeLastMonth = g.Count(b => b.CreatedAt < lastMonthStart),
+                    RevenueThisMonth = g.Where(b => b.Status == "Completed" && b.CreatedAt >= lastMonthStart).Sum(b => b.PlatformFee),
+                    RevenueLastMonth = g.Where(b => b.Status == "Completed" && b.CreatedAt < lastMonthStart && b.CreatedAt >= lastMonthStart.AddMonths(-1)).Sum(b => b.PlatformFee)
+                })
+                .FirstOrDefaultAsync() ?? new { TotalBookings = 0, CompletedBookings = 0, PlatformRevenue = 0m, CompletedBeforeLastMonth = 0, TotalBeforeLastMonth = 0, RevenueThisMonth = 0m, RevenueLastMonth = 0m };
 
-            var bookingRate = totalBookings > 0 ? (completedBookings * 100.0 / totalBookings) : 0;
+            // Calculate real percentage changes
+            var userChange = userStats.NewUsersLastMonth > 0 
+                ? (double)((userStats.NewUsersThisMonth - userStats.NewUsersLastMonth) * 100m / userStats.NewUsersLastMonth) 
+                : 0;
+            
+            var machineChange = machineStats.NewMachinesLastMonth > 0 
+                ? (double)((machineStats.NewMachinesThisMonth - machineStats.NewMachinesLastMonth) * 100m / machineStats.NewMachinesLastMonth) 
+                : 0;
+            
+            var revenueChange = bookingStats.RevenueLastMonth > 0 
+                ? (double)((bookingStats.RevenueThisMonth - bookingStats.RevenueLastMonth) * 100m / bookingStats.RevenueLastMonth) 
+                : 0;
+            
+            var bookingRate = bookingStats.TotalBookings > 0 
+                ? (bookingStats.CompletedBookings * 100.0 / bookingStats.TotalBookings) 
+                : 0;
+            var lastBookingRate = bookingStats.TotalBeforeLastMonth > 0 
+                ? (bookingStats.CompletedBeforeLastMonth * 100.0 / bookingStats.TotalBeforeLastMonth) 
+                : 0;
+            var completionChange = lastBookingRate > 0 ? (bookingRate - lastBookingRate) : 0;
 
-            return new List<InsightDto>
-            {
+            return
+            [
                 new InsightDto
                 {
                     Title = "Total Users",
-                    Value = totalUsers.ToString(),
-                    Change = $"+{Math.Max(10, totalUsers / 10)}%",
-                    Trend = "up",
-                    Description = $"({totalFarmers} farmers, {totalOwners} owners)",
+                    Value = userStats.TotalUsers.ToString(),
+                    Change = userChange >= 0 ? $"+{userChange:F0}%" : $"{userChange:F0}%",
+                    Trend = userChange >= 0 ? "up" : "down",
+                    Description = $"({userStats.TotalFarmers} farmers, {userStats.TotalOwners} owners)",
                     Color = "#3b82f6"
                 },
                 new InsightDto
                 {
                     Title = "Total Equipment",
-                    Value = totalMachines.ToString(),
-                    Change = $"+{Math.Max(5, totalMachines / 20)}%",
-                    Trend = "up",
+                    Value = machineStats.TotalMachines.ToString(),
+                    Change = machineChange >= 0 ? $"+{machineChange:F0}%" : $"{machineChange:F0}%",
+                    Trend = machineChange >= 0 ? "up" : "down",
                     Description = "registered machines",
                     Color = "#10b981"
                 },
                 new InsightDto
                 {
                     Title = "Platform Revenue",
-                    Value = $"₹{platformRevenue / 1000:F1}K",
-                    Change = $"+{Math.Max(15, (int)(platformRevenue / 1000))}%",
-                    Trend = "up",
+                    Value = $"₹{bookingStats.PlatformRevenue / 1000:F1}K",
+                    Change = revenueChange >= 0 ? $"+{revenueChange:F0}%" : $"{revenueChange:F0}%",
+                    Trend = revenueChange >= 0 ? "up" : "down",
                     Description = "from platform fees",
                     Color = "#f59e0b"
                 },
@@ -1199,12 +1297,12 @@ namespace FEServices.Service
                 {
                     Title = "Completion Rate",
                     Value = $"{bookingRate:F0}%",
-                    Change = "+5%",
-                    Trend = "up",
-                    Description = $"{completedBookings} of {totalBookings} bookings",
+                    Change = completionChange >= 0 ? $"+{completionChange:F0}%" : $"{completionChange:F0}%",
+                    Trend = completionChange >= 0 ? "up" : "down",
+                    Description = $"{bookingStats.CompletedBookings} of {bookingStats.TotalBookings} bookings",
                     Color = "#8b5cf6"
                 }
-            };
+            ];
         }
     }
 }

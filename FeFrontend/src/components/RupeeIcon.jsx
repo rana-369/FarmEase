@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const RupeeIcon = ({ className, style }) => (
+export const RupeeIcon = ({ className, style, size = 24 }) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     viewBox="0 0 24 24" 
@@ -11,8 +11,8 @@ export const RupeeIcon = ({ className, style }) => (
     strokeLinejoin="round"
     className={className}
     style={style}
-    width="1em"
-    height="1em"
+    width={size}
+    height={size}
   >
     <path d="M6 3h12M6 8h12M6 8l6 8M6 13h6M6 13l6 8" />
   </svg>

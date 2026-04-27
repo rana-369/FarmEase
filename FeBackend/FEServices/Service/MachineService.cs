@@ -6,6 +6,7 @@ using FEDomain.Data;
 using FEServices.Interface;
 using Microsoft.AspNetCore.Http;
 using FECommon.DTO;
+using FECommon.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace FEServices.Service
@@ -28,21 +29,27 @@ namespace FEServices.Service
 
         public async Task<PagedResult<MachineSummaryDto>> GetAllMachinesPagedAsync(int page, int limit, string? search, string? status)
         {
+            // Validate and sanitize pagination parameters
+            var (_, validPage, validLimit) = InputSanitizer.ValidatePagination(page, limit);
+            
+            // Sanitize search input to prevent injection
+            var sanitizedSearch = InputSanitizer.SanitizeSearchInput(search);
+            
             var query = _unitOfWork.Machines.Query().AsNoTracking();
 
             // Apply status filter at DB level
-            if (!string.IsNullOrEmpty(status) && !status.Equals("all", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(status) && !string.Equals(status, "all", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(m => m.Status == status);
             }
 
-            // Apply search filter at DB level BEFORE pagination
-            if (!string.IsNullOrEmpty(search))
+            // Apply search filter at DB level BEFORE pagination (using sanitized input)
+            if (!string.IsNullOrEmpty(sanitizedSearch))
             {
                 query = query.Where(m => 
-                    (m.Name != null && m.Name.Contains(search)) ||
-                    (m.Type != null && m.Type.Contains(search)) ||
-                    (m.Location != null && m.Location.Contains(search)));
+                    (m.Name != null && m.Name.Contains(sanitizedSearch)) ||
+                    (m.Type != null && m.Type.Contains(sanitizedSearch)) ||
+                    (m.Location != null && m.Location.Contains(sanitizedSearch)));
             }
 
             // Total count AFTER all filters
@@ -51,8 +58,8 @@ namespace FEServices.Service
             // Get paged machines
             var machines = await query
                 .OrderByDescending(m => m.CreatedAt)
-                .Skip((page - 1) * limit)
-                .Take(limit)
+                .Skip((validPage - 1) * validLimit)
+                .Take(validLimit)
                 .ToListAsync();
 
             // Get owner data only for this page
@@ -76,7 +83,7 @@ namespace FEServices.Service
                 };
             }
 
-            return new PagedResult<MachineSummaryDto>(result, totalItems, page, limit);
+            return new PagedResult<MachineSummaryDto>(result, totalItems, validPage, validLimit);
         }
 
         public async Task<IEnumerable<Machine>> GetOwnerMachinesAsync(string ownerId)

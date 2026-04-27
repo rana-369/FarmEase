@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,8 @@ using FEServices.Interface;
 using FEServices.Service;
 using FarmEase.Middleware;
 using FEServices.Mapping;
+using FECommon.Security;
+using FECommon.Patterns;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,9 +33,18 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
             sqlOptions.CommandTimeout(30);
         }));
 
-// --- 1.1. RESPONSE CACHING ---
+// --- 1.1. RESPONSE & OUTPUT CACHING ---
 builder.Services.AddResponseCaching();
 builder.Services.AddMemoryCache();
+
+// Output caching for public endpoints (30 seconds for stats, 60 seconds for featured)
+builder.Services.AddOutputCache(options =>
+{
+    options.AddBasePolicy(builder => builder.Expire(TimeSpan.FromSeconds(30)));
+    options.AddPolicy("PublicStats", builder => builder.Expire(TimeSpan.FromSeconds(30)).SetVaryByHost(true));
+    options.AddPolicy("FeaturedMachines", builder => builder.Expire(TimeSpan.FromSeconds(60)).SetVaryByHost(true));
+    options.AddPolicy("NoCache", builder => builder.NoCache());
+});
 
 // --- 1.2. RESPONSE COMPRESSION ---
 builder.Services.AddResponseCompression(options =>
@@ -40,12 +52,9 @@ builder.Services.AddResponseCompression(options =>
     options.EnableForHttps = true;
     options.Providers.Add<GzipCompressionProvider>();
     options.Providers.Add<BrotliCompressionProvider>();
-    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
-    {
-        "application/json",
-        "text/json",
-        "application/ld+json"
-    });
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/json", "text/json", "application/ld+json" }
+    );
 });
 builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 {
@@ -111,14 +120,17 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// --- 3. JWT AUTHENTICATION ---
-var jwtSettings = builder.Configuration.GetSection("JWT");
-var secretKey = jwtSettings["Secret"];
+// --- 3. JWT AUTHENTICATION (SECURE) ---
+// Use secure configuration that checks environment variables first
+var jwtSettings = SecureConfiguration.GetJwtSettings(builder.Configuration);
 
-if (string.IsNullOrEmpty(secretKey))
-    throw new Exception("JWT Secret is missing from appsettings.json");
+if (string.IsNullOrEmpty(jwtSettings.Secret))
+    throw new Exception("JWT Secret is missing. Set JWT_SECRET environment variable or JWT:Secret in appsettings.json");
 
-var key = Encoding.UTF8.GetBytes(secretKey);
+var key = Encoding.UTF8.GetBytes(jwtSettings.Secret);
+
+// Determine if we should require HTTPS (production only)
+var isProduction = SecureConfiguration.IsProduction(builder.Configuration);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -127,7 +139,8 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false;
+    // Only allow HTTP in development, require HTTPS in production
+    options.RequireHttpsMetadata = isProduction;
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -135,20 +148,19 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
         ValidateAudience = true,
-        ValidIssuer = jwtSettings["ValidIssuer"],
-        ValidAudience = jwtSettings["ValidAudience"],
-        ClockSkew = TimeSpan.FromMinutes(5)
+        ValidIssuer = jwtSettings.ValidIssuer,
+        ValidAudience = jwtSettings.ValidAudience,
+        ClockSkew = TimeSpan.FromMinutes(5),
+        // Additional security validations
+        RequireExpirationTime = true,
+        ValidateLifetime = true
     };
 });
 
 // --- 4. AUTHORIZE POLICIES ---
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("RequireAdminRole", policy =>
-        policy.RequireRole("admin", "Admin"));
-    options.AddPolicy("RequireOwnerRole", policy =>
-        policy.RequireRole("owner", "Owner"));
-});
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("RequireAdminRole", policy => policy.RequireRole("admin", "Admin"))
+    .AddPolicy("RequireOwnerRole", policy => policy.RequireRole("owner", "Owner"));
 
 // --- 5. SERVICES (Dependency Injection) ---
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -160,6 +172,13 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 // --- 5.1. AUTOMAPPER ---
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+
+// --- 5.2. MEDIATR (CQRS PATTERN) ---
+builder.Services.AddMediatR(typeof(Program));
+
+// --- 5.3. AUDIT SERVICE ---
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IAuditService, AuditService>();
 
 // --- 6. CORS ---
 builder.Services.AddCors(options =>
@@ -207,6 +226,16 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
+// --- 7.1. HEALTH CHECKS ---
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>("database", tags: ["db", "sql"])
+    .AddCheck<DatabaseHealthCheck>("database-connectivity", tags: ["db"]);
+
+builder.Services.AddHealthChecksUI(settings =>
+{
+    settings.AddHealthCheckEndpoint("FarmEase API", "/health-ui");
+}).AddInMemoryStorage();
 
 var app = builder.Build();
 
@@ -325,7 +354,10 @@ using (var scope = app.Services.CreateScope())
 }
 
 // --- 9. MIDDLEWARE PIPELINE ---
-// Exception handling middleware - must be first to catch all errors
+// Security headers middleware - adds protective headers to all responses
+app.UseSecurityHeaders();
+
+// Exception handling middleware - must be early to catch all errors
 app.UseExceptionHandling();
 
 if (app.Environment.IsDevelopment())
@@ -350,31 +382,45 @@ app.UseStaticFiles(new StaticFileOptions
         
         // Set correct content type for images to prevent CORB
         var fileName = ctx.File?.Name ?? "";
-        if (fileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) || 
-            fileName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase))
+        var contentType = fileName switch
         {
-            headers["Content-Type"] = "image/jpeg";
-        }
-        else if (fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
-        {
-            headers["Content-Type"] = "image/png";
-        }
-        else if (fileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase))
-        {
-            headers["Content-Type"] = "image/gif";
-        }
-        else if (fileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
-        {
-            headers["Content-Type"] = "image/webp";
-        }
+            _ when fileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) => "image/jpeg",
+            _ when fileName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) => "image/jpeg",
+            _ when fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase) => "image/png",
+            _ when fileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase) => "image/gif",
+            _ when fileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) => "image/webp",
+            _ => null
+        };
+        
+        if (contentType != null)
+            ctx.Context.Response.ContentType = contentType;
     }
 });
 
 app.UseCors("FarmEasePolicy");
 app.UseRateLimiter();
 app.UseResponseCompression();
+app.UseOutputCache();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// --- 10. HEALTH CHECK ENDPOINTS ---
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = HealthCheckResponseWriter.WriteHealthCheckResponse
+});
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false // No checks, just confirms app is running
+});
+
+// Health check UI dashboard
+app.MapHealthChecksUI(options => options.UIPath = "/health-ui");
+
 app.MapControllers();
 
 app.Run();
