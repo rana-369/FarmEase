@@ -11,16 +11,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FEServices.Service
 {
-    public class MachineService : IMachineService
+    public class MachineService(IUnitOfWork unitOfWork, IMapper mapper) : IMachineService
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
-
-        public MachineService(IUnitOfWork unitOfWork, IMapper mapper)
-        {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
-        }
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<IEnumerable<Machine>> GetAllMachinesAsync()
         {
@@ -146,7 +140,7 @@ namespace FEServices.Service
         {
             var machines = await _unitOfWork.Machines.GetVerifiedAsync();
             var ownerIds = machines.Select(m => m.OwnerId).Where(id => !string.IsNullOrEmpty(id)).Distinct().ToList();
-            var users = ownerIds.Count > 0
+            List<ApplicationUser> users = ownerIds.Count > 0
                 ? await _unitOfWork.Users.Query().Where(u => ownerIds.Contains(u.Id)).ToListAsync()
                 : [];
 
@@ -171,9 +165,6 @@ namespace FEServices.Service
         {
             var owners = await _unitOfWork.Users.GetOwnersAsync();
             var cities = owners.Select(u => u.Location).Where(l => !string.IsNullOrEmpty(l)).Cast<string>().Distinct().ToList();
-
-            if (cities.Count == 0)
-                cities = ["Mohali", "Chandigarh", "Panchkula", "Ludhiana"];
 
             return cities;
         }
@@ -201,10 +192,8 @@ namespace FEServices.Service
                     var uniqueFileName = $"{Guid.NewGuid()}{extension}";
                     var exactFilePath = Path.Combine(folderPath, uniqueFileName);
 
-                    using (var stream = new FileStream(exactFilePath, FileMode.Create))
-                    {
-                        await image.CopyToAsync(stream);
-                    }
+                    using var stream = new FileStream(exactFilePath, FileMode.Create);
+                    await image.CopyToAsync(stream);
                     imageUrl = $"/uploads/equipment/{uniqueFileName}";
                     Console.WriteLine($"Image saved: {imageUrl}");
                 }
@@ -225,9 +214,8 @@ namespace FEServices.Service
                 Console.WriteLine($"Creating machine: {newMachine.Name}, {newMachine.Type}, {newMachine.Rate}");
                 
                 await _unitOfWork.Machines.AddAsync(newMachine);
-                var saveResult = await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
                 
-                Console.WriteLine($"SaveChanges result: {saveResult}");
                 Console.WriteLine($"Machine Id after save: {newMachine.Id}");
                 Console.WriteLine($"==========================================\n");
 

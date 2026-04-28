@@ -10,14 +10,9 @@ namespace FarmEase.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [EnableRateLimiting("ApiPolicy")]
-    public class AuthController : ControllerBase
+    public class AuthController(IAuthService authService) : ControllerBase
     {
-        private readonly IAuthService _authService;
-
-        public AuthController(IAuthService authService)
-        {
-            _authService = authService;
-        }
+        private readonly IAuthService _authService = authService;
 
         [HttpPost("register")]
         [EnableRateLimiting("AuthPolicy")]
@@ -57,7 +52,7 @@ namespace FarmEase.Controllers
         [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
         {
-            var (success, message) = await _authService.ForgotPasswordAsync(model);
+            var (_, message) = await _authService.ForgotPasswordAsync(model);
             return Ok(new { Message = message });
         }
 

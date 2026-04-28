@@ -9,14 +9,9 @@ namespace FarmEase.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PublicController : ControllerBase
+    public class PublicController(IUnitOfWork unitOfWork) : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
-
-        public PublicController(IUnitOfWork unitOfWork)
-        {
-            _unitOfWork = unitOfWork;
-        }
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         [HttpGet("stats")]
         [AllowAnonymous]

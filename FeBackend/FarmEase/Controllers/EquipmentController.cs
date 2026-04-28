@@ -7,14 +7,9 @@ namespace FarmEase.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class EquipmentController : ControllerBase
+    public class EquipmentController(IMachineService machineService) : ControllerBase
     {
-        private readonly IMachineService _machineService;
-
-        public EquipmentController(IMachineService machineService)
-        {
-            _machineService = machineService;
-        }
+        private readonly IMachineService _machineService = machineService;
 
         [HttpGet("cities")]
         [AllowAnonymous]

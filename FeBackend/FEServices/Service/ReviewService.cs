@@ -9,16 +9,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FEServices.Service
 {
-    public class ReviewService : IReviewService
+    public class ReviewService(IUnitOfWork unitOfWork, IMapper mapper) : IReviewService
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
-
-        public ReviewService(IUnitOfWork unitOfWork, IMapper mapper)
-        {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
-        }
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<(bool Success, string Message, ReviewResponseDto? Review)> CreateReviewAsync(CreateReviewDto request, string farmerId, string farmerName)
         {
@@ -92,7 +86,7 @@ namespace FEServices.Service
 
                 var machine = await _unitOfWork.Machines.GetByIdAsync(machineId);
 
-                if (!reviews.Any())
+                if (reviews.Count == 0)
                 {
                     return new MachineRatingSummaryDto
                     {

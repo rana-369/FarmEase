@@ -8,14 +8,9 @@ namespace FarmEase.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BookingsController : ControllerBase
+    public class BookingsController(IBookingService bookingService) : ControllerBase
     {
-        private readonly IBookingService _bookingService;
-
-        public BookingsController(IBookingService bookingService)
-        {
-            _bookingService = bookingService;
-        }
+        private readonly IBookingService _bookingService = bookingService;
 
         [HttpPost]
         [Authorize(Roles = "Farmer,farmer")]

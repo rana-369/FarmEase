@@ -8,14 +8,9 @@ namespace FarmEase.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ReviewsController : ControllerBase
+    public class ReviewsController(IReviewService reviewService) : ControllerBase
     {
-        private readonly IReviewService _reviewService;
-
-        public ReviewsController(IReviewService reviewService)
-        {
-            _reviewService = reviewService;
-        }
+        private readonly IReviewService _reviewService = reviewService;
 
         [HttpPost]
         [Authorize(Roles = "Farmer,farmer")]

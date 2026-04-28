@@ -12,30 +12,22 @@ namespace FarmEase.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class PaymentsController : ControllerBase
+    public class PaymentsController(
+        IPaymentService paymentService,
+        IBookingService bookingService,
+        IConfiguration configuration,
+        ILogger<PaymentsController> logger) : ControllerBase
     {
-        private readonly IPaymentService _paymentService;
-        private readonly IBookingService _bookingService;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<PaymentsController> _logger;
+        private readonly IPaymentService _paymentService = paymentService;
+        private readonly IBookingService _bookingService = bookingService;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly ILogger<PaymentsController> _logger = logger;
 
         // Cached JsonSerializerOptions for reuse
         private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true
         };
-
-        public PaymentsController(
-            IPaymentService paymentService,
-            IBookingService bookingService,
-            IConfiguration configuration,
-            ILogger<PaymentsController> logger)
-        {
-            _paymentService = paymentService;
-            _bookingService = bookingService;
-            _configuration = configuration;
-            _logger = logger;
-        }
 
         [HttpPost("create-order")]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto model)

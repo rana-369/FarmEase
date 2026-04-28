@@ -16,12 +16,15 @@ const OwnerAnalytics = () => {
     fetchAnalytics();
   }, [period]);
 
+  const [error, setError] = useState(null);
+
   const fetchAnalytics = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [analyticsData, performance] = await Promise.all([
-        getOwnerAnalytics(period).catch(() => null),
-        getOwnerEquipmentPerformance().catch(() => null)
+        getOwnerAnalytics(period),
+        getOwnerEquipmentPerformance()
       ]);
 
       if (analyticsData) {
@@ -60,82 +63,34 @@ const OwnerAnalytics = () => {
         })));
       }
     } catch (error) {
-      // Silently handle - mock data will be generated
+      console.error('Failed to fetch owner analytics:', error);
+      setError('Failed to load analytics data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Generate mock data if no backend data
-  useEffect(() => {
-    if (!loading && earningsData.length === 0) {
-      // Generate sample data for demonstration
-      const mockEarnings = [
-        { name: 'Jan', revenue: 45000, bookings: 12 },
-        { name: 'Feb', revenue: 52000, bookings: 15 },
-        { name: 'Mar', revenue: 68000, bookings: 18 },
-        { name: 'Apr', revenue: 75000, bookings: 22 },
-        { name: 'May', revenue: 82000, bookings: 25 },
-        { name: 'Jun', revenue: 95000, bookings: 28 }
-      ];
-      setEarningsData(mockEarnings);
-
-      const mockEquipment = [
-        { name: 'Tractor', value: 45, revenue: 125000, color: '#10b981' },
-        { name: 'Harvester', value: 28, revenue: 85000, color: '#3b82f6' },
-        { name: 'Cultivator', value: 18, revenue: 45000, color: '#8b5cf6' },
-        { name: 'Sprayer', value: 12, revenue: 28000, color: '#f59e0b' }
-      ];
-      setEquipmentPerformance(mockEquipment);
-
-      const mockCategories = [
-        { name: 'Active', value: 65, color: '#10b981' },
-        { name: 'Pending', value: 20, color: '#f59e0b' },
-        { name: 'Completed', value: 15, color: '#3b82f6' }
-      ];
-      setCategoryData(mockCategories);
-    }
-  }, [loading, earningsData.length]);
-
-  const insights = analytics?.insights || [
-    { 
-      title: 'Revenue Growth', 
-      value: '+18%', 
-      trend: 'up', 
-      description: 'vs last month',
-      icon: FiTrendingUp,
-      color: '#10b981'
-    },
-    { 
-      title: 'Avg. Booking Value', 
-      value: '₹3,250', 
-      trend: 'up', 
-      description: 'per rental',
-      icon: FiDollarSign,
-      color: '#3b82f6'
-    },
-    { 
-      title: 'Utilization Rate', 
-      value: '78%', 
-      trend: 'up', 
-      description: 'equipment usage',
-      icon: FiTruck,
-      color: '#8b5cf6'
-    },
-    { 
-      title: 'Peak Season', 
-      value: 'Mar-May', 
-      trend: 'neutral', 
-      description: 'highest demand',
-      icon: FiCalendar,
-      color: '#f59e0b'
-    }
-  ];
+  const insights = analytics?.insights || [];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-10 h-10 border-2 rounded-xl animate-spin" style={{ borderColor: 'var(--border-primary)', borderTopColor: '#10b981' }} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <p style={{ color: 'var(--text-muted)' }}>{error}</p>
+        <button 
+          onClick={fetchAnalytics}
+          className="px-4 py-2 rounded-xl text-sm font-medium"
+          style={{ backgroundColor: '#10b981', color: 'white' }}
+        >
+          Retry
+        </button>
       </div>
     );
   }

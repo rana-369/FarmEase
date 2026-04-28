@@ -27,8 +27,8 @@ namespace FECommon.Patterns
     public abstract class Specification<T> : ISpecification<T>
     {
         public Expression<Func<T, bool>> Criteria { get; protected set; } = _ => true;
-        public List<Expression<Func<T, object>>> Includes { get; } = [];
-        public List<string> IncludeStrings { get; } = [];
+        public List<Expression<Func<T, object>>> Includes { get; } = new List<Expression<Func<T, object>>>();
+        public List<string> IncludeStrings { get; } = new List<string>();
         public Expression<Func<T, object>>? OrderBy { get; protected set; }
         public Expression<Func<T, object>>? OrderByDescending { get; protected set; }
         public Expression<Func<T, object>>? ThenBy { get; protected set; }

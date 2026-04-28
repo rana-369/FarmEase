@@ -8,16 +8,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FEServices.Service
 {
-    public class TestimonialService : ITestimonialService
+    public class TestimonialService(IUnitOfWork unitOfWork, IMapper mapper) : ITestimonialService
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
-
-        public TestimonialService(IUnitOfWork unitOfWork, IMapper mapper)
-        {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
-        }
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly IMapper _mapper = mapper;
 
         // Public endpoint - only approved AND active testimonials
         public async Task<IEnumerable<TestimonialDto>> GetActiveTestimonialsAsync()

@@ -25,14 +25,17 @@ const AdminAnalytics = () => {
     fetchAnalytics();
   }, [period]);
 
+  const [error, setError] = useState(null);
+
   const fetchAnalytics = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [analyticsData, userGrowthData, bookingData, categoryData] = await Promise.all([
-        getAdminAnalytics(period).catch(() => null),
-        getAdminUserGrowth().catch(() => null),
-        getAdminBookingTrends().catch(() => null),
-        getAdminCategoryDistribution().catch(() => null)
+        getAdminAnalytics(period),
+        getAdminUserGrowth(),
+        getAdminBookingTrends(),
+        getAdminCategoryDistribution()
       ]);
 
       if (analyticsData) {
@@ -98,100 +101,34 @@ const AdminAnalytics = () => {
         })));
       }
     } catch (error) {
-      // Silently handle - mock data will be generated
+      console.error('Failed to fetch admin analytics:', error);
+      setError('Failed to load analytics data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Generate mock data if no backend data
-  useEffect(() => {
-    if (!loading && revenueData.length === 0) {
-      // Generate sample data for demonstration
-      const mockRevenue = [
-        { name: 'Jan', revenue: 125000, bookings: 45 },
-        { name: 'Feb', revenue: 158000, bookings: 52 },
-        { name: 'Mar', revenue: 195000, bookings: 68 },
-        { name: 'Apr', revenue: 242000, bookings: 85 },
-        { name: 'May', revenue: 285000, bookings: 98 },
-        { name: 'Jun', revenue: 320000, bookings: 112 }
-      ];
-      setRevenueData(mockRevenue);
-
-      const mockUserGrowth = [
-        { name: 'Jan', farmers: 120, owners: 45, total: 165 },
-        { name: 'Feb', farmers: 145, owners: 58, total: 203 },
-        { name: 'Mar', farmers: 178, owners: 72, total: 250 },
-        { name: 'Apr', farmers: 215, owners: 89, total: 304 },
-        { name: 'May', farmers: 265, owners: 108, total: 373 },
-        { name: 'Jun', farmers: 320, owners: 130, total: 450 }
-      ];
-      setUserGrowth(mockUserGrowth);
-
-      const mockBookings = [
-        { name: 'Jan', value: 45, color: '#10b981' },
-        { name: 'Feb', value: 52, color: '#10b981' },
-        { name: 'Mar', value: 68, color: '#3b82f6' },
-        { name: 'Apr', value: 85, color: '#3b82f6' },
-        { name: 'May', value: 98, color: '#8b5cf6' },
-        { name: 'Jun', value: 112, color: '#8b5cf6' }
-      ];
-      setBookingTrends(mockBookings);
-
-      const mockCategories = [
-        { name: 'Tractors', value: 35, color: '#10b981' },
-        { name: 'Harvesters', value: 25, color: '#3b82f6' },
-        { name: 'Cultivators', value: 20, color: '#8b5cf6' },
-        { name: 'Sprayers', value: 12, color: '#f59e0b' },
-        { name: 'Others', value: 8, color: '#06b6d4' }
-      ];
-      setCategoryDistribution(mockCategories);
-    }
-  }, [loading, revenueData.length]);
-
-  const insights = analytics?.insights || [
-    { 
-      title: 'Total Users', 
-      value: '450', 
-      change: '+18%', 
-      trend: 'up',
-      icon: FiUsers,
-      color: '#3b82f6',
-      description: 'active platform users'
-    },
-    { 
-      title: 'Total Equipment', 
-      value: '280', 
-      change: '+12%', 
-      trend: 'up',
-      icon: FiTruck,
-      color: '#10b981',
-      description: 'registered machines'
-    },
-    { 
-      title: 'Platform Revenue', 
-      value: '₹3.2L', 
-      change: '+25%', 
-      trend: 'up',
-      icon: FiDollarSign,
-      color: '#f59e0b',
-      description: 'this month'
-    },
-    { 
-      title: 'Booking Rate', 
-      value: '78%', 
-      change: '+5%', 
-      trend: 'up',
-      icon: FiActivity,
-      color: '#8b5cf6',
-      description: 'utilization rate'
-    }
-  ];
+  const insights = analytics?.insights || [];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-10 h-10 border-2 rounded-xl animate-spin" style={{ borderColor: 'var(--border-primary)', borderTopColor: '#f43f5e' }} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <p style={{ color: 'var(--text-muted)' }}>{error}</p>
+        <button 
+          onClick={fetchAnalytics}
+          className="px-4 py-2 rounded-xl text-sm font-medium"
+          style={{ backgroundColor: '#f43f5e', color: 'white' }}
+        >
+          Retry
+        </button>
       </div>
     );
   }

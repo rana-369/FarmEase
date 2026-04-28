@@ -9,7 +9,7 @@ namespace FECommon.Security
     public static class InputSanitizer
     {
         // SQL injection patterns (common attack vectors)
-        private static readonly string[] SqlPatterns = 
+        private static readonly string[] SqlPatterns =
         [
             @"(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE)\b)",
             @"(\b(UNION|JOIN|INNER|OUTER|LEFT|RIGHT)\b)",
@@ -21,7 +21,7 @@ namespace FECommon.Security
         ];
 
         // XSS patterns
-        private static readonly string[] XssPatterns = 
+        private static readonly string[] XssPatterns =
         [
             @"<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>",
             @"javascript\s*:",
@@ -49,7 +49,7 @@ namespace FECommon.Security
             
             // Limit length to prevent DoS
             if (sanitized.Length > 100)
-                sanitized = sanitized.Substring(0, 100);
+                sanitized = sanitized[..100];
 
             return sanitized;
         }
@@ -163,8 +163,8 @@ namespace FECommon.Security
         /// </summary>
         public static string GenerateSecureToken(int length = 32)
         {
-            var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            var random = new Random();
+            const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = Random.Shared;
             var result = new StringBuilder(length);
             
             for (int i = 0; i < length; i++)

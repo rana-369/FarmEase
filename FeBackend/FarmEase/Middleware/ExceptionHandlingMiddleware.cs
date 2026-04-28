@@ -51,7 +51,7 @@ namespace FarmEase.Middleware
                     errorResponse.ErrorCode = appEx.ErrorCode;
                     errorResponse.Message = appEx.Message;
                     
-                    if (appEx is ValidationException valEx && valEx.ValidationErrors.Any())
+                    if (appEx is ValidationException valEx && valEx.ValidationErrors is { Count: > 0 })
                     {
                         errorResponse.Details = valEx.ValidationErrors
                             .SelectMany(kvp => kvp.Value.Select(v => $"{kvp.Key}: {v}"))
@@ -83,10 +83,10 @@ namespace FarmEase.Middleware
                     // Include stack trace only in development
                     if (_environment.IsDevelopment())
                     {
-                        errorResponse.Details = new List<string> 
-                        { 
-                            exception.StackTrace ?? "No stack trace available" 
-                        };
+                        errorResponse.Details =
+                        [
+                            exception.StackTrace ?? "No stack trace available"
+                        ];
                     }
 
                     _logger.LogError(exception, "Unhandled exception occurred");

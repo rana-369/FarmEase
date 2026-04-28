@@ -8,16 +8,10 @@ namespace FarmEase.Controllers
     [Route("api/owner")]
     [ApiController]
     [Authorize(Roles = "owner,Owner")]
-    public class OwnerController : ControllerBase
+    public class OwnerController(IBookingService bookingService, IMachineService machineService) : ControllerBase
     {
-        private readonly IBookingService _bookingService;
-        private readonly IMachineService _machineService;
-
-        public OwnerController(IBookingService bookingService, IMachineService machineService)
-        {
-            _bookingService = bookingService;
-            _machineService = machineService;
-        }
+        private readonly IBookingService _bookingService = bookingService;
+        private readonly IMachineService _machineService = machineService;
 
         [HttpGet("analytics")]
         public async Task<IActionResult> GetAnalytics([FromQuery] string period = "month")

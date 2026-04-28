@@ -9,14 +9,9 @@ namespace FarmEase.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "admin,Admin")]
-    public class UsersController : ControllerBase
+    public class UsersController(IUserService userService) : ControllerBase
     {
-        private readonly IUserService _userService;
-
-        public UsersController(IUserService userService)
-        {
-            _userService = userService;
-        }
+        private readonly IUserService _userService = userService;
 
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()

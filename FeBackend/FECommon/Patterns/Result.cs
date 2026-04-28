@@ -9,23 +9,30 @@ namespace FECommon.Patterns
         public bool IsSuccess { get; }
         public bool IsFailure => !IsSuccess;
         public T? Data { get; }
+        public string? Message { get; }
         public string? Error { get; }
         public string? ErrorCode { get; }
-        public List<string> ValidationErrors { get; } = [];
+        public List<string> ValidationErrors { get; } = new List<string>();
 
-        private Result(bool isSuccess, T? data, string? error, string? errorCode, List<string>? validationErrors = null)
+        private Result(bool isSuccess, T? data, string? message, string? errorCode, List<string>? validationErrors = null)
         {
             IsSuccess = isSuccess;
             Data = data;
-            Error = error;
+            Message = message;
+            Error = isSuccess ? null : message;
             ErrorCode = errorCode;
-            ValidationErrors = validationErrors ?? [];
+            ValidationErrors = validationErrors ?? new List<string>();
         }
 
         /// <summary>
         /// Creates a successful result with data
         /// </summary>
         public static Result<T> Success(T data) => new(true, data, null, null);
+
+        /// <summary>
+        /// Creates a successful result with data and message
+        /// </summary>
+        public static Result<T> Success(T data, string message) => new(true, data, message, null);
 
         /// <summary>
         /// Creates a successful result without data

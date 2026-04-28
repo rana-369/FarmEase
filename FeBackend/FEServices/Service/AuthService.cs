@@ -16,20 +16,16 @@ using OtpNet;
 
 namespace FEServices.Service
 {
-    public class AuthService : IAuthService
+    public class AuthService(
+        UserManager<ApplicationUser> userManager,
+        IConfiguration configuration,
+        IEmailService emailService,
+        ILogger<AuthService> logger) : IAuthService
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IConfiguration _configuration;
-        private readonly IEmailService _emailService;
-        private readonly ILogger<AuthService> _logger;
-
-        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration, IEmailService emailService, ILogger<AuthService> logger)
-        {
-            _userManager = userManager;
-            _configuration = configuration;
-            _emailService = emailService;
-            _logger = logger;
-        }
+        private readonly UserManager<ApplicationUser> _userManager = userManager;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly IEmailService _emailService = emailService;
+        private readonly ILogger<AuthService> _logger = logger;
 
         public async Task<(bool Success, string Message, string? Token, string? Role, string? UserId)> RegisterAsync(RegisterDto model)
         {
@@ -361,11 +357,11 @@ namespace FEServices.Service
 
             var authClaims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, safeUserName),
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Role, role),
-                new Claim("FullName", user.FullName ?? "User")
+                new(ClaimTypes.Name, safeUserName),
+                new(ClaimTypes.NameIdentifier, user.Id),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new(ClaimTypes.Role, role),
+                new("FullName", user.FullName ?? "User")
             };
 
             string jwtSecret = _configuration["JWT:Secret"]
@@ -392,10 +388,8 @@ namespace FEServices.Service
             {
                 // Use cryptographically secure RNG for backup codes
                 var bytes = new byte[9];
-                using (var rng = RandomNumberGenerator.Create())
-                {
-                    rng.GetBytes(bytes);
-                }
+                using var rng = RandomNumberGenerator.Create();
+                rng.GetBytes(bytes);
                 var base64 = Convert.ToBase64String(bytes)
                     .Replace("+", "")
                     .Replace("/", "")

@@ -16,22 +16,18 @@ using PaymentEntity = FEDomain.Payment;
 
 namespace FEServices.Service
 {
-    public class PaymentService : IPaymentService
+    public class PaymentService(
+        IUnitOfWork unitOfWork,
+        IConfiguration configuration,
+        ILogger<PaymentService> logger,
+        UserManager<ApplicationUser> userManager,
+        IMapper mapper) : IPaymentService
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<PaymentService> _logger;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IMapper _mapper;
-
-        public PaymentService(IUnitOfWork unitOfWork, IConfiguration configuration, ILogger<PaymentService> logger, UserManager<ApplicationUser> userManager, IMapper mapper)
-        {
-            _unitOfWork = unitOfWork;
-            _configuration = configuration;
-            _logger = logger;
-            _userManager = userManager;
-            _mapper = mapper;
-        }
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly ILogger<PaymentService> _logger = logger;
+        private readonly UserManager<ApplicationUser> _userManager = userManager;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<(bool Success, string Message, object? OrderData)> CreateOrderAsync(int bookingId)
         {
@@ -78,35 +74,33 @@ namespace FEServices.Service
                 // Create order with transfers for automatic split (Razorpay Route API)
                 var options = new Dictionary<string, object>
                 {
-                    { "amount", amountInPaise },
-                    { "currency", "INR" },
-                    { "receipt", $"rcpt_{booking.Id}" },
-                    { "payment_capture", 1 }, // Auto-capture payment
-                    { "notes", new Dictionary<string, string>
-                        {
-                            { "booking_id", booking.Id.ToString() },
-                            { "owner_id", booking.OwnerId ?? "" },
-                            { "farmer_id", booking.FarmerId ?? "" },
-                            { "equipment_name", booking.MachineName ?? "" }
-                        }
+                    ["amount"] = amountInPaise,
+                    ["currency"] = "INR",
+                    ["receipt"] = $"rcpt_{booking.Id}",
+                    ["payment_capture"] = 1, // Auto-capture payment
+                    ["notes"] = new Dictionary<string, string>
+                    {
+                        ["booking_id"] = booking.Id.ToString(),
+                        ["owner_id"] = booking.OwnerId ?? "",
+                        ["farmer_id"] = booking.FarmerId ?? "",
+                        ["equipment_name"] = booking.MachineName ?? ""
                     }
                 };
 
                 // Add transfers for Route API - automatic split to owner's account
                 var transfers = new List<Dictionary<string, object>>
                 {
-                    new Dictionary<string, object>
+                    new()
                     {
-                        { "account", owner.RazorpayAccountId }, // Owner's linked Razorpay account
-                        { "amount", ownerAmountInPaise },
-                        { "currency", "INR" },
-                        { "notes", new Dictionary<string, string>
-                            {
-                                { "booking_id", booking.Id.ToString() },
-                                { "transfer_type", "owner_payout" }
-                            }
+                        ["account"] = owner.RazorpayAccountId, // Owner's linked Razorpay account
+                        ["amount"] = ownerAmountInPaise,
+                        ["currency"] = "INR",
+                        ["notes"] = new Dictionary<string, string>
+                        {
+                            ["booking_id"] = booking.Id.ToString(),
+                            ["transfer_type"] = "owner_payout"
                         },
-                        { "on_hold", 0 } // Release immediately
+                        ["on_hold"] = 0 // Release immediately
                     }
                 };
 
@@ -225,7 +219,7 @@ namespace FEServices.Service
             await _unitOfWork.Notifications.AddAsync(ownerNotification);
             await _unitOfWork.Notifications.AddAsync(farmerNotification);
             await _unitOfWork.Notifications.AddAsync(adminNotification);
-            var saveResult = await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation("Payment verified successfully for BookingId: {BookingId}", booking.Id);
 
@@ -291,8 +285,8 @@ namespace FEServices.Service
                 // Create refund using Razorpay API
                 var refundOptions = new Dictionary<string, object>
                 {
-                    { "amount", (int)(payment.Amount * 100) }, // Convert to paise
-                    { "notes", new Dictionary<string, string> { ["reason"] = reason ?? "Booking cancelled" } }
+                    ["amount"] = (int)(payment.Amount * 100), // Convert to paise
+                    ["notes"] = new Dictionary<string, string> { ["reason"] = reason ?? "Booking cancelled" }
                 };
 
                 var refund = client.Payment.Fetch(payment.RazorpayPaymentId).Refund(refundOptions);
@@ -394,11 +388,9 @@ namespace FEServices.Service
         {
             string payload = orderId + "|" + paymentId;
 
-            using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret)))
-            {
-                byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-                return BitConverter.ToString(hash).Replace("-", "").ToLower();
-            }
+            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
+            byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+            return BitConverter.ToString(hash).Replace("-", "").ToLower();
         }
 
         #region Razorpay Route API - Owner Payment Settlements
@@ -607,7 +599,7 @@ namespace FEServices.Service
                 // POST /v1/transfers with the payment_id and destination account
                 // For now, we simulate a successful transfer
 
-                string transferId = $"trf_{Guid.NewGuid():N}".Substring(0, 18);
+                string transferId = $"trf_{Guid.NewGuid():N}"[..18];
                 string ownerAccountId = owner.RazorpayAccountId ?? "";
 
                 _logger.LogInformation("Transfer created: {TransferId} for Owner: {OwnerId}, Amount: {Amount}, Account: {AccountId}",

@@ -120,29 +120,18 @@ const Landing = () => {
           borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e5e7eb'
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <motion.div 
-                className="w-11 h-11 rounded-xl flex items-center justify-center"
-                style={{
-                  background: 'linear-gradient(to bottom right, #10b981, #0d9488)',
-                  boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)'
-                }}
-                animate={{ y: [0, -3, 0] }}
+            <a href="/" className="flex items-center gap-3 group">
+              <motion.img
+                src="/Logo.png"
+                alt="FarmEase"
+                className="h-12 w-12 object-contain transition-transform group-hover:scale-105"
+                animate={{ y: [0, -2, 0] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 16H2V20H4V16Z" fill="white"/>
-                  <path d="M20 16H18V20H20V16Z" fill="white"/>
-                  <rect x="3" y="8" width="18" height="8" rx="2" fill="white"/>
-                  <rect x="6" y="4" width="8" height="4" rx="1" fill="white" opacity="0.8"/>
-                  <circle cx="6" cy="18" r="2" fill="white"/>
-                  <circle cx="18" cy="18" r="2" fill="white"/>
-                </svg>
-              </motion.div>
-              <span className={`text-xl font-bold transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>FarmEase</span>
-            </div>
+              />
+              <span className={`text-xl font-bold tracking-tight transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>FarmEase</span>
+            </a>
             
             <div className="flex items-center gap-3">
               {/* Theme Toggle - Modern Switch */}
@@ -339,21 +328,21 @@ const Landing = () => {
       </nav>
 
       {/* Hero Section with Background Image */}
-      <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
-          <img 
+          <img
             src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&h=1080&fit=crop"
             alt="Farm landscape"
             className="w-full h-full object-cover"
           />
-          <div 
+          <div
             className="absolute inset-0"
             style={{ backgroundColor: isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.4)' }}
           />
         </div>
 
-        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center py-20">
+        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center py-28 pt-24">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -403,17 +392,17 @@ const Landing = () => {
             className="grid grid-cols-3 gap-6 sm:gap-8 max-w-3xl mx-auto mt-16"
           >
             {[
-              { value: stats.totalUsers || '500+', label: 'Active Farmers', icon: FiUsers },
-              { value: stats.totalMachines || '200+', label: 'Equipment', icon: FiTruck },
-              { value: stats.totalBookings || '1000+', label: 'Rentals', icon: FiTrendingUp }
+              { value: '4.8★', label: 'Rating', icon: FiStar, color: '#fbbf24' },
+              { value: '10+', label: 'Users', icon: FiUsers, color: '#34d399' },
+              { value: '98%', label: 'Success Rate', icon: FiAward, color: '#3b82f6' }
             ].map((stat, i) => (
               <div
                 key={i}
-                className="text-center"
+                className="text-center text-white"
               >
-                <stat.icon style={{ color: '#34d399' }} className="mx-auto mb-2" size={24} />
-                <div className="text-xl md:text-2xl font-bold text-white mb-1">{stat.value}</div>
-                <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{stat.label}</div>
+                <stat.icon style={{ color: stat.color }} className="mx-auto mb-2" size={24} />
+                <div className="text-xl md:text-2xl font-bold mb-1">{stat.value}</div>
+                <div className="text-xs text-white/80">{stat.label}</div>
               </div>
             ))}
           </motion.div>

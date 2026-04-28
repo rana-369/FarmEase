@@ -12,24 +12,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FEServices.Service
 {
-    public class UserService : IUserService
+    public class UserService(
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager,
+        IUnitOfWork unitOfWork,
+        IMapper mapper) : IUserService
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
-
-        public UserService(
-            UserManager<ApplicationUser> userManager, 
-            RoleManager<IdentityRole> roleManager, 
-            IUnitOfWork unitOfWork,
-            IMapper mapper)
-        {
-            _userManager = userManager;
-            _roleManager = roleManager;
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
-        }
+        private readonly UserManager<ApplicationUser> _userManager = userManager;
+        private readonly RoleManager<IdentityRole> _roleManager = roleManager;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<IEnumerable<UserProfileDto>> GetAllUsersAsync()
         {
@@ -228,7 +220,7 @@ namespace FEServices.Service
             if (file == null || file.Length == 0)
                 return (false, "No file was uploaded.", null);
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            string[] allowedExtensions = [".jpg", ".jpeg", ".png", ".gif"];
             var extension = Path.GetExtension(file.FileName);
             if (!allowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
                 return (false, "Only JPG, PNG, and GIF files are allowed.", null);
@@ -240,10 +232,8 @@ namespace FEServices.Service
             var uniqueFileName = $"{Guid.NewGuid()}{extension}";
             var exactFilePath = Path.Combine(folderPath, uniqueFileName);
 
-            using (var stream = new FileStream(exactFilePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
+            using var stream = new FileStream(exactFilePath, FileMode.Create);
+            await file.CopyToAsync(stream);
 
             var fileUrl = $"/uploads/profiles/{uniqueFileName}";
             user.ProfileImageUrl = fileUrl;

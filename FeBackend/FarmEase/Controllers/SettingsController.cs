@@ -9,14 +9,9 @@ namespace FarmEase.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "admin,Admin")] // Strict Admin security - matches AgriConnect.Api
-    public class SettingsController : ControllerBase
+    public class SettingsController(IUnitOfWork unitOfWork) : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
-
-        public SettingsController(IUnitOfWork unitOfWork)
-        {
-            _unitOfWork = unitOfWork;
-        }
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         // GET: api/settings/by-category/{category}
         [HttpGet("by-category/{category}")]

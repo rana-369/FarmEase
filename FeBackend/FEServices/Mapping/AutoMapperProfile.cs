@@ -30,13 +30,6 @@ namespace FEServices.Mapping
 
             // UserProfileUpdateDto -> ApplicationUser (for updates)
             CreateMap<UserProfileUpdateDto, ApplicationUser>()
-                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
-                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email))
-                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
-                .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Location))
-                .ForMember(dest => dest.FarmSize, opt => opt.MapFrom(src => src.FarmSize))
-                .ForMember(dest => dest.CompanyName, opt => opt.MapFrom(src => src.CompanyName))
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Role, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -78,8 +71,7 @@ namespace FEServices.Mapping
                 .ForMember(dest => dest.IsRefunded, opt => opt.Ignore());
 
             // Booking -> BookingResponseDto
-            CreateMap<Booking, BookingResponseDto>()
-                .ForMember(dest => dest.OwnerId, opt => opt.MapFrom(src => src.OwnerId ?? string.Empty));
+            CreateMap<Booking, BookingResponseDto>();
 
             // ==================== PAYMENT MAPPINGS ====================
             

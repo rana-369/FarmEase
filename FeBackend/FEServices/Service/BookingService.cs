@@ -10,6 +10,11 @@ using FECommon.Enums;
 using FECommon.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace FEServices.Service
 {
@@ -18,19 +23,23 @@ namespace FEServices.Service
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPaymentService _paymentService;
         private readonly IConfiguration _configuration;
-        private readonly decimal _commissionRate;
         private readonly IMapper _mapper;
+        private readonly decimal _commissionRate;
 
-        public BookingService(IUnitOfWork unitOfWork, IPaymentService paymentService, IConfiguration configuration, IMapper mapper)
+        public BookingService(
+            IUnitOfWork unitOfWork,
+            IPaymentService paymentService,
+            IConfiguration configuration,
+            IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _paymentService = paymentService;
             _configuration = configuration;
             _mapper = mapper;
-            
+
             // Get commission rate from config, default to 0.10 (10%)
-            var commissionStr = configuration["PlatformSettings:CommissionRate"];
-            _commissionRate = !string.IsNullOrEmpty(commissionStr) && decimal.TryParse(commissionStr, out var rate) ? rate : 0.10m;
+            _commissionRate =
+                decimal.TryParse(configuration["PlatformSettings:CommissionRate"], out var rate) ? rate : 0.10m;
         }
 
         public async Task<IEnumerable<BookingSummaryDto>> GetAllBookingsAsync()
@@ -44,9 +53,9 @@ namespace FEServices.Service
                     .ToListAsync();
 
                 var bookingIds = bookings.Select(b => b.Id).ToList();
-                var payments = bookingIds.Count > 0
+                List<Payment> payments = bookingIds.Count > 0
                     ? await _unitOfWork.Payments.Query().AsNoTracking().Where(p => bookingIds.Contains(p.BookingId)).ToListAsync()
-                    : [];
+                    : new List<Payment>();
 
                 return bookings.Select(b => {
                     var payment = payments.FirstOrDefault(p => p.BookingId == b.Id);
@@ -82,10 +91,10 @@ namespace FEServices.Service
             {
                 // Validate and sanitize pagination parameters
                 var (_, validPage, validLimit) = InputSanitizer.ValidatePagination(page, limit);
-                
+
                 // Sanitize search input to prevent injection
                 var sanitizedSearch = InputSanitizer.SanitizeSearchInput(search);
-                
+
                 // Database has no FK relationships - use denormalized data directly
                 IQueryable<Booking> query = _unitOfWork.Bookings.Query()
                     .AsNoTracking();
@@ -99,7 +108,7 @@ namespace FEServices.Service
                 // Apply search filter at DB level BEFORE pagination - use denormalized fields (sanitized)
                 if (!string.IsNullOrEmpty(sanitizedSearch))
                 {
-                    query = query.Where(b => 
+                    query = query.Where(b =>
                         (b.MachineName != null && b.MachineName.Contains(sanitizedSearch)) ||
                         (b.FarmerName != null && b.FarmerName.Contains(sanitizedSearch)) ||
                         (b.OwnerId != null && b.OwnerId.Contains(sanitizedSearch)));
@@ -128,7 +137,7 @@ namespace FEServices.Service
 
                 // Map data to DTO using AutoMapper, then enrich with computed properties
                 var result = _mapper.Map<List<BookingSummaryDto>>(bookings);
-                
+
                 for (int i = 0; i < bookings.Count; i++)
                 {
                     var isRefunded = refundedBookingIds.Contains(bookings[i].Id);
@@ -181,9 +190,9 @@ namespace FEServices.Service
                     .ToListAsync();
 
                 var bookingIds = bookings.Select(b => b.Id).ToList();
-                var payments = bookingIds.Count > 0
+                List<Payment> payments = bookingIds.Count > 0
                     ? await _unitOfWork.Payments.Query().AsNoTracking().Where(p => bookingIds.Contains(p.BookingId)).ToListAsync()
-                    : [];
+                    : new List<Payment>();
 
                 return bookings.Select(b => {
                     var payment = payments.FirstOrDefault(p => p.BookingId == b.Id);
@@ -216,10 +225,10 @@ namespace FEServices.Service
                     .ToListAsync();
 
                 var bookingIds = farmerBookings.Select(b => b.Id).ToList();
-                var payments = bookingIds.Count > 0
+                List<Payment> payments = bookingIds.Count > 0
                     ? await _unitOfWork.Payments.Query().AsNoTracking().Where(p => bookingIds.Contains(p.BookingId)).ToListAsync()
-                    : [];
-                
+                    : new List<Payment>();
+
                 var result = new List<BookingSummaryDto>();
                 foreach (var b in farmerBookings)
                 {
@@ -293,13 +302,13 @@ namespace FEServices.Service
                     Status = "Pending", // Explicitly set status
                     CreatedAt = DateTime.UtcNow
                 };
-                
+
                 // Ensure Status is set
                 if (string.IsNullOrEmpty(booking.Status))
                 {
                     booking.Status = "Pending";
                 }
-                
+
                 System.Diagnostics.Debug.WriteLine($"[CreateAsync] Booking Status before add: '{booking.Status}'");
 
                 await _unitOfWork.Bookings.AddAsync(booking);
@@ -437,7 +446,7 @@ namespace FEServices.Service
                     // Check if payment already refunded
                     var existingPayment = await _unitOfWork.Payments.Query()
                         .FirstOrDefaultAsync(p => p.BookingId == id);
-                    
+
                     if (existingPayment != null && existingPayment.Status == "Refunded")
                     {
                         // Payment already refunded, just update booking status
@@ -446,7 +455,7 @@ namespace FEServices.Service
                         await _unitOfWork.SaveChangesAsync();
                         return (true, "Booking cancelled. Refund was already processed.");
                     }
-                    
+
                     var (success, message, _) = await _paymentService.RefundAsync(id, "Cancelled by farmer");
                     if (!success)
                     {
@@ -455,7 +464,7 @@ namespace FEServices.Service
                         {
                             booking.Status = "Cancelled";
                             _unitOfWork.Bookings.Update(booking);
-                            
+
                             // Update payment status if needed
                             if (existingPayment != null && existingPayment.Status != "Refunded")
                             {
@@ -464,7 +473,7 @@ namespace FEServices.Service
                                 existingPayment.RefundReason = "Cancelled by farmer";
                                 _unitOfWork.Payments.Update(existingPayment);
                             }
-                            
+
                             var notification = new Notification
                             {
                                 UserId = booking.OwnerId ?? string.Empty,
@@ -476,16 +485,16 @@ namespace FEServices.Service
                             };
                             await _unitOfWork.Notifications.AddAsync(notification);
                             await _unitOfWork.SaveChangesAsync();
-                            
+
                             return (true, "Booking cancelled. Refund was already processed.");
                         }
                         return (false, $"Failed to process refund: {message}");
                     }
-                    
+
                     // Update booking status to Cancelled after successful refund
                     booking.Status = "Cancelled";
                     _unitOfWork.Bookings.Update(booking);
-                    
+
                     var notification2 = new Notification
                     {
                         UserId = booking.OwnerId ?? string.Empty,
@@ -497,7 +506,7 @@ namespace FEServices.Service
                     };
                     await _unitOfWork.Notifications.AddAsync(notification2);
                     await _unitOfWork.SaveChangesAsync();
-                    
+
                     return (true, "Booking cancelled and refund processed successfully.");
                 }
 
@@ -506,7 +515,7 @@ namespace FEServices.Service
                 {
                     var payment = await _unitOfWork.Payments.Query()
                         .FirstOrDefaultAsync(p => p.BookingId == id && p.Status == "Captured");
-                    
+
                     if (payment != null)
                     {
                         // Payment was made, process refund
@@ -518,7 +527,7 @@ namespace FEServices.Service
                             {
                                 booking.Status = "Cancelled";
                                 _unitOfWork.Bookings.Update(booking);
-                                
+
                                 // Update payment status if needed
                                 if (payment.Status != "Refunded")
                                 {
@@ -527,7 +536,7 @@ namespace FEServices.Service
                                     payment.RefundReason = "Cancelled by farmer";
                                     _unitOfWork.Payments.Update(payment);
                                 }
-                                
+
                                 var notification = new Notification
                                 {
                                     UserId = booking.OwnerId ?? string.Empty,
@@ -539,16 +548,16 @@ namespace FEServices.Service
                                 };
                                 await _unitOfWork.Notifications.AddAsync(notification);
                                 await _unitOfWork.SaveChangesAsync();
-                                
+
                                 return (true, "Booking cancelled. Refund was already processed.");
                             }
                             return (false, $"Failed to process refund: {message}");
                         }
-                        
+
                         // Update booking status to Cancelled after successful refund
                         booking.Status = "Cancelled";
                         _unitOfWork.Bookings.Update(booking);
-                        
+
                         var notification3 = new Notification
                         {
                             UserId = booking.OwnerId ?? string.Empty,
@@ -560,14 +569,14 @@ namespace FEServices.Service
                         };
                         await _unitOfWork.Notifications.AddAsync(notification3);
                         await _unitOfWork.SaveChangesAsync();
-                        
+
                         return (true, "Booking cancelled and refund processed successfully.");
                     }
-                    
+
                     // No payment, just update status
                     booking.Status = "Cancelled";
                     _unitOfWork.Bookings.Update(booking);
-                    
+
                     var notification4 = new Notification
                     {
                         UserId = booking.OwnerId ?? string.Empty,
@@ -800,24 +809,9 @@ namespace FEServices.Service
                     .ThenBy(x => x.MonthNum)
                     .ToListAsync();
 
+                // Return empty list if no data - frontend will handle empty state
                 if (rawData.Count == 0)
-                {
-                    var months = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-                    var today = DateTime.UtcNow;
-                    var dummyData = new List<MonthlyRevenueDto>();
-                    for (int i = 5; i >= 0; i--)
-                    {
-                        var targetDate = today.AddMonths(-i);
-                        dummyData.Add(new MonthlyRevenueDto
-                        {
-                            Month = months[targetDate.Month - 1],
-                            Year = targetDate.Year,
-                            Revenue = 0,
-                            BookingCount = 0
-                        });
-                    }
-                    return dummyData;
-                }
+                    return Enumerable.Empty<MonthlyRevenueDto>();
 
                 var monthNames = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
                 return rawData.Select(x => new MonthlyRevenueDto
@@ -938,7 +932,7 @@ namespace FEServices.Service
                     .ThenBy(x => x.Month)
                     .ToListAsync();
 
-                var monthNames = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+                string[] monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
                 return usersByMonth.Select(x => new UserGrowthDto
                 {
@@ -973,8 +967,8 @@ namespace FEServices.Service
                     .ThenBy(x => x.Month)
                     .ToListAsync();
 
-                var monthNames = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-                var colors = new[] { "#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4" };
+                string[] monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                string[] colors = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4"];
 
                 return bookingsByMonth.Select((x, i) => new BookingTrendDto
                 {
@@ -1004,7 +998,7 @@ namespace FEServices.Service
                     .Take(5)
                     .ToListAsync();
 
-                var colors = new[] { "#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#06b6d4" };
+                string[] colors = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#06b6d4"];
 
                 return machinesByType.Select((x, i) => new CategoryDistributionDto
                 {
@@ -1041,7 +1035,7 @@ namespace FEServices.Service
                     })
                     .ToListAsync();
 
-                var colors = new[] { "#10b981", "#3b82f6", "#8b5cf6", "#f59e0b" };
+                string[] colors = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b"];
 
                 return machines.Join(bookingStats, m => m.Id, b => b.MachineId, (m, b) => new EquipmentPerformanceDto
                 {
@@ -1075,7 +1069,7 @@ namespace FEServices.Service
                 .ThenBy(x => x.MonthNum)
                 .ToListAsync();
 
-            var monthNames = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+            string[] monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
             return rawData.Select(x => new MonthlyRevenueDto
             {
@@ -1096,10 +1090,10 @@ namespace FEServices.Service
 
             var colorMap = new Dictionary<string, string>
             {
-                { "Active", "#10b981" },
-                { "Completed", "#3b82f6" },
-                { "Pending", "#f59e0b" },
-                { "Cancelled", "#ef4444" }
+                ["Active"] = "#10b981",
+                ["Completed"] = "#3b82f6",
+                ["Pending"] = "#f59e0b",
+                ["Cancelled"] = "#ef4444"
             };
 
             return statusCounts.Select(s => new CategoryDistributionDto
@@ -1114,19 +1108,19 @@ namespace FEServices.Service
         {
             if (machineIds.Count == 0)
             {
-                return
-                [
+                return new List<InsightDto>
+                {
                     new InsightDto { Title = "Total Revenue", Value = "₹0", Change = "-", Trend = "neutral", Description = "lifetime earnings", Color = "#10b981" },
                     new InsightDto { Title = "Avg. Booking Value", Value = "₹0", Change = "-", Trend = "neutral", Description = "per rental", Color = "#3b82f6" },
                     new InsightDto { Title = "Utilization Rate", Value = "0%", Change = "-", Trend = "neutral", Description = "equipment usage", Color = "#8b5cf6" },
                     new InsightDto { Title = "Total Bookings", Value = "0", Change = "-", Trend = "neutral", Description = "all time", Color = "#f59e0b" }
-                ];
+                };
             }
 
             var now = DateTime.UtcNow;
             var thisMonthStart = new DateTime(now.Year, now.Month, 1);
             var lastMonthStart = thisMonthStart.AddMonths(-1);
-            
+
             // Single optimized query for all booking stats
             var stats = await _unitOfWork.Bookings.Query()
                 .Where(b => machineIds.Contains(b.MachineId))
@@ -1146,20 +1140,20 @@ namespace FEServices.Service
             var avgBookingValue = stats.TotalBookings > 0 ? stats.TotalRevenue / stats.TotalBookings : 0;
             var lastAvgBookingValue = stats.LastMonthBookings > 0 ? stats.LastMonthRevenue / stats.LastMonthBookings : 0;
             var utilizationRate = (stats.ActiveBookings * 100.0 / machineIds.Count);
-            
+
             // Calculate real percentage changes
-            var revenueChange = stats.LastMonthRevenue > 0 
-                ? (double)((stats.ThisMonthRevenue - stats.LastMonthRevenue) * 100m / stats.LastMonthRevenue) 
+            var revenueChange = stats.LastMonthRevenue > 0
+                ? (double)((stats.ThisMonthRevenue - stats.LastMonthRevenue) * 100m / stats.LastMonthRevenue)
                 : 0;
-            var bookingChange = stats.LastMonthBookings > 0 
-                ? ((stats.ThisMonthBookings - stats.LastMonthBookings) * 100.0 / stats.LastMonthBookings) 
+            var bookingChange = stats.LastMonthBookings > 0
+                ? ((stats.ThisMonthBookings - stats.LastMonthBookings) * 100.0 / stats.LastMonthBookings)
                 : 0;
-            var avgValueChange = lastAvgBookingValue > 0 
-                ? (double)((avgBookingValue - lastAvgBookingValue) * 100m / lastAvgBookingValue) 
+            var avgValueChange = lastAvgBookingValue > 0
+                ? (double)((avgBookingValue - lastAvgBookingValue) * 100m / lastAvgBookingValue)
                 : 0;
 
-            return
-            [
+            return new List<InsightDto>
+            {
                 new InsightDto
                 {
                     Title = "Total Revenue",
@@ -1196,14 +1190,14 @@ namespace FEServices.Service
                     Description = "all time",
                     Color = "#f59e0b"
                 }
-            ];
+            };
         }
 
         private async Task<IEnumerable<InsightDto>> GetAdminInsightsAsync()
         {
             var now = DateTime.UtcNow;
             var lastMonthStart = now.AddMonths(-1);
-            
+
             // Single optimized query for user stats
             var userStats = await _unitOfWork.Users.Query()
                 .GroupBy(_ => 1)
@@ -1216,7 +1210,7 @@ namespace FEServices.Service
                     NewUsersLastMonth = g.Count(u => u.CreatedAt < lastMonthStart && u.CreatedAt >= lastMonthStart.AddMonths(-1))
                 })
                 .FirstOrDefaultAsync() ?? new { TotalUsers = 0, TotalFarmers = 0, TotalOwners = 0, NewUsersThisMonth = 0, NewUsersLastMonth = 0 };
-            
+
             // Single optimized query for machine stats
             var machineStats = await _unitOfWork.Machines.Query()
                 .GroupBy(_ => 1)
@@ -1227,7 +1221,7 @@ namespace FEServices.Service
                     NewMachinesLastMonth = g.Count(m => m.CreatedAt < lastMonthStart && m.CreatedAt >= lastMonthStart.AddMonths(-1))
                 })
                 .FirstOrDefaultAsync() ?? new { TotalMachines = 0, NewMachinesThisMonth = 0, NewMachinesLastMonth = 0 };
-            
+
             // Single optimized query for booking stats
             var bookingStats = await _unitOfWork.Bookings.Query()
                 .GroupBy(_ => 1)
@@ -1244,28 +1238,28 @@ namespace FEServices.Service
                 .FirstOrDefaultAsync() ?? new { TotalBookings = 0, CompletedBookings = 0, PlatformRevenue = 0m, CompletedBeforeLastMonth = 0, TotalBeforeLastMonth = 0, RevenueThisMonth = 0m, RevenueLastMonth = 0m };
 
             // Calculate real percentage changes
-            var userChange = userStats.NewUsersLastMonth > 0 
-                ? (double)((userStats.NewUsersThisMonth - userStats.NewUsersLastMonth) * 100m / userStats.NewUsersLastMonth) 
+            var userChange = userStats.NewUsersLastMonth > 0
+                ? (double)((userStats.NewUsersThisMonth - userStats.NewUsersLastMonth) * 100m / userStats.NewUsersLastMonth)
                 : 0;
-            
-            var machineChange = machineStats.NewMachinesLastMonth > 0 
-                ? (double)((machineStats.NewMachinesThisMonth - machineStats.NewMachinesLastMonth) * 100m / machineStats.NewMachinesLastMonth) 
+
+            var machineChange = machineStats.NewMachinesLastMonth > 0
+                ? (double)((machineStats.NewMachinesThisMonth - machineStats.NewMachinesLastMonth) * 100m / machineStats.NewMachinesLastMonth)
                 : 0;
-            
-            var revenueChange = bookingStats.RevenueLastMonth > 0 
-                ? (double)((bookingStats.RevenueThisMonth - bookingStats.RevenueLastMonth) * 100m / bookingStats.RevenueLastMonth) 
+
+            var revenueChange = bookingStats.RevenueLastMonth > 0
+                ? (double)((bookingStats.RevenueThisMonth - bookingStats.RevenueLastMonth) * 100m / bookingStats.RevenueLastMonth)
                 : 0;
-            
-            var bookingRate = bookingStats.TotalBookings > 0 
-                ? (bookingStats.CompletedBookings * 100.0 / bookingStats.TotalBookings) 
+
+            var bookingRate = bookingStats.TotalBookings > 0
+                ? (bookingStats.CompletedBookings * 100.0 / bookingStats.TotalBookings)
                 : 0;
-            var lastBookingRate = bookingStats.TotalBeforeLastMonth > 0 
-                ? (bookingStats.CompletedBeforeLastMonth * 100.0 / bookingStats.TotalBeforeLastMonth) 
+            var lastBookingRate = bookingStats.TotalBeforeLastMonth > 0
+                ? (bookingStats.CompletedBeforeLastMonth * 100.0 / bookingStats.TotalBeforeLastMonth)
                 : 0;
             var completionChange = lastBookingRate > 0 ? (bookingRate - lastBookingRate) : 0;
 
-            return
-            [
+            return new List<InsightDto>
+            {
                 new InsightDto
                 {
                     Title = "Total Users",
@@ -1302,7 +1296,7 @@ namespace FEServices.Service
                     Description = $"{bookingStats.CompletedBookings} of {bookingStats.TotalBookings} bookings",
                     Color = "#8b5cf6"
                 }
-            ];
+            };
         }
     }
 }

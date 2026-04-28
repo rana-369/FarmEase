@@ -8,14 +8,9 @@ namespace FarmEase.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TestimonialsController : ControllerBase
+    public class TestimonialsController(ITestimonialService testimonialService) : ControllerBase
     {
-        private readonly ITestimonialService _testimonialService;
-
-        public TestimonialsController(ITestimonialService testimonialService)
-        {
-            _testimonialService = testimonialService;
-        }
+        private readonly ITestimonialService _testimonialService = testimonialService;
 
         // GET: api/testimonials - Public endpoint for landing page
         [HttpGet]

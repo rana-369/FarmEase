@@ -264,8 +264,8 @@ export const getOwnerAnalytics = async (period = 'month') => {
     const response = await api.get(`owner/analytics?period=${period}`);
     return response.data;
   } catch (error) {
-    // Silently return null - mock data will be used
-    return null;
+    console.error('Error fetching owner analytics:', error);
+    throw error;
   }
 };
 
@@ -275,7 +275,8 @@ export const getOwnerEarningsBreakdown = async () => {
     const response = await api.get('owner/analytics/equipment-performance');
     return response.data;
   } catch (error) {
-    return null;
+    console.error('Error fetching admin analytics:', error);
+    throw error;
   }
 };
 
@@ -285,7 +286,8 @@ export const getOwnerEquipmentPerformance = async () => {
     const response = await api.get('owner/analytics/equipment-performance');
     return response.data;
   } catch (error) {
-    return null;
+    console.error('Error fetching admin analytics:', error);
+    throw error;
   }
 };
 
@@ -295,7 +297,8 @@ export const getAdminAnalytics = async (period = 'month') => {
     const response = await api.get(`admin/analytics?period=${period}`);
     return response.data;
   } catch (error) {
-    return null;
+    console.error('Error fetching admin analytics:', error);
+    throw error;
   }
 };
 
@@ -305,7 +308,8 @@ export const getAdminUserGrowth = async () => {
     const response = await api.get('admin/analytics/user-growth');
     return response.data;
   } catch (error) {
-    return null;
+    console.error('Error fetching admin analytics:', error);
+    throw error;
   }
 };
 
@@ -315,7 +319,8 @@ export const getAdminBookingTrends = async () => {
     const response = await api.get('admin/analytics/booking-trends');
     return response.data;
   } catch (error) {
-    return null;
+    console.error('Error fetching admin analytics:', error);
+    throw error;
   }
 };
 
@@ -325,6 +330,7 @@ export const getAdminCategoryDistribution = async () => {
     const response = await api.get('admin/analytics/category-distribution');
     return response.data;
   } catch (error) {
-    return null;
+    console.error('Error fetching admin analytics:', error);
+    throw error;
   }
 };

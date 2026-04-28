@@ -5,14 +5,9 @@ using FEServices.Interface;
 
 namespace FEServices.Service
 {
-    public class NotificationService : INotificationService
+    public class NotificationService(IUnitOfWork unitOfWork) : INotificationService
     {
-        private readonly IUnitOfWork _unitOfWork;
-
-        public NotificationService(IUnitOfWork unitOfWork)
-        {
-            _unitOfWork = unitOfWork;
-        }
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         public async Task<IEnumerable<Notification>> GetUserNotificationsAsync(string userId)
         {

@@ -171,7 +171,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 // --- 5.1. AUTOMAPPER ---
-builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AutoMapperProfile>());
 
 // --- 5.2. MEDIATR (CQRS PATTERN) ---
 builder.Services.AddMediatR(typeof(Program));
@@ -222,7 +222,7 @@ builder.Services.AddSwaggerGen(c =>
             {
                 Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
             },
-            Array.Empty<string>()
+            []
         }
     });
 });
@@ -240,117 +240,115 @@ builder.Services.AddHealthChecksUI(settings =>
 var app = builder.Build();
 
 // --- 8. AUTO MIGRATION ---
-using (var scope = app.Services.CreateScope())
+using var scope = app.Services.CreateScope();
+var services = scope.ServiceProvider;
+try
 {
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        Console.WriteLine("[Startup] Applying database migrations...");
-        context.Database.Migrate();
-        Console.WriteLine("[Startup] Database migrations applied successfully!");
-        
-        // Ensure MachineName and FarmerName columns exist in Bookings table
-        var connection = context.Database.GetDbConnection();
-        await connection.OpenAsync();
-        using (var command = connection.CreateCommand())
-        {
-            // Add MachineName column if missing
-            command.CommandText = @"
-                IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Bookings' AND COLUMN_NAME = 'MachineName')
-                BEGIN
-                    ALTER TABLE Bookings ADD MachineName NVARCHAR(MAX) NULL;
-                    PRINT 'MachineName column added';
-                END";
-            await command.ExecuteNonQueryAsync();
-            
-            // Add FarmerName column if missing
-            command.CommandText = @"
-                IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Bookings' AND COLUMN_NAME = 'FarmerName')
-                BEGIN
-                    ALTER TABLE Bookings ADD FarmerName NVARCHAR(MAX) NULL;
-                    PRINT 'FarmerName column added';
-                END";
-            await command.ExecuteNonQueryAsync();
-            
-            // Populate MachineName from Machines table
-            command.CommandText = @"
-                UPDATE b
-                SET b.MachineName = m.Name
-                FROM Bookings b
-                INNER JOIN Machines m ON b.MachineId = m.Id
-                WHERE b.MachineName IS NULL";
-            await command.ExecuteNonQueryAsync();
-            
-            // Populate FarmerName from AspNetUsers table
-            command.CommandText = @"
-                UPDATE b
-                SET b.FarmerName = u.FullName
-                FROM Bookings b
-                INNER JOIN AspNetUsers u ON b.FarmerId = u.Id
-                WHERE b.FarmerName IS NULL";
-            await command.ExecuteNonQueryAsync();
-            
-            Console.WriteLine("[Startup] Booking columns verified/populated.");
-            
-            // Ensure Payments table exists
-            command.CommandText = @"
-                IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Payments')
-                BEGIN
-                    CREATE TABLE Payments (
-                        Id INT IDENTITY(1,1) PRIMARY KEY,
-                        BookingId INT NOT NULL,
-                        RazorpayOrderId NVARCHAR(MAX) NOT NULL,
-                        RazorpayPaymentId NVARCHAR(MAX) NOT NULL,
-                        RazorpaySignature NVARCHAR(MAX) NOT NULL,
-                        Amount DECIMAL(18,2) NOT NULL,
-                        Currency NVARCHAR(MAX) NOT NULL DEFAULT 'INR',
-                        Status NVARCHAR(MAX) NOT NULL DEFAULT 'Pending',
-                        RefundAmount DECIMAL(18,2) NULL,
-                        RefundId NVARCHAR(MAX) NULL,
-                        RefundedAt DATETIME2 NULL,
-                        RefundReason NVARCHAR(MAX) NULL,
-                        CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-                        CONSTRAINT FK_Payments_Bookings FOREIGN KEY (BookingId) REFERENCES Bookings(Id) ON DELETE CASCADE
-                    );
-                    CREATE INDEX IX_Payments_BookingId ON Payments(BookingId);
-                    PRINT 'Payments table created';
-                END";
-            await command.ExecuteNonQueryAsync();
-            Console.WriteLine("[Startup] Payments table verified/created.");
-            
-            // Ensure Reviews table exists
-            command.CommandText = @"
-                IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Reviews')
-                BEGIN
-                    CREATE TABLE Reviews (
-                        Id INT IDENTITY(1,1) PRIMARY KEY,
-                        BookingId INT NOT NULL,
-                        MachineId INT NOT NULL,
-                        MachineName NVARCHAR(100) NULL,
-                        FarmerId NVARCHAR(450) NOT NULL,
-                        FarmerName NVARCHAR(100) NULL,
-                        OwnerId NVARCHAR(450) NOT NULL,
-                        Rating INT NOT NULL CHECK (Rating >= 1 AND Rating <= 5),
-                        Comment NVARCHAR(500) NULL,
-                        CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
-                    );
-                    CREATE UNIQUE INDEX IX_Reviews_BookingId_Unique ON Reviews(BookingId);
-                    CREATE INDEX IX_Reviews_MachineId ON Reviews(MachineId);
-                    CREATE INDEX IX_Reviews_FarmerId ON Reviews(FarmerId);
-                    CREATE INDEX IX_Reviews_OwnerId ON Reviews(OwnerId);
-                    CREATE INDEX IX_Reviews_CreatedAt ON Reviews(CreatedAt);
-                    PRINT 'Reviews table created';
-                END";
-            await command.ExecuteNonQueryAsync();
-            Console.WriteLine("[Startup] Reviews table verified/created.");
-        }
-        await connection.CloseAsync();
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[Startup] Migration ERROR: {ex.Message}");
-    }
+    var context = services.GetRequiredService<ApplicationDbContext>();
+    Console.WriteLine("[Startup] Applying database migrations...");
+    context.Database.Migrate();
+    Console.WriteLine("[Startup] Database migrations applied successfully!");
+    
+    // Ensure MachineName and FarmerName columns exist in Bookings table
+    var connection = context.Database.GetDbConnection();
+    await connection.OpenAsync();
+    using var command = connection.CreateCommand();
+    
+    // Add MachineName column if missing
+    command.CommandText = @"
+        IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Bookings' AND COLUMN_NAME = 'MachineName')
+        BEGIN
+            ALTER TABLE Bookings ADD MachineName NVARCHAR(MAX) NULL;
+            PRINT 'MachineName column added';
+        END";
+    await command.ExecuteNonQueryAsync();
+    
+    // Add FarmerName column if missing
+    command.CommandText = @"
+        IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Bookings' AND COLUMN_NAME = 'FarmerName')
+        BEGIN
+            ALTER TABLE Bookings ADD FarmerName NVARCHAR(MAX) NULL;
+            PRINT 'FarmerName column added';
+        END";
+    await command.ExecuteNonQueryAsync();
+    
+    // Populate MachineName from Machines table
+    command.CommandText = @"
+        UPDATE b
+        SET b.MachineName = m.Name
+        FROM Bookings b
+        INNER JOIN Machines m ON b.MachineId = m.Id
+        WHERE b.MachineName IS NULL";
+    await command.ExecuteNonQueryAsync();
+    
+    // Populate FarmerName from AspNetUsers table
+    command.CommandText = @"
+        UPDATE b
+        SET b.FarmerName = u.FullName
+        FROM Bookings b
+        INNER JOIN AspNetUsers u ON b.FarmerId = u.Id
+        WHERE b.FarmerName IS NULL";
+    await command.ExecuteNonQueryAsync();
+    
+    Console.WriteLine("[Startup] Booking columns verified/populated.");
+    
+    // Ensure Payments table exists
+    command.CommandText = @"
+        IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Payments')
+        BEGIN
+            CREATE TABLE Payments (
+                Id INT IDENTITY(1,1) PRIMARY KEY,
+                BookingId INT NOT NULL,
+                RazorpayOrderId NVARCHAR(MAX) NOT NULL,
+                RazorpayPaymentId NVARCHAR(MAX) NOT NULL,
+                RazorpaySignature NVARCHAR(MAX) NOT NULL,
+                Amount DECIMAL(18,2) NOT NULL,
+                Currency NVARCHAR(MAX) NOT NULL DEFAULT 'INR',
+                Status NVARCHAR(MAX) NOT NULL DEFAULT 'Pending',
+                RefundAmount DECIMAL(18,2) NULL,
+                RefundId NVARCHAR(MAX) NULL,
+                RefundedAt DATETIME2 NULL,
+                RefundReason NVARCHAR(MAX) NULL,
+                CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+                CONSTRAINT FK_Payments_Bookings FOREIGN KEY (BookingId) REFERENCES Bookings(Id) ON DELETE CASCADE
+            );
+            CREATE INDEX IX_Payments_BookingId ON Payments(BookingId);
+            PRINT 'Payments table created';
+        END";
+    await command.ExecuteNonQueryAsync();
+    Console.WriteLine("[Startup] Payments table verified/created.");
+    
+    // Ensure Reviews table exists
+    command.CommandText = @"
+        IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Reviews')
+        BEGIN
+            CREATE TABLE Reviews (
+                Id INT IDENTITY(1,1) PRIMARY KEY,
+                BookingId INT NOT NULL,
+                MachineId INT NOT NULL,
+                MachineName NVARCHAR(100) NULL,
+                FarmerId NVARCHAR(450) NOT NULL,
+                FarmerName NVARCHAR(100) NULL,
+                OwnerId NVARCHAR(450) NOT NULL,
+                Rating INT NOT NULL CHECK (Rating >= 1 AND Rating <= 5),
+                Comment NVARCHAR(500) NULL,
+                CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+            );
+            CREATE UNIQUE INDEX IX_Reviews_BookingId_Unique ON Reviews(BookingId);
+            CREATE INDEX IX_Reviews_MachineId ON Reviews(MachineId);
+            CREATE INDEX IX_Reviews_FarmerId ON Reviews(FarmerId);
+            CREATE INDEX IX_Reviews_OwnerId ON Reviews(OwnerId);
+            CREATE INDEX IX_Reviews_CreatedAt ON Reviews(CreatedAt);
+            PRINT 'Reviews table created';
+        END";
+    await command.ExecuteNonQueryAsync();
+    Console.WriteLine("[Startup] Reviews table verified/created.");
+    
+    await connection.CloseAsync();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[Startup] Migration ERROR: {ex.Message}");
 }
 
 // --- 9. MIDDLEWARE PIPELINE ---

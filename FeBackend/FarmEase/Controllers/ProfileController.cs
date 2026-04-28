@@ -9,14 +9,9 @@ namespace FarmEase.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class ProfileController : ControllerBase
+    public class ProfileController(IUserService userService) : ControllerBase
     {
-        private readonly IUserService _userService;
-
-        public ProfileController(IUserService userService)
-        {
-            _userService = userService;
-        }
+        private readonly IUserService _userService = userService;
 
         [HttpGet]
         public async Task<IActionResult> GetProfile()

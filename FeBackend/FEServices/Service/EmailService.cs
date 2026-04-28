@@ -13,16 +13,10 @@ namespace FEServices.Service
         Task<bool> SendEmailAsync(string toEmail, string subject, string htmlBody);
     }
 
-    public class EmailService : IEmailService
+    public class EmailService(IConfiguration configuration, ILogger<EmailService> logger) : IEmailService
     {
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<EmailService> _logger;
-
-        public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
-        {
-            _configuration = configuration;
-            _logger = logger;
-        }
+        private readonly IConfiguration _configuration = configuration;
+        private readonly ILogger<EmailService> _logger = logger;
 
         public async Task<bool> SendOtpEmailAsync(string toEmail, string otp)
         {

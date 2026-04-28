@@ -49,7 +49,7 @@ namespace FECommon.Exceptions
         public ValidationException(string message) 
             : base(message, 400, "VALIDATION_ERROR")
         {
-            ValidationErrors = new Dictionary<string, string[]>();
+            ValidationErrors = new();
         }
 
         public ValidationException(Dictionary<string, string[]> errors) 

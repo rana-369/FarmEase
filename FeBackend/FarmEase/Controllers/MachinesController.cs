@@ -8,14 +8,9 @@ namespace FarmEase.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MachinesController : ControllerBase
+    public class MachinesController(IMachineService machineService) : ControllerBase
     {
-        private readonly IMachineService _machineService;
-
-        public MachinesController(IMachineService machineService)
-        {
-            _machineService = machineService;
-        }
+        private readonly IMachineService _machineService = machineService;
 
         [HttpGet]
         public async Task<IActionResult> GetMachines()

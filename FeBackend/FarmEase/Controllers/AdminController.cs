@@ -9,18 +9,14 @@ namespace FarmEase.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "admin,Admin")]
-    public class AdminController : ControllerBase
+    public class AdminController(
+        IBookingService bookingService, 
+        IMachineService machineService, 
+        IUserService userService) : ControllerBase
     {
-        private readonly IBookingService _bookingService;
-        private readonly IMachineService _machineService;
-        private readonly IUserService _userService;
-
-        public AdminController(IBookingService bookingService, IMachineService machineService, IUserService userService)
-        {
-            _bookingService = bookingService;
-            _machineService = machineService;
-            _userService = userService;
-        }
+        private readonly IBookingService _bookingService = bookingService;
+        private readonly IMachineService _machineService = machineService;
+        private readonly IUserService _userService = userService;
 
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboardStats()
