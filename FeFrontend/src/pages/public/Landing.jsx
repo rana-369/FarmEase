@@ -126,9 +126,10 @@ const Landing = () => {
               <motion.img
                 src="/Logo.png"
                 alt="FarmEase"
-                className="h-12 w-12 object-contain transition-transform group-hover:scale-105"
-                animate={{ y: [0, -2, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                className="h-14 w-20 object-contain transition-transform group-hover:scale-105 relative z-10"
+                style={{
+                  filter: isDark ? 'drop-shadow(0 0 12px rgba(16, 185, 129, 0.6))' : 'none'
+                }}
               />
               <span className={`text-xl font-bold tracking-tight transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>FarmEase</span>
             </a>
