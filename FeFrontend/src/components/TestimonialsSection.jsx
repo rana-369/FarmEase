@@ -152,9 +152,9 @@ const TestimonialsSection = () => {
         {/* Dots Indicator */}
         {testimonials.length > 1 && (
           <div className="flex justify-center gap-3 mt-6 sm:mt-8">
-            {testimonials.map((_, index) => (
+            {testimonials.map((t, index) => (
               <button
-                key={index}
+                key={t.id || `dot-${index}`}
                 onClick={() => setCurrentIndex(index)}
                 className="rounded-full transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
                 style={{

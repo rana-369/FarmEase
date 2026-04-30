@@ -118,9 +118,9 @@ const Pagination = ({
 
         {/* Page numbers */}
         <div className="flex items-center gap-1">
-          {getPageNumbers().map((page, index) => (
+          {getPageNumbers().map((page) => (
             <motion.button
-              key={index}
+              key={`page-${page}`}
               whileHover={{ scale: page === '...' ? 1 : 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handlePageChange(page)}

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 
 const ThemeContext = createContext();
 
@@ -12,12 +12,8 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    // Check localStorage first
     const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      return savedTheme;
-    }
-    // Check system preference
+    if (savedTheme) return savedTheme;
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
       return 'light';
     }
@@ -25,35 +21,31 @@ export const ThemeProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    // Persist theme to localStorage
     localStorage.setItem('theme', theme);
     
-    // Apply theme class to document root
     const root = document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
     
-    // Update body background for immediate effect using CSS variables
-    // CSS variables in index.css handle the actual colors based on theme class
     document.body.style.backgroundColor = 'var(--bg-primary)';
     document.body.style.color = 'var(--text-primary)';
   }, [theme]);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
+  }, []);
 
-  const setLightTheme = () => setTheme('light');
-  const setDarkTheme = () => setTheme('dark');
+  const setLightTheme = useCallback(() => setTheme('light'), []);
+  const setDarkTheme = useCallback(() => setTheme('dark'), []);
 
-  const value = {
+  const value = useMemo(() => ({
     theme,
     isDark: theme === 'dark',
     isLight: theme === 'light',
     toggleTheme,
     setLightTheme,
     setDarkTheme,
-  };
+  }), [theme, toggleTheme, setLightTheme, setDarkTheme]);
 
   return (
     <ThemeContext.Provider value={value}>

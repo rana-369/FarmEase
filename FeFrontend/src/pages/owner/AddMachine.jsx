@@ -91,12 +91,15 @@ const AddMachine = () => {
     }
   };
 
-  const removeImage = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-      imageFiles: prev.imageFiles.filter((_, i) => i !== index)
-    }));
+  const removeImage = (imageName) => {
+    setFormData(prev => {
+      const imageIndex = prev.images.indexOf(imageName);
+      return {
+        ...prev,
+        images: prev.images.filter(img => img !== imageName),
+        imageFiles: imageIndex >= 0 ? prev.imageFiles.filter((_, i) => i !== imageIndex) : prev.imageFiles
+      };
+    });
   };
 
   if (success) {
@@ -329,15 +332,15 @@ const AddMachine = () => {
 
                 {formData.images.length > 0 && (
                   <div className="mt-4 flex flex-wrap gap-3">
-                    {formData.images.map((image, index) => (
-                      <div key={index} className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl" style={{ background: 'var(--bg-button)', border: '1px solid var(--border-secondary)' }}>
+                    {formData.images.map((image) => (
+                      <div key={image} className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl" style={{ background: 'var(--bg-button)', border: '1px solid var(--border-secondary)' }}>
                         <FiFileText style={{ color: '#10b981' }} />
                         <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{image}</span>
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           type="button"
-                          onClick={() => removeImage(index)}
+                          onClick={() => removeImage(image)}
                           className="p-1 rounded"
                           style={{ color: '#f87171' }}
                         >

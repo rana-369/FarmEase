@@ -36,8 +36,8 @@ const CustomTooltip = ({ active, payload }) => {
 const CustomLegend = ({ payload }) => {
   return (
     <div className="flex flex-wrap justify-center gap-3 mt-4">
-      {payload.map((entry, index) => (
-        <div key={index} className="flex items-center gap-2">
+      {payload.map((entry) => (
+        <div key={`legend-${entry.value}`} className="flex items-center gap-2">
           <div 
             className="w-3 h-3 rounded-full"
             style={{ backgroundColor: entry.color }}
@@ -99,7 +99,7 @@ const CategoryPieChart = ({
           >
             {dataWithPercentage.map((entry, index) => (
               <Cell 
-                key={`cell-${index}`} 
+                key={`cell-${entry.name || index}`} 
                 fill={entry.color || defaultColors[index % defaultColors.length]}
                 stroke={isDark ? '#1f1f1f' : '#ffffff'}
                 strokeWidth={2}

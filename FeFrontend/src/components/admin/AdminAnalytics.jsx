@@ -268,7 +268,7 @@ const AdminAnalytics = () => {
           padding: 24px;
           backdrop-filter: blur(20px);
         }
-        
+
         .chart-main {
           grid-row: span 2;
           min-height: 400px;

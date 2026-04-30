@@ -629,92 +629,6 @@ body {
 
 /* Custom component classes - Modern 2026 Design */
 
-/* Glass Card - Glassmorphism */
-.glass-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  border-radius: 1.25rem;
-}
-
-.glass-card-dark {
-  background: rgba(10, 10, 15, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
-  border-radius: 1.25rem;
-}
-
-/* Ghost Button */
-.ghost-button {
-  background: transparent;
-  color: var(--text-secondary);
-  border: none;
-  border-radius: 10px;
-  font-weight: 500;
-  font-size: 13px;
-  padding: 8px 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.ghost-button:hover {
-  background: var(--bg-button-hover);
-  color: var(--text-primary);
-}
-
-/* Pill Button - Gen Z Style */
-.pill-button {
-  background: var(--bg-button);
-  color: var(--text-primary);
-  border: 1px solid var(--border-primary);
-  border-radius: 9999px;
-  font-weight: 500;
-  padding: 0.625rem 1.25rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.pill-button:hover {
-  background: var(--bg-button-hover);
-  border-color: var(--border-secondary);
-  transform: scale(1.02);
-}
-
-/* Gradient Accent Button */
-.accent-button {
-  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-  color: white;
-  border: none;
-  border-radius: 0.875rem;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
-  position: relative;
-  overflow: hidden;
-}
-
-.accent-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%);
-}
-
-.accent-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
-}
-
 /* Icon Button */
 .icon-button {
   width: 2.5rem;
@@ -745,19 +659,6 @@ body {
 .card-hover:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-}
-
-/* Glow Effects */
-.glow-green {
-  box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
-}
-
-.glow-violet {
-  box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
-}
-
-.glow-cyan {
-  box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
 }
 
 /* Input Styles */
@@ -929,6 +830,9 @@ body {
 @media (min-width: 1024px) {
   .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .lg\:px-8 { padding-left: 2rem; padding-right: 2rem; }
+  .lg\:block { display: block !important; }
+  .lg\:w-1\/2 { width: 50% !important; }
+  .lg\:flex { display: flex !important; }
 }
 
 /* Fill current for SVG icons */
@@ -1701,74 +1605,6 @@ select option {
   box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
 }
 
-/* Icon Button */
-.icon-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  background: var(--bg-button);
-  border: 1px solid var(--border-primary);
-  border-radius: 10px;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.icon-button:hover {
-  background: var(--bg-button-hover);
-  color: var(--text-primary);
-}
-
-/* ===== BADGES ===== */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 20px;
-  text-transform: capitalize;
-}
-
-.badge-success {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-}
-
-.badge-warning {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.25);
-}
-
-.badge-info {
-  background: rgba(59, 130, 246, 0.15);
-  color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.25);
-}
-
-.badge-danger {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-}
-
-.badge-purple {
-  background: rgba(168, 85, 247, 0.15);
-  color: #a855f7;
-  border: 1px solid rgba(168, 85, 247, 0.25);
-}
-
-.badge-neutral {
-  background: var(--bg-button);
-  color: var(--text-tertiary);
-  border: 1px solid var(--border-primary);
-}
-
 /* ===== INPUTS ===== */
 .input-field {
   width: 100%;
@@ -1880,6 +1716,16 @@ select option {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Skeleton Loading Animation */
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -20,15 +20,10 @@ import {
   FiStar
 } from 'react-icons/fi';
 import { RupeeIcon } from './RupeeIcon';
-import ThemeToggle from './ThemeToggle';
 
-const Sidebar = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { logout, user } = useAuth();
-  const { theme, toggleTheme, isDark } = useTheme();
-
-  const adminMenuItems = [
+// Static menu configurations - defined outside component to prevent recreation
+const MENU_CONFIGS = {
+  Admin: [
     { icon: FiHome, label: 'Dashboard', path: '/admin' },
     { icon: FiPackage, label: 'Orders', path: '/admin/bookings' },
     { icon: FiTruck, label: 'Products', path: '/admin/machines' },
@@ -37,17 +32,15 @@ const Sidebar = () => {
     { icon: FiStar, label: 'Testimonials', path: '/admin/testimonials' },
     { icon: FiBell, label: 'Notifications', path: '/admin/notifications' },
     { icon: FiSettings, label: 'Settings', path: '/admin/settings' },
-  ];
-
-  const farmerMenuItems = [
+  ],
+  Farmer: [
     { icon: FiHome, label: 'Dashboard', path: '/farmer' },
     { icon: FiTruck, label: 'Browse Equipment', path: '/farmer/machines' },
     { icon: FiPackage, label: 'My Bookings', path: '/farmer/bookings' },
     { icon: FiBell, label: 'Notifications', path: '/farmer/notifications' },
     { icon: FiSettings, label: 'Profile Settings', path: '/farmer/profile' },
-  ];
-
-  const ownerMenuItems = [
+  ],
+  Owner: [
     { icon: FiHome, label: 'Dashboard', path: '/owner' },
     { icon: FiTruck, label: 'My Machinery', path: '/owner/machines' },
     { icon: FiPlus, label: 'Add Machinery', path: '/owner/add-machine' },
@@ -56,58 +49,115 @@ const Sidebar = () => {
     { icon: FiCreditCard, label: 'Payment Settings', path: '/owner/payment-settings' },
     { icon: FiBell, label: 'Notifications', path: '/owner/notifications' },
     { icon: FiSettings, label: 'Profile Settings', path: '/owner/profile' },
-  ];
+  ]
+};
 
-  const getMenuItems = () => {
-    switch (user?.role) {
-      case 'Admin': return adminMenuItems;
-      case 'Farmer': return farmerMenuItems;
-      case 'Owner': return ownerMenuItems;
-      default: return [];
-    }
-  };
+// Static role configurations
+const ROLE_CONFIGS = {
+  Admin: { 
+    gradientStart: '#f43f5e',
+    gradientEnd: '#db2777',
+    bgGlow: 'rgba(244, 63, 94, 0.15)',
+    text: '#f43f5e',
+    border: 'rgba(244, 63, 94, 0.3)'
+  },
+  Farmer: { 
+    gradientStart: '#10b981',
+    gradientEnd: '#059669',
+    bgGlow: 'rgba(16, 185, 129, 0.15)',
+    text: '#10b981',
+    border: 'rgba(16, 185, 129, 0.3)'
+  },
+  Owner: { 
+    gradientStart: '#3b82f6',
+    gradientEnd: '#4f46e5',
+    bgGlow: 'rgba(59, 130, 246, 0.15)',
+    text: '#3b82f6',
+    border: 'rgba(59, 130, 246, 0.3)'
+  },
+  default: { 
+    gradientStart: '#6b7280',
+    gradientEnd: '#475569',
+    bgGlow: 'rgba(255, 255, 255, 0.1)',
+    text: '#a1a1a1',
+    border: 'rgba(255, 255, 255, 0.2)'
+  }
+};
 
-  const menuItems = getMenuItems();
+// Memoized nav item component
+const NavItem = memo(({ item, isActive, roleConfig, index, onNavigate }) => {
+  const Icon = item.icon;
+  const isDashboard = item.path === '/admin' || item.path === '/farmer' || item.path === '/owner';
+  
+  return (
+    <li>
+      <motion.button
+        onClick={() => onNavigate(item.path)}
+        className={`nav-item-new ${isActive ? 'active' : ''}`}
+        style={isActive ? { '--active-color': roleConfig.gradientStart } : {}}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.35 + index * 0.05, duration: 0.3 }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        {isActive && (
+          <div 
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full"
+            style={{ 
+              background: `linear-gradient(180deg, ${roleConfig.gradientStart} 0%, ${roleConfig.gradientEnd} 100%)`,
+              boxShadow: `0 0 12px ${roleConfig.text}80`
+            }}
+          />
+        )}
+        
+        <div 
+          className="nav-item-icon"
+          style={isActive ? { 
+            background: `linear-gradient(135deg, ${roleConfig.gradientStart} 0%, ${roleConfig.gradientEnd} 100%)`,
+            boxShadow: `0 4px 20px ${roleConfig.text}40`
+          } : {}}
+        >
+          <Icon />
+        </div>
+        
+        <span className="nav-item-text">{item.label}</span>
+        <FiChevronRight className="nav-item-arrow" />
+      </motion.button>
+    </li>
+  );
+});
 
-  const handleLogout = () => {
+NavItem.displayName = 'NavItem';
+
+const Sidebar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { logout, user } = useAuth();
+  const { toggleTheme, isDark } = useTheme();
+
+  // Memoize menu items based on user role
+  const menuItems = useMemo(() => MENU_CONFIGS[user?.role] || [], [user?.role]);
+
+  // Memoize role config
+  const roleConfig = useMemo(() => ROLE_CONFIGS[user?.role] || ROLE_CONFIGS.default, [user?.role]);
+
+  // Stable callback for navigation
+  const handleNavigate = useCallback((path) => {
+    navigate(path);
+  }, [navigate]);
+
+  // Stable callback for logout
+  const handleLogout = useCallback(() => {
     logout();
     navigate('/login');
-  };
+  }, [logout, navigate]);
 
-  const getRoleConfig = () => {
-    switch (user?.role) {
-      case 'Admin': return { 
-        gradientStart: '#f43f5e',
-        gradientEnd: '#db2777',
-        bgGlow: 'rgba(244, 63, 94, 0.15)',
-        text: '#f43f5e',
-        border: 'rgba(244, 63, 94, 0.3)'
-      };
-      case 'Farmer': return { 
-        gradientStart: '#10b981',
-        gradientEnd: '#059669',
-        bgGlow: 'rgba(16, 185, 129, 0.15)',
-        text: '#10b981',
-        border: 'rgba(16, 185, 129, 0.3)'
-      };
-      case 'Owner': return { 
-        gradientStart: '#3b82f6',
-        gradientEnd: '#4f46e5',
-        bgGlow: 'rgba(59, 130, 246, 0.15)',
-        text: '#3b82f6',
-        border: 'rgba(59, 130, 246, 0.3)'
-      };
-      default: return { 
-        gradientStart: '#6b7280',
-        gradientEnd: '#475569',
-        bgGlow: 'rgba(255, 255, 255, 0.1)',
-        text: '#a1a1a1',
-        border: 'rgba(255, 255, 255, 0.2)'
-      };
-    }
-  };
-
-  const roleConfig = getRoleConfig();
+  // Check if path is active
+  const isPathActive = useCallback((path) => {
+    const isDashboard = path === '/admin' || path === '/farmer' || path === '/owner';
+    return isDashboard ? location.pathname === path : location.pathname.startsWith(path);
+  }, [location.pathname]);
 
   return (
     <motion.aside
@@ -199,58 +249,16 @@ const Sidebar = () => {
         <div className="nav-section-title">Navigation</div>
         
         <ul>
-          {menuItems.map((item, index) => {
-            const Icon = item.icon;
-            const isDashboard = item.path === '/admin' || item.path === '/farmer' || item.path === '/owner';
-            const isActive = isDashboard 
-              ? location.pathname === item.path 
-              : location.pathname.startsWith(item.path);
-            
-            return (
-              <li key={index}>
-                <motion.button
-                  onClick={() => navigate(item.path)}
-                  className={`nav-item-new ${isActive ? 'active' : ''}`}
-                  style={isActive ? {
-                    '--active-color': roleConfig.gradientStart
-                  } : {}}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.35 + index * 0.05, duration: 0.3 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {/* Active indicator bar */}
-                  {isActive && (
-                    <div 
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full"
-                      style={{ 
-                        background: `linear-gradient(180deg, ${roleConfig.gradientStart} 0%, ${roleConfig.gradientEnd} 100%)`,
-                        boxShadow: `0 0 12px ${roleConfig.text}80`
-                      }}
-                    />
-                  )}
-                  
-                  {/* Icon container */}
-                  <div 
-                    className="nav-item-icon"
-                    style={isActive ? { 
-                      background: `linear-gradient(135deg, ${roleConfig.gradientStart} 0%, ${roleConfig.gradientEnd} 100%)`,
-                      boxShadow: `0 4px 20px ${roleConfig.text}40`
-                    } : {}}
-                  >
-                    <Icon />
-                  </div>
-                  
-                  {/* Label */}
-                  <span className="nav-item-text">{item.label}</span>
-                  
-                  {/* Arrow indicator */}
-                  <FiChevronRight className="nav-item-arrow" />
-                </motion.button>
-              </li>
-            );
-          })}
+          {menuItems.map((item, index) => (
+            <NavItem
+              key={item.path}
+              item={item}
+              isActive={isPathActive(item.path)}
+              roleConfig={roleConfig}
+              index={index}
+              onNavigate={handleNavigate}
+            />
+          ))}
         </ul>
       </nav>
       

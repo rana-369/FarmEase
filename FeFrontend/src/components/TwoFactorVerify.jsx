@@ -146,7 +146,7 @@ const TwoFactorVerify = ({ email, onVerify, onBack, loading: parentLoading }) =>
       <div className="flex justify-center gap-2 mb-6">
         {code.map((digit, index) => (
           <motion.input
-            key={index}
+            key={`code-digit-${index}`}
             ref={(el) => (inputRefs.current[index] = el)}
             type="text"
             inputMode="numeric"

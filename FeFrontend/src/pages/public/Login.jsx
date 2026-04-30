@@ -1,33 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiTruck, FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle, FiShield, FiUsers, FiArrowLeft, FiX, FiCheck, FiSun, FiTool, FiUser, FiMoon } from 'react-icons/fi';
+import { FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle, FiCheck, FiTruck, FiArrowLeft } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
-import { createPortal } from 'react-dom';
 import TwoFactorVerify from '../../components/TwoFactorVerify';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, logout, verify2FA, resend2FACode, cancel2FA, requires2FA, pending2FAEmail, pending2FARole } = useAuth();
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { login, verify2FA, resend2FACode, cancel2FA, requires2FA, pending2FAEmail } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const [selectedRole, setSelectedRole] = useState('Farmer');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [warning, setWarning] = useState('');
-  const [showRoleModal, setShowRoleModal] = useState(false);
-  const [actualRole, setActualRole] = useState('');
-
-  useEffect(() => {
-    if (showRoleModal) {
-      console.log('Modal should be visible, actualRole:', actualRole);
-    }
-  }, [showRoleModal, actualRole]);
 
   const handleChange = (e) => {
     setFormData({
@@ -35,7 +22,6 @@ const Login = () => {
       [e.target.name]: e.target.value
     });
     if (error) setError('');
-    if (warning) setWarning('');
   };
 
   const handleSubmit = async (e) => {
@@ -50,7 +36,7 @@ const Login = () => {
     setError('');
 
     try {
-      const result = await login(formData.email, formData.password, selectedRole);
+      const result = await login(formData.email, formData.password);
       console.log('Login result:', JSON.stringify(result, null, 2));
       
       if (result.success) {
@@ -116,532 +102,419 @@ const Login = () => {
     cancel2FA();
   };
 
-  const getRoleConfig = (role) => {
-    switch (role) {
-      case 'Farmer':
-        return { icon: FiSun, color: '#22c55e', bg: 'rgba(34, 197, 94, 0.15)', border: 'rgba(34, 197, 94, 0.3)' };
-      case 'Owner':
-        return { icon: FiTool, color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.3)' };
-      case 'Admin':
-        return { icon: FiShield, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)', border: 'rgba(239, 68, 68, 0.3)' };
-      default:
-        return { icon: FiUser, color: '#a1a1a1', bg: 'rgba(255, 255, 255, 0.1)', border: 'rgba(255, 255, 255, 0.2)' };
-    }
-  };
+  const features = [
+    { icon: FiCheck, title: 'Access to 1000+ farm equipment', color: '#10b981' },
+    { icon: FiCheck, title: 'Secure booking & payments', color: '#10b981' },
+    { icon: FiCheck, title: 'Real-time equipment tracking', color: '#10b981' }
+  ];
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--bg-primary)', transition: 'background-color 0.3s ease' }}>
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden" style={{ 
-        background: isDark 
-          ? 'linear-gradient(135deg, #080808 0%, #0c0c0c 50%, #080808 100%)'
-          : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%)',
-        transition: 'background 0.3s ease'
-      }}>
-        {/* Background Pattern */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
-            radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.04) 0%, transparent 30%)
-          `
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      backgroundColor: '#0a0a0a'
+    }}>
+      {/* Left Side - Dark Green Panel with FarmEase Branding */}
+      <div style={{
+        display: 'none',
+        width: '50%',
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'linear-gradient(135deg, #0d2818 0%, #1a4d3a 50%, #0d2818 100%)'
+      }} className="lg:block">
+        {/* Radial gradient overlays */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(ellipse at top left, rgba(16,185,129,0.15) 0%, transparent 50%)'
         }} />
-        
-        {/* Floating Elements */}
-        <motion.div
-          animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-20 left-20 w-16 h-16 rounded-2xl flex items-center justify-center"
-          style={{ 
-            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%)',
-            border: '1px solid rgba(16, 185, 129, 0.25)'
-          }}
-        >
-          <FiSun className="text-2xl" style={{ color: '#10b981' }} />
-        </motion.div>
-        
-        <motion.div
-          animate={{ y: [0, 20, 0], rotate: [0, -5, 0] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute bottom-32 left-32 w-20 h-20 rounded-2xl flex items-center justify-center"
-          style={{ 
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%)',
-            border: '1px solid rgba(59, 130, 246, 0.25)'
-          }}
-        >
-          <FiTool className="text-3xl" style={{ color: '#3b82f6' }} />
-        </motion.div>
-        
-        <motion.div
-          animate={{ y: [0, -15, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute top-40 right-20 w-14 h-14 rounded-2xl flex items-center justify-center"
-          style={{ 
-            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%)',
-            border: '1px solid rgba(139, 92, 246, 0.25)'
-          }}
-        >
-          <FiShield className="text-xl" style={{ color: '#8b5cf6' }} />
-        </motion.div>
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(ellipse at bottom right, rgba(5,150,105,0.1) 0%, transparent 50%)'
+        }} />
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-center px-16">
+        <div style={{
+          position: 'relative',
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          padding: '0 64px',
+          height: '100%'
+        }}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
             {/* Logo */}
-            <div className="flex items-center gap-4 mb-8">
-              <div 
-                className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
-                style={{ 
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
-                  boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
-                }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-                <FiTruck className="text-2xl text-white relative z-10" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35)'
+              }}>
+                <FiTruck style={{ fontSize: '24px', color: '#ffffff' }} />
               </div>
               <div>
-                <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>FarmEase</h1>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Farm Equipment Platform</p>
+                <h1 style={{
+                  fontSize: '28px',
+                  fontWeight: 700,
+                  color: '#ffffff',
+                  margin: 0
+                }}>FarmEase</h1>
+                <p style={{
+                  fontSize: '14px',
+                  color: 'rgba(255,255,255,0.7)',
+                  margin: 0
+                }}>Farm Equipment Platform</p>
               </div>
             </div>
 
             {/* Headline */}
-            <h2 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight" style={{ color: 'var(--text-primary)' }}>
-              Modern Farming<br />
-              <span className="text-gradient">Starts Here</span>
+            <h2 style={{
+              fontSize: '48px',
+              fontWeight: 700,
+              color: '#ffffff',
+              lineHeight: 1.2,
+              marginBottom: '16px'
+            }}>
+              Modern Farming<br />Starts Here
             </h2>
             
-            <p className="text-lg mb-10 max-w-md" style={{ color: 'var(--text-muted)' }}>
+            <p style={{
+              fontSize: '18px',
+              color: 'rgba(255,255,255,0.7)',
+              marginBottom: '40px',
+              maxWidth: '400px'
+            }}>
               Connect with equipment owners, manage your farm operations, and grow your agricultural business.
             </p>
 
-            {/* Features */}
-            <div className="space-y-4">
-              {[
-                { icon: FiCheck, text: 'Access to 1000+ farm equipment', color: '#10b981' },
-                { icon: FiCheck, text: 'Secure booking & payments', color: '#3b82f6' },
-                { icon: FiCheck, text: 'Real-time equipment tracking', color: '#8b5cf6' }
-              ].map((feature, index) => (
+            {/* Feature Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {features.map((feature, index) => (
                 <motion.div
-                  key={index}
+                  key={feature.title}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + index * 0.1 }}
-                  className="flex items-center gap-3"
+                  style={{
+                    padding: '20px',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    background: 'rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(8px)',
+                    transition: 'all 0.3s ease'
+                  }}
                 >
-                  <div 
-                    className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${feature.color}20 0%, ${feature.color}10 100%)`,
-                      border: `1px solid ${feature.color}30`
-                    }}
-                  >
-                    <feature.icon className="text-sm" style={{ color: feature.color }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: `${feature.color}20`,
+                      border: `1px solid ${feature.color}40`,
+                      flexShrink: 0
+                    }}>
+                      <feature.icon style={{
+                        fontSize: '16px',
+                        color: feature.color
+                      }} />
+                    </div>
+                    <span style={{
+                      fontSize: '16px',
+                      fontWeight: 500,
+                      color: '#ffffff'
+                    }}>
+                      {feature.title}
+                    </span>
                   </div>
-                  <span style={{ color: 'var(--text-secondary)' }}>{feature.text}</span>
                 </motion.div>
               ))}
             </div>
           </motion.div>
         </div>
-
-        {/* Bottom Gradient */}
-        <div className="absolute bottom-0 left-0 right-0 h-32" style={{
-          background: isDark 
-            ? 'linear-gradient(to top, #050505, transparent)'
-            : 'linear-gradient(to top, var(--bg-primary), transparent)'
-        }} />
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-12 relative" style={{ backgroundColor: 'var(--bg-primary)', transition: 'background-color 0.3s ease' }}>
+      <div style={{
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '48px',
+        backgroundColor: '#0a0a0a'
+      }} className="lg:w-1/2">
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
+          style={{ width: '100%', maxWidth: '400px' }}
         >
-          {/* Back Button */}
+          {/* Back to Home Link */}
           <motion.button
-            onClick={() => navigate('/', { replace: true })}
-            whileHover={{ x: -4 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex items-center gap-2 mb-6 sm:mb-8 text-sm font-semibold transition-colors px-4 py-2 rounded-xl min-h-[44px]"
-            style={{ 
-              color: '#10b981',
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
-              border: '1px solid rgba(16, 185, 129, 0.2)'
+            onClick={() => navigate('/')}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'none',
+              border: 'none',
+              color: '#6b7280',
+              fontSize: '14px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              marginBottom: '24px',
+              padding: 0,
+              transition: 'color 0.2s ease'
             }}
+            whileHover={{ color: '#10b981' }}
           >
-            <FiArrowLeft />
-            <span>Back to Home</span>
+            <FiArrowLeft style={{ fontSize: '16px' }} />
+            Back to Home
           </motion.button>
 
-          {/* Mobile Logo */}
-          <div className="lg:hidden mb-6 sm:mb-8">
-            <div className="flex items-center gap-3 mb-4 sm:mb-6">
-              <div 
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
-                style={{ 
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
-                  boxShadow: '0 4px 20px rgba(16, 185, 129, 0.35)'
-                }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-                <FiTruck className="text-lg sm:text-xl text-white relative z-10" />
-              </div>
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>FarmEase</h1>
-                <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Farm Equipment Platform</p>
-              </div>
-            </div>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <h2 style={{
+              fontSize: '24px',
+              fontWeight: 700,
+              color: '#ffffff',
+              marginBottom: '8px'
+            }}>Sign In</h2>
+            <p style={{
+              fontSize: '14px',
+              color: '#6b7280'
+            }}>Enter your credentials to access your account</p>
           </div>
 
-          {/* Header */}
-          <div className="mb-6 sm:mb-8">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Welcome Back</h2>
-              {/* Theme Toggle - Modern Switch */}
-              <motion.button
-                onClick={toggleTheme}
-                className="relative flex items-center w-16 h-8 rounded-full p-1 transition-all duration-500"
-                style={{
-                  background: isDark 
-                    ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' 
-                    : 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
-                  boxShadow: isDark
-                    ? 'inset 0 2px 10px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-                    : 'inset 0 2px 10px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.1)'
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                aria-label="Toggle theme"
-              >
-                {/* Toggle Ball */}
+          {/* Login Form */}
+          {requires2FA ? (
+            <TwoFactorVerify
+              email={pending2FAEmail}
+              onVerify={handle2FAVerify}
+              onBack={handle2FABack}
+              loading={loading}
+            />
+          ) : (
+            <>
+              {error && (
                 <motion.div
-                  className="relative z-10 w-6 h-6 rounded-full flex items-center justify-center"
-                  animate={{ x: isDark ? 32 : 0 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   style={{
-                    background: isDark 
-                      ? 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'
-                      : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-                    boxShadow: isDark
-                      ? '0 0 15px rgba(251, 191, 36, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)'
-                      : '0 0 15px rgba(251, 191, 36, 0.6), 0 2px 8px rgba(0, 0, 0, 0.15)'
+                    padding: '16px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                    marginBottom: '20px'
                   }}
                 >
-                  {isDark ? (
-                    <FiMoon size={12} style={{ color: '#fbbf24' }} />
-                  ) : (
-                    <FiSun size={12} style={{ color: '#f59e0b' }} />
-                  )}
+                  <FiAlertCircle style={{ color: '#f87171', flexShrink: 0 }} />
+                  <span style={{ fontSize: '14px', color: '#f87171' }}>{error}</span>
                 </motion.div>
-                
-                {/* Static Icons */}
-                <motion.div 
-                  className="absolute left-1.5"
-                  animate={{ opacity: isDark ? 0.3 : 0.7 }}
-                >
-                  <FiSun size={10} style={{ color: '#fbbf24' }} />
-                </motion.div>
-                <motion.div 
-                  className="absolute right-1.5"
-                  animate={{ opacity: isDark ? 0.7 : 0.3 }}
-                >
-                  <FiMoon size={10} style={{ color: '#94a3b8' }} />
-                </motion.div>
-              </motion.button>
-            </div>
-            <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>Sign in to access your dashboard</p>
-          </div>
+              )}
 
-          {/* Role Selection */}
-          <div className="mb-4 sm:mb-6">
-            <label className="block text-xs sm:text-sm font-medium mb-2 sm:mb-3" style={{ color: 'var(--text-tertiary)' }}>
-              Select your role
-            </label>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              {['Farmer', 'Owner', 'Admin'].map((role) => {
-                const activeRole = requires2FA ? pending2FARole : selectedRole;
-                const isActive = activeRole === role;
-                const config = getRoleConfig(role);
-                const Icon = config.icon;
-                
-                return (
-                  <motion.button
-                    key={role}
-                    type="button"
-                    onClick={() => !requires2FA && setSelectedRole(role)}
-                    disabled={requires2FA}
-                    whileHover={{ scale: 1.03, y: -2 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="flex flex-col items-center gap-1 sm:gap-2 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all relative overflow-hidden group min-h-[60px] sm:min-h-[80px]"
-                    style={{ 
-                      backgroundColor: isActive ? `${config.color}15` : 'var(--bg-card)',
-                      border: isActive ? `2px solid ${config.color}40` : '2px solid var(--border-primary)',
-                      opacity: requires2FA && !isActive ? 0.5 : 1,
-                      cursor: requires2FA ? 'not-allowed' : 'pointer'
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Email */}
+                <div>
+                  <label htmlFor="email" style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: '#9ca3af',
+                    marginBottom: '8px'
+                  }}>
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    autoComplete="email"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      background: '#1a1a1a',
+                      border: '1px solid #333',
+                      color: '#ffffff',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease',
+                      boxSizing: 'border-box'
                     }}
-                  >
-                    {isActive && (
-                      <div 
-                        className="absolute inset-0 opacity-20"
-                        style={{
-                          background: `radial-gradient(circle at 50% 0%, ${config.color}30 0%, transparent 70%)`
-                        }}
-                      />
-                    )}
-                    <Icon className="text-lg sm:text-xl relative z-10" style={{ color: isActive ? config.color : 'var(--text-secondary)' }} />
-                    <span className="text-xs sm:text-sm font-semibold relative z-10" style={{ color: isActive ? config.color : 'var(--text-muted)' }}>
-                      {role}
-                    </span>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </div>
+                    onFocus={(e) => e.target.style.borderColor = '#555'}
+                    onBlur={(e) => e.target.style.borderColor = '#333'}
+                    placeholder="Enter your email"
+                  />
+                </div>
 
-          {/* Login Form Card */}
-          <div 
-            className="p-4 sm:p-6 rounded-xl sm:rounded-2xl lg:rounded-3xl relative overflow-hidden"
-            style={{ 
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-primary)',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            {requires2FA ? (
-              <TwoFactorVerify
-                email={pending2FAEmail}
-                onVerify={handle2FAVerify}
-                onBack={handle2FABack}
-                loading={loading}
-              />
-            ) : (
-              <>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-5 p-4 rounded-2xl flex items-center gap-3"
-                    style={{ 
-                      background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%)',
-                      border: '1px solid rgba(239, 68, 68, 0.25)',
-                      color: '#f87171'
-                    }}
-                  >
-                    <FiAlertCircle className="text-lg flex-shrink-0" />
-                    <span className="text-sm font-medium">{error}</span>
-                  </motion.div>
-                )}
-
-                {warning && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-5 p-4 rounded-2xl flex items-center gap-3"
-                    style={{ 
-                      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%)',
-                      border: '1px solid rgba(245, 158, 11, 0.25)',
-                      color: '#fbbf24'
-                    }}
-                  >
-                    <FiAlertCircle className="text-lg flex-shrink-0" />
-                    <span className="text-sm font-medium">{warning}</span>
-                  </motion.div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
-                      <FiMail style={{ color: '#10b981' }} />
-                      Email Address
+                {/* Password */}
+                <div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '8px'
+                  }}>
+                    <label htmlFor="password" style={{
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      color: '#9ca3af'
+                    }}>
+                      Password
                     </label>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/forgot-password')}
+                      style={{
+                        fontSize: '12px',
+                        color: '#10b981',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                  <div style={{ position: 'relative' }}>
                     <input
-                      id="email"
-                      type="email"
-                      name="email"
-                      value={formData.email}
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formData.password}
                       onChange={handleChange}
                       required
-                      autoComplete="email"
-                      className="modern-input"
-                      placeholder="Enter your email"
+                      autoComplete="current-password"
+                      style={{
+                        width: '100%',
+                        padding: '12px 48px 12px 16px',
+                        borderRadius: '12px',
+                        background: '#1a1a1a',
+                        border: '1px solid #333',
+                        color: '#ffffff',
+                        fontSize: '14px',
+                        outline: 'none',
+                        transition: 'border-color 0.2s ease',
+                        boxSizing: 'border-box'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#555'}
+                      onBlur={(e) => e.target.style.borderColor = '#333'}
+                      placeholder="Enter your password"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        padding: '4px',
+                        background: 'none',
+                        border: 'none',
+                        color: '#6b7280',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    </button>
                   </div>
+                </div>
 
-                  {/* Password */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label htmlFor="password" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
-                        <FiLock style={{ color: '#3b82f6' }} />
-                        Password
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => navigate('/forgot-password')}
-                        className="text-xs font-medium animated-underline"
-                        style={{ color: '#10b981' }}
-                      >
-                        Forgot password?
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <input
-                        id="password"
-                        type={showPassword ? 'text' : 'password'}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                        autoComplete="current-password"
-                        className="modern-input pr-12"
-                        placeholder="Enter your password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all hover:bg-gray-500/10"
-                        style={{ color: '#6b7280' }}
-                      >
-                        {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-                      </button>
-                    </div>
-                  </div>
+                {/* Submit */}
+                <motion.button
+                  type="submit"
+                  disabled={loading}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '12px',
+                    background: '#ffffff',
+                    border: 'none',
+                    color: '#0a0a0a',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.5 : 1,
+                    transition: 'background 0.2s ease'
+                  }}
+                >
+                  {loading ? (
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        border: '2px solid #0a0a0a',
+                        borderTopColor: 'transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                      Signing in...
+                    </span>
+                  ) : (
+                    'Sign In'
+                  )}
+                </motion.button>
+              </form>
 
-                  {/* Submit */}
-                  <motion.button
-                    type="submit"
-                    disabled={loading}
-                    whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(16, 185, 129, 0.5)' }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full mx-auto py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50 relative overflow-hidden"
-                    style={{ 
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
-                      color: '#ffffff',
-                      boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35)'
+              {/* Register Link */}
+              <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                  Don't have an account?{' '}
+                  <button
+                    onClick={() => navigate('/register')}
+                    style={{
+                      fontWeight: 600,
+                      color: '#10b981',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer'
                     }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-                    {loading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin relative z-10" />
-                        <span className="relative z-10">Signing in...</span>
-                      </>
-                    ) : (
-                      <span className="relative z-10">Sign In</span>
-                    )}
-                  </motion.button>
-                </form>
-
-                {/* Register Link */}
-                <div className="mt-6 text-center pt-6" style={{ borderTop: '1px solid var(--border-secondary)' }}>
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    Don't have an account?{' '}
-                    <button
-                      onClick={() => navigate('/register')}
-                      className="font-semibold animated-underline"
-                      style={{ color: '#10b981' }}
-                    >
-                      Register now
-                    </button>
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Security Badge */}
-          <div className="mt-6 flex items-center justify-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
-            <div className="flex items-center gap-1.5">
-              <FiShield />
-              <span>Secure</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <FiLock />
-              <span>Encrypted</span>
-            </div>
-          </div>
+                    Sign up
+                  </button>
+                </p>
+              </div>
+            </>
+          )}
         </motion.div>
       </div>
 
-      {/* Role Mismatch Modal */}
-      {showRoleModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-sm p-6 rounded-2xl relative"
-            style={{ 
-              background: 'var(--bg-card)',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
-              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)'
-            }}
-          >
-            <button
-              onClick={() => setShowRoleModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-lg transition-colors hover:bg-white/5"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              <FiX />
-            </button>
-            
-            <div className="text-center">
-              <div 
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)' }}
-              >
-                <FiAlertCircle className="text-3xl" style={{ color: '#f59e0b' }} />
-              </div>
-              
-              <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Role Mismatch</h3>
-              <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
-                This account is registered as <span className="font-semibold" style={{ color: '#22c55e' }}>{actualRole}</span>. 
-                Only <span className="font-semibold" style={{ color: '#22c55e' }}>{actualRole}</span>s can login with these credentials.
-              </p>
-              
-              <div className="space-y-3">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setSelectedRole(actualRole);
-                    setShowRoleModal(false);
-                  }}
-                  className="w-full py-3 rounded-xl font-medium transition-all"
-                  style={{ 
-                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                    color: '#ffffff'
-                  }}
-                >
-                  Login as {actualRole}
-                </motion.button>
-                
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setShowRoleModal(false)}
-                  className="w-full py-3 rounded-xl font-medium transition-all"
-                  style={{ 
-                    backgroundColor: 'var(--bg-button)',
-                    color: 'var(--text-secondary)',
-                    border: '1px solid var(--border-primary)'
-                  }}
-                >
-                  Try Different Account
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        </div>,
-        document.body
-      )}
+      {/* CSS Animation */}
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @media (min-width: 1024px) {
+          .lg\\:block { display: block !important; }
+          .lg\\:w-1\\/2 { width: 50% !important; }
+        }
+      `}</style>
     </div>
   );
 };

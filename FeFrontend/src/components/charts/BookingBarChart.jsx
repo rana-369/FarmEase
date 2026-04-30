@@ -26,8 +26,8 @@ const CustomTooltip = ({ active, payload, label }) => {
         <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
           {label}
         </p>
-        {payload.map((entry, index) => (
-          <p key={index} className="text-xs" style={{ color: entry.color || entry.fill }}>
+        {payload.map((entry) => (
+          <p key={`tooltip-${entry.name}`} className="text-xs" style={{ color: entry.color || entry.fill }}>
             {entry.name}: {entry.value}
           </p>
         ))}
@@ -89,7 +89,7 @@ const BookingBarChart = ({
             radius={[4, 4, 0, 0]}
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color || colors[index % colors.length]} />
+              <Cell key={`cell-${entry.name || index}`} fill={entry.color || colors[index % colors.length]} />
             ))}
           </Bar>
         </BarChart>

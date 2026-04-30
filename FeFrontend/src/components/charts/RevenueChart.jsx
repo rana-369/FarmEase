@@ -25,10 +25,10 @@ const CustomTooltip = ({ active, payload, label }) => {
         <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
           {label}
         </p>
-        {payload.map((entry, index) => (
-          <p key={index} className="text-xs" style={{ color: entry.color }}>
+        {payload.map((entry) => (
+          <p key={`tooltip-${entry.name}`} className="text-xs" style={{ color: entry.color }}>
             {entry.name === 'revenue' ? 'Revenue' : 'Bookings'}: 
-            {entry.name === 'revenue' ? ` ₹${entry.value.toLocaleString()}` : ` ${entry.value}`}
+            {entry.name === 'revenue' ? ` ¥${entry.value.toLocaleString()}` : ` ${entry.value}`}
           </p>
         ))}
       </div>
@@ -57,13 +57,14 @@ const RevenueChart = ({
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex flex-col">
       {title && (
         <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
           {title}
         </h3>
       )}
-      <ResponsiveContainer width="100%" height={280}>
+      <div className="flex-1 flex items-center justify-center">
+        <ResponsiveContainer width="100%" height={280}>
         <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -113,6 +114,7 @@ const RevenueChart = ({
           )}
         </AreaChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 };

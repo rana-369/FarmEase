@@ -237,7 +237,7 @@ const ResetPassword = () => {
                     <div className="flex justify-between gap-2">
                       {[0, 1, 2, 3, 4, 5].map((index) => (
                         <motion.input
-                          key={index}
+                          key={`otp-input-${index}`}
                           id={`otp-${index}`}
                           type="text"
                           inputMode="numeric"

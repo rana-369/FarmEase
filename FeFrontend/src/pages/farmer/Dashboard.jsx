@@ -58,34 +58,42 @@ const FarmerDashboard = () => {
     }
   };
 
+  // Calculate meaningful metrics
+  const completionRate = stats.totalBookings > 0 
+    ? Math.round((stats.completedBookings / stats.totalBookings) * 100) 
+    : 0;
+  const activeRate = stats.totalBookings > 0 
+    ? Math.round((stats.activeBookings / stats.totalBookings) * 100) 
+    : 0;
+
   const statCards = [
     {
       title: 'Total Bookings',
       value: stats.totalBookings,
       icon: FiPackage,
       color: '#22c55e',
-      change: '+12%'
+      subtitle: 'All time bookings'
     },
     {
       title: 'Active Rentals',
       value: stats.activeBookings,
       icon: FiClock,
       color: '#3b82f6',
-      change: '+2'
+      subtitle: `${activeRate}% of total`
     },
     {
       title: 'Completed',
       value: stats.completedBookings,
       icon: FiCheckCircle,
       color: '#a855f7',
-      change: '+10'
+      subtitle: `${completionRate}% completion rate`
     },
     {
       title: 'Total Spent',
       value: `₹${(stats.totalSpent || 0).toLocaleString()}`,
       icon: FiTrendingUp,
       color: '#f59e0b',
-      change: 'Live'
+      subtitle: 'Total expenditure'
     }
   ];
 
@@ -151,7 +159,7 @@ const FarmerDashboard = () => {
                   <p className="stat-title-new text-xs sm:text-sm">{stat.title}</p>
                   <h3 className="stat-value-new text-lg sm:text-2xl">{stat.value}</h3>
                   <div className="stat-trend-new up text-xs">
-                    <span>{stat.change}</span>
+                    <span>{stat.subtitle}</span>
                   </div>
                 </div>
                 <div 

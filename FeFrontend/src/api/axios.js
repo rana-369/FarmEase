@@ -5,9 +5,11 @@ const API = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
-  }
+  },
+  timeout: 30000, // 30 second timeout
 });
 
+// Request interceptor - add auth token
 API.interceptors.request.use((req) => {
   const token = localStorage.getItem("token");
 
@@ -15,18 +17,39 @@ API.interceptors.request.use((req) => {
     req.headers.Authorization = `Bearer ${token}`;
   }
 
-  console.log('API Request:', req.method?.toUpperCase(), req.url);
   return req;
 }, (error) => {
-  console.error('Request error:', error);
   return Promise.reject(error);
 });
 
+// Response interceptor - handle errors globally
 API.interceptors.response.use((res) => {
-  console.log('API Response:', res.config.url, res.status, JSON.stringify(res.data));
   return res;
 }, (error) => {
-  console.error('Response error:', error.config?.url, error.response?.status, error.message);
+  const { response, config } = error;
+  
+  // Handle 401 Unauthorized - redirect to login
+  if (response?.status === 401) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('userId');
+    
+    // Only redirect if not already on login page
+    if (!window.location.pathname.includes('/login')) {
+      window.location.href = '/login';
+    }
+  }
+  
+  // Handle 403 Forbidden
+  if (response?.status === 403) {
+    console.warn('Access denied:', config?.url);
+  }
+  
+  // Handle network errors
+  if (!response) {
+    error.code = 'NETWORK_ERROR';
+  }
+  
   return Promise.reject(error);
 });
 

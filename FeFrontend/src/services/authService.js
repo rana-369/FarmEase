@@ -12,31 +12,21 @@ export const register = async (userData) => {
 };
 
 // Login user
-export const login = async (email, password, selectedRole = null) => {
-  const payload = {
-    email,
-    password
-  };
-  
-  // Send selected role if provided (for role-based login validation)
-  if (selectedRole) {
-    payload.selectedRole = selectedRole;
-  }
-  
-  const response = await api.post('/auth/login', payload);
-  
+export const login = async (email, password) => {
+  const response = await api.post('/auth/login', { email, password });
+
   // Handle both lowercase and capitalized field names
   const token = response.data.token || response.data.Token;
   const role = response.data.role || response.data.Role;
   const userId = response.data.userId || response.data.UserId;
-  
+
   // Store token and user info in localStorage
   if (token) {
     localStorage.setItem('token', token);
     localStorage.setItem('role', role);
     localStorage.setItem('userId', userId);
   }
-  
+
   return {
     token,
     role,

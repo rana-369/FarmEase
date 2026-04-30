@@ -372,9 +372,9 @@ const Landing = () => {
             className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-tight tracking-tight"
           >
             FARM
-            <span 
+            <span
               className="block"
-              style={{ 
+              style={{
                 background: 'linear-gradient(to right, #34d399, #2dd4bf, #22d3ee)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -393,7 +393,7 @@ const Landing = () => {
             className="grid grid-cols-3 gap-6 sm:gap-8 max-w-3xl mx-auto mt-16"
           >
             {[
-              { value: '4.8★', label: 'Rating', icon: FiStar, color: '#fbbf24' },
+              { value: '4.8', label: 'Rating', icon: FiStar, color: '#fbbf24' },
               { value: '10+', label: 'Users', icon: FiUsers, color: '#34d399' },
               { value: '98%', label: 'Success Rate', icon: FiAward, color: '#3b82f6' }
             ].map((stat, i) => (
@@ -411,20 +411,32 @@ const Landing = () => {
       </section>
 
       {/* Equipment Categories */}
-      <section id="equipment" className={`py-28 transition-colors duration-500 ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
+      <section id="equipment" className={`py-24 transition-colors duration-500 ${isDark ? 'bg-gradient-to-b from-[#0a0a0a] to-[#0f0f0f]' : 'bg-gradient-to-b from-white to-gray-50'}`}>
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-20"
+            className="text-center mb-16"
           >
-            <span className="text-emerald-500 text-sm font-bold tracking-wider uppercase mb-4 block">Explore</span>
-            <h2 className={`text-4xl md:text-5xl font-bold mb-6 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>Equipment Categories</h2>
-            <p className={`max-w-2xl mx-auto text-lg transition-colors ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Premium farming machinery available for rent</p>
+            <motion.span 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="inline-block px-4 py-1.5 rounded-full text-sm font-bold tracking-wider uppercase mb-4"
+              style={{
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(20,184,166,0.2) 100%)',
+                color: '#10b981',
+                border: '1px solid rgba(16,185,129,0.3)'
+              }}
+            >
+              Explore
+            </motion.span>
+            <h2 className={`text-4xl md:text-5xl font-bold mb-4 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>Equipment Categories</h2>
+            <p className={`max-w-2xl mx-auto text-lg transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Premium farming machinery available for rent</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {equipmentCategories.map((category, i) => (
               <motion.div
                 key={i}
@@ -432,12 +444,13 @@ const Landing = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="rounded-2xl overflow-hidden border transition-all duration-300 cursor-pointer group"
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="rounded-2xl overflow-hidden cursor-pointer group"
                 style={{
-                  backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
-                  borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb',
-                  boxShadow: isDark ? 'none' : '0 10px 15px -3px rgba(0,0,0,0.1)'
+                  backgroundColor: isDark ? 'rgba(26,26,26,0.8)' : 'rgba(255,255,255,0.9)',
+                  border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.08)',
+                  boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.3)' : '0 4px 24px rgba(0,0,0,0.08)',
+                  backdropFilter: 'blur(12px)'
                 }}
                 onClick={() => navigate('/register')}
               >
@@ -490,9 +503,9 @@ const Landing = () => {
                     )}
                   </div>
                 </div>
-                <div className="p-8">
-                  <h3 className={`text-xl font-bold mb-3 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{category.name}</h3>
-                  <p className="text-emerald-500 text-sm font-semibold">{category.count || 0} Available</p>
+                <div className="p-6">
+                  <h3 className={`text-lg font-bold mb-1 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{category.name}</h3>
+                  <p className="text-emerald-500 text-sm font-medium">{category.count || 0} Available</p>
                 </div>
               </motion.div>
             ))}
@@ -501,19 +514,31 @@ const Landing = () => {
       </section>
 
       {/* Why Choose Us */}
-      <section id="benefits" className={`py-28 transition-colors duration-500 ${isDark ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
+      <section id="benefits" className={`py-24 transition-colors duration-500 ${isDark ? 'bg-gradient-to-b from-[#0f0f0f] to-[#0a0a0a]' : 'bg-gradient-to-b from-gray-50 to-white'}`}>
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-20"
+            className="text-center mb-16"
           >
-            <span className="text-emerald-500 text-sm font-bold tracking-wider uppercase mb-4 block">Benefits</span>
-            <h2 className={`text-4xl md:text-5xl font-bold mb-6 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>Why Choose FarmEase?</h2>
+            <motion.span 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="inline-block px-4 py-1.5 rounded-full text-sm font-bold tracking-wider uppercase mb-4"
+              style={{
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(20,184,166,0.2) 100%)',
+                color: '#10b981',
+                border: '1px solid rgba(16,185,129,0.3)'
+              }}
+            >
+              Benefits
+            </motion.span>
+            <h2 className={`text-4xl md:text-5xl font-bold mb-4 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>Why Choose FarmEase?</h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {benefits.map((benefit, i) => (
               <motion.div
                 key={i}
@@ -521,24 +546,27 @@ const Landing = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="text-center p-10 rounded-2xl border transition-all duration-300"
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="text-center p-8 rounded-2xl transition-all duration-300"
                 style={{
-                  backgroundColor: isDark ? '#1a1a1a' : '#f9fafb',
-                  borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb'
+                  backgroundColor: isDark ? 'rgba(26,26,26,0.6)' : 'rgba(255,255,255,0.8)',
+                  border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.06)',
+                  boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.2)' : '0 4px 24px rgba(0,0,0,0.06)',
+                  backdropFilter: 'blur(12px)'
                 }}
               >
-                <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
+                <motion.div 
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5"
                   style={{
-                    background: 'linear-gradient(to bottom right, rgba(16, 185, 129, 0.2), rgba(20, 184, 166, 0.2))',
-                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)'
                   }}
                 >
-                  <benefit.icon style={{ color: '#10b981' }} size={28} />
-                </div>
-                <h3 className={`text-lg font-bold mb-3 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{benefit.title}</h3>
-                <p className={`text-sm transition-colors ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{benefit.desc}</p>
+                  <benefit.icon style={{ color: '#ffffff' }} size={24} />
+                </motion.div>
+                <h3 className={`text-lg font-bold mb-2 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{benefit.title}</h3>
+                <p className={`text-sm transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{benefit.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -546,114 +574,95 @@ const Landing = () => {
       </section>
 
       {/* How It Works */}
-      <section className={`py-28 transition-colors duration-500 ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-20 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <span className="text-emerald-500 text-sm font-bold tracking-wider uppercase mb-4 block">Process</span>
-              <h2 className={`text-4xl md:text-5xl font-bold mb-6 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>How It Works</h2>
-              <p className={`mb-8 transition-colors ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                Renting equipment has never been easier. Follow these simple steps.
-              </p>
-              
-              <div className="space-y-6">
-                {steps.map((step, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.15 }}
-                    className="flex items-start gap-5 p-6 rounded-2xl border transition-colors"
-                    style={{
-                      backgroundColor: isDark ? 'rgba(26, 26, 26, 0.5)' : '#ffffff',
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb'
-                    }}
-                  >
-                    <div 
-                      className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{
-                        background: 'linear-gradient(to bottom right, #10b981, #0d9488)',
-                        boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)'
-                      }}
-                    >
-                      <step.icon style={{ color: '#ffffff' }} size={24} />
-                    </div>
-                    <div>
-                      <h3 className={`text-lg font-bold mb-1 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{step.title}</h3>
-                      <p className={`text-sm transition-colors ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{step.desc}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="hidden lg:block"
-            >
-              <div className="grid grid-cols-2 gap-6">
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl"
-                  style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)' }}
-                >
-                  <img 
-                    src="/Tractors"
-                    alt="Tractor"
-                    className="w-full h-full object-cover"
-                    onError={(e) => { 
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span style={{ fontSize: '64px', opacity: 0.4 }}>🚜</span>
-                  </div>
-                </motion.div>
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="aspect-[3/4] rounded-2xl overflow-hidden mt-10 shadow-2xl"
-                  style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)' }}
-                >
-                  <img 
-                    src="/Harvester"
-                    alt="Harvester"
-                    className="w-full h-full object-cover"
-                    onError={(e) => { 
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span style={{ fontSize: '64px', opacity: 0.4 }}>🌾</span>
-                  </div>
-                </motion.div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Locations */}
-      <section id="locations" className={`py-28 transition-colors duration-500 ${isDark ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
+      <section className={`py-24 transition-colors duration-500 ${isDark ? 'bg-gradient-to-b from-[#0a0a0a] to-[#0f0f0f]' : 'bg-gradient-to-b from-white to-gray-50'}`}>
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-20"
+            className="text-center mb-16"
           >
-            <span className="text-emerald-500 text-sm font-bold tracking-wider uppercase mb-4 block">Locations</span>
-            <h2 className={`text-4xl md:text-5xl font-bold mb-6 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>Explore Regions</h2>
-            <p className={`max-w-2xl mx-auto text-lg transition-colors ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Find equipment across major farming regions</p>
+            <motion.span 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="inline-block px-4 py-1.5 rounded-full text-sm font-bold tracking-wider uppercase mb-4"
+              style={{
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(20,184,166,0.2) 100%)',
+                color: '#10b981',
+                border: '1px solid rgba(16,185,129,0.3)'
+              }}
+            >
+              Process
+            </motion.span>
+            <h2 className={`text-4xl md:text-5xl font-bold mb-4 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>How It Works</h2>
+            <p className={`max-w-2xl mx-auto text-lg transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              Renting equipment has never been easier. Follow these simple steps.
+            </p>
+          </motion.div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {steps.map((step, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="text-center p-6 rounded-2xl transition-all duration-300"
+                style={{
+                  backgroundColor: isDark ? 'rgba(26,26,26,0.6)' : 'rgba(255,255,255,0.8)',
+                  border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.06)',
+                  boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.2)' : '0 4px 24px rgba(0,0,0,0.06)',
+                  backdropFilter: 'blur(12px)'
+                }}
+              >
+                <motion.div 
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)'
+                  }}
+                >
+                  <step.icon style={{ color: '#ffffff' }} size={24} />
+                </motion.div>
+                <h3 className={`text-lg font-bold mb-2 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{step.title}</h3>
+                <p className={`text-sm transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{step.desc}</p>
+              </motion.div>
+                ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Locations */}
+      <section id="locations" className={`py-24 transition-colors duration-500 ${isDark ? 'bg-gradient-to-b from-[#0f0f0f] to-[#0a0a0a]' : 'bg-gradient-to-b from-gray-50 to-white'}`}>
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <motion.span 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="inline-block px-4 py-1.5 rounded-full text-sm font-bold tracking-wider uppercase mb-4"
+              style={{
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(20,184,166,0.2) 100%)',
+                color: '#10b981',
+                border: '1px solid rgba(16,185,129,0.3)'
+              }}
+            >
+              Locations
+            </motion.span>
+            <h2 className={`text-4xl md:text-5xl font-bold mb-4 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>Explore Regions</h2>
+            <p className={`max-w-2xl mx-auto text-lg transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Find equipment across major farming regions</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {locations.map((location, i) => (
               <motion.div
                 key={i}
@@ -661,12 +670,13 @@ const Landing = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="rounded-2xl overflow-hidden border transition-all duration-300 cursor-pointer group"
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="rounded-2xl overflow-hidden cursor-pointer group"
                 style={{
-                  backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
-                  borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb',
-                  boxShadow: isDark ? 'none' : '0 10px 15px -3px rgba(0,0,0,0.1)'
+                  backgroundColor: isDark ? 'rgba(26,26,26,0.8)' : 'rgba(255,255,255,0.9)',
+                  border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.08)',
+                  boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.3)' : '0 4px 24px rgba(0,0,0,0.08)',
+                  backdropFilter: 'blur(12px)'
                 }}
                 onClick={() => navigate('/register')}
               >
@@ -684,9 +694,9 @@ const Landing = () => {
                     <span style={{ fontSize: '48px', opacity: 0.4 }}>{location.fallback}</span>
                   </div>
                 </div>
-                <div className="p-8">
-                  <h3 className={`text-xl font-bold mb-2 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{location.name}</h3>
-                  <p className="text-emerald-500 text-sm font-semibold">Explore Region</p>
+                <div className="p-6">
+                  <h3 className={`text-lg font-bold mb-1 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{location.name}</h3>
+                  <p className="text-emerald-500 text-sm font-medium">Explore Region</p>
                 </div>
               </motion.div>
             ))}
@@ -698,44 +708,37 @@ const Landing = () => {
       <TestimonialsSection />
 
       {/* Footer */}
-      <footer 
-        className="py-16 border-t transition-colors duration-500"
-        style={{ 
-          backgroundColor: isDark ? '#0a0a0a' : '#ffffff',
-          borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb'
+      <footer
+        className="py-12 border-t transition-colors duration-500"
+        style={{
+          backgroundColor: isDark ? 'rgba(10,10,10,0.9)' : 'rgba(255,255,255,0.9)',
+          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+          backdropFilter: 'blur(16px)'
         }}
       >
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div 
-                className="w-11 h-11 rounded-xl flex items-center justify-center"
+              <motion.div
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
                 style={{
-                  background: 'linear-gradient(to bottom right, #10b981, #0d9488)',
-                  boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)'
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)'
                 }}
               >
-                {/* Wheat/Grain icon for footer */}
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 3C12 3 8 6 8 12C8 15 9 17 10 18.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                  <path d="M12 3C12 3 16 6 16 12C16 15 15 17 14 18.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                  <ellipse cx="8" cy="8" rx="2" ry="3" fill="white" opacity="0.9"/>
-                  <ellipse cx="16" cy="8" rx="2" ry="3" fill="white" opacity="0.9"/>
-                  <ellipse cx="10" cy="6" rx="1.5" ry="2" fill="white" opacity="0.7"/>
-                  <ellipse cx="14" cy="6" rx="1.5" ry="2" fill="white" opacity="0.7"/>
-                  <path d="M12 18V21" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <span className={`text-xl font-bold transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>FarmEase</span>
+                <FiTruck style={{ color: '#ffffff' }} size={20} />
+              </motion.div>
+              <span className={`text-lg font-bold transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>FarmEase</span>
             </div>
-            
-            <div className={`flex items-center gap-10 text-sm transition-colors ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              <a href="#" style={{ color: 'inherit' }} className="hover:text-emerald-500 transition-colors font-medium">Privacy</a>
-              <a href="#" style={{ color: 'inherit' }} className="hover:text-emerald-500 transition-colors font-medium">Terms</a>
-              <a href="#" style={{ color: 'inherit' }} className="hover:text-emerald-500 transition-colors font-medium">Contact</a>
+
+            <div className={`flex items-center gap-8 text-sm transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <motion.a href="#" whileHover={{ color: '#10b981', y: -2 }} style={{ color: 'inherit' }} className="font-medium transition-colors">Privacy</motion.a>
+              <motion.a href="#" whileHover={{ color: '#10b981', y: -2 }} style={{ color: 'inherit' }} className="font-medium transition-colors">Terms</motion.a>
+              <motion.a href="#" whileHover={{ color: '#10b981', y: -2 }} style={{ color: 'inherit' }} className="font-medium transition-colors">Contact</motion.a>
             </div>
-            
-            <p className={`text-sm transition-colors ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>© 2024 FarmEase. All rights reserved.</p>
+
+            <p className={`text-sm transition-colors ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>© 2024 FarmEase. All rights reserved.</p>
           </div>
         </div>
       </footer>

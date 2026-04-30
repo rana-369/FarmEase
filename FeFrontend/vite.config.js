@@ -11,6 +11,25 @@ export default defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom']
   },
+  build: {
+    // Production optimizations
+    target: 'es2015',
+    minify: 'esbuild',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        // Better chunking strategy
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'animation-vendor': ['framer-motion'],
+          'icons-vendor': ['react-icons'],
+          'chart-vendor': ['recharts'],
+        }
+      }
+    },
+    // Increase chunk size warning limit
+    chunkSizeWarningLimit: 500,
+  },
   server: {
     port: 5174,
     strictPort: true,
