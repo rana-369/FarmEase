@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiPackage, FiTruck, FiCalendar, FiClock, FiCheckCircle, FiAlertCircle, FiXCircle, FiFilter, FiSearch, FiArrowUpRight, FiMapPin, FiCreditCard, FiRefreshCw, FiX, FiStar } from 'react-icons/fi';
+import { FiPackage, FiTruck, FiCalendar, FiClock, FiCheckCircle, FiAlertCircle, FiXCircle, FiFilter, FiSearch, FiArrowUpRight, FiMapPin, FiCreditCard, FiRefreshCw, FiX, FiStar, FiKey } from 'react-icons/fi';
 import Modal from '../../components/Modal';
 import { getFarmerBookings } from '../../services/dashboardService';
 import { cancelBooking } from '../../services/bookingService';
@@ -23,6 +23,16 @@ const FarmerBookings = () => {
   const [reviewEligibility, setReviewEligibility] = useState(null);
   const [bookingReview, setBookingReview] = useState(null);
 
+  // Helper function to format time (e.g., "06:00" -> "6:00 AM")
+  const formatTime = (time) => {
+    if (!time || !time.includes(':')) return time;
+    const [hours] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+    return `${displayHour}:00 ${period}`;
+  };
+
   useEffect(() => {
     const fetchBookings = async () => {
       try {
@@ -34,6 +44,8 @@ const FarmerBookings = () => {
           machineId: booking.machineId || booking.MachineId || 0,
           machineName: booking.machineName || booking.MachineName || 'Equipment',
           ownerName: booking.ownerName || booking.OwnerName || 'Owner',
+          scheduledDate: booking.scheduledDate || booking.ScheduledDate || null,
+          scheduledTime: booking.scheduledTime || booking.ScheduledTime || null,
           startDate: booking.startDate || (booking.createdAt || booking.CreatedAt)?.split('T')[0] || 'N/A',
           endDate: booking.endDate || booking.EndDate || 'N/A',
           status: booking.status || booking.Status || 'Pending',
@@ -45,7 +57,10 @@ const FarmerBookings = () => {
           refundAmount: booking.payment?.refundAmount || booking.Payment?.RefundAmount || booking.payment?.RefundAmount || 0,
           refundDate: booking.payment?.refundedAt || booking.Payment?.RefundedAt || booking.payment?.RefundedAt || null,
           refundReason: booking.payment?.refundReason || booking.Payment?.RefundReason || booking.payment?.RefundReason || null,
-          hasReviewed: booking.hasReviewed || booking.HasReviewed || false
+          hasReviewed: booking.hasReviewed || booking.HasReviewed || false,
+          // OTP fields
+          arrivalOtp: booking.arrivalOtp || booking.ArrivalOtp || null,
+          workStartOtp: booking.workStartOtp || booking.WorkStartOtp || null
         }));
         
         setBookings(transformedBookings);
@@ -80,9 +95,9 @@ const FarmerBookings = () => {
       
       if (result.success) {
         setBookings(prev => prev.map(b => 
-          b.id === booking.id ? { ...b, status: 'Active', isPaid: true } : b
+          b.id === booking.id ? { ...b, status: 'Paid', isPaid: true } : b
         ));
-        alert("Payment successful! Your booking is now Active.");
+        alert("Payment successful! Booking settled.");
       } else {
         alert(result.message || "Payment failed. Please try again.");
       }
@@ -168,9 +183,12 @@ const FarmerBookings = () => {
 
   const getStatusConfig = (status) => {
     switch (status?.toLowerCase()) {
-      case 'active': return { icon: FiClock, color: '#22c55e', bg: 'rgba(34, 197, 94, 0.15)' };
       case 'pending': return { icon: FiClock, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)' };
-      case 'completed': return { icon: FiCheckCircle, color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' };
+      case 'accepted': return { icon: FiCheckCircle, color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' };
+      case 'arrived': return { icon: FiMapPin, color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.15)' };
+      case 'inprogress': return { icon: FiTruck, color: '#22c55e', bg: 'rgba(34, 197, 94, 0.15)' };
+      case 'completed': return { icon: FiCheckCircle, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)' };
+      case 'paid': return { icon: FiCheckCircle, color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)' };
       case 'rejected':
       case 'cancelled': return { icon: FiXCircle, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)' };
       default: return { icon: FiClock, color: '#888888', bg: 'rgba(255, 255, 255, 0.05)' };
@@ -213,8 +231,8 @@ const FarmerBookings = () => {
         <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
           {[
             { label: 'Total', value: bookings.length, color: '#3b82f6' },
-            { label: 'Active', value: bookings.filter(b => b.status.toLowerCase() === 'active').length, color: '#10b981' },
-            { label: 'Completed', value: bookings.filter(b => b.status.toLowerCase() === 'completed').length, color: '#a855f7' }
+            { label: 'In Progress', value: bookings.filter(b => ['accepted', 'arrived', 'inprogress'].includes(b.status?.toLowerCase() || '')).length, color: '#10b981' },
+            { label: 'Settled', value: bookings.filter(b => b.status?.toLowerCase() === 'paid' || b.isPaid).length, color: '#a855f7' }
           ].map((stat, index) => (
             <motion.div 
               key={stat.label}
@@ -260,8 +278,11 @@ const FarmerBookings = () => {
             >
               <option value="all">All Statuses</option>
               <option value="pending">Pending</option>
-              <option value="active">Active</option>
+              <option value="accepted">Accepted</option>
+              <option value="arrived">Arrived</option>
+              <option value="inprogress">In Progress</option>
               <option value="completed">Completed</option>
+              <option value="paid">Paid</option>
               <option value="rejected">Rejected</option>
               <option value="cancelled">Cancelled</option>
             </select>
@@ -315,13 +336,45 @@ const FarmerBookings = () => {
                         <div className="flex items-center gap-4 mt-2 text-xs" style={{ color: 'var(--text-muted)' }}>
                           <div className="flex items-center gap-1">
                             <FiCalendar />
-                            <span>{booking.startDate} - {booking.endDate}</span>
+                            <span>
+                              {booking.scheduledDate
+                                ? new Date(booking.scheduledDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                : booking.startDate}
+                              {booking.scheduledTime && ` at ${formatTime(booking.scheduledTime)}`}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1">
                             <FiClock />
                             <span>#{booking.id.toString().substring(0, 8)}</span>
                           </div>
                         </div>
+
+                        {/* OTP Display for Accepted/Arrived status - OTP generated at booking creation */}
+                        {booking.status === 'Accepted' && booking.arrivalOtp && (
+                          <div
+                            className="mt-3 p-3 rounded-lg flex items-center gap-3"
+                            style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)' }}
+                          >
+                            <FiKey className="text-lg" style={{ color: '#3b82f6' }} />
+                            <div>
+                              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Arrival OTP (share with owner when they arrive):</p>
+                              <p className="text-2xl font-bold tracking-widest" style={{ color: '#3b82f6' }}>{booking.arrivalOtp}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {booking.status === 'Arrived' && booking.workStartOtp && (
+                          <div
+                            className="mt-3 p-3 rounded-lg flex items-center gap-3"
+                            style={{ background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.2)' }}
+                          >
+                            <FiKey className="text-lg" style={{ color: '#a855f7' }} />
+                            <div>
+                              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Work Start OTP (share with owner to begin work):</p>
+                              <p className="text-2xl font-bold tracking-widest" style={{ color: '#a855f7' }}>{booking.workStartOtp}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -331,7 +384,8 @@ const FarmerBookings = () => {
                         <p className="text-xl font-bold" style={{ color: '#10b981' }}>Rs.{booking.totalCost.toLocaleString()}</p>
                       </div>
                       
-                      {booking.status === 'Accepted' && !booking.isPaid && (
+                      {/* NEW FLOW: Payment only after work is completed */}
+                      {booking.status === 'Completed' && !booking.isPaid && !booking.payment && (
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
@@ -343,15 +397,16 @@ const FarmerBookings = () => {
                           {paymentLoading === booking.id ? (
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                           ) : (
-                            <><FiCreditCard /> Pay</>
+                            <><FiCreditCard /> Pay Now</>
                           )}
                         </motion.button>
                       )}
 
-                      {booking.isPaid && !booking.hasRefund && (
-                        <div className="badge" style={{ 
+                      {/* Show Paid badge if payment exists or status is Paid */}
+                      {(booking.isPaid || booking.payment || booking.status === 'Paid') && !booking.hasRefund && (
+                        <div className="badge" style={{
                           background: 'rgba(16, 185, 129, 0.15)',
-                          color: '#10b981' 
+                          color: '#10b981'
                         }}>
                           <FiCheckCircle className="w-3 h-3" /> Paid
                         </div>

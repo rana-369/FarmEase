@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiCalendar, FiUser, FiTruck, FiClock, FiCheck, FiX, FiInfo, FiMapPin, FiCheckCircle } from 'react-icons/fi';
+import { FiCalendar, FiUser, FiTruck, FiClock, FiCheck, FiX, FiInfo, FiMapPin, FiCheckCircle, FiKey } from 'react-icons/fi';
 import Modal from '../../components/Modal';
 import api from '../../services/api';
 
@@ -10,6 +10,24 @@ const OwnerRequests = () => {
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
+
+  // OTP Modal states
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpType, setOtpType] = useState(null); // 'arrival' or 'workstart'
+  const [otpBookingId, setOtpBookingId] = useState(null);
+  const [otpValue, setOtpValue] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState(null);
+
+  // Helper function to format time (e.g., "06:00" -> "6:00 AM")
+  const formatTime = (time) => {
+    if (!time || !time.includes(':')) return time;
+    const [hours] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+    return `${displayHour}:00 ${period}`;
+  };
 
   useEffect(() => {
     fetchRequests();
@@ -32,6 +50,8 @@ const OwnerRequests = () => {
             machineName: req.machineName || req.MachineName || 'Equipment',
             status: req.status || req.Status || 'Pending',
             hours: req.hours || req.Hours || 0,
+            scheduledDate: req.scheduledDate || req.ScheduledDate || null,
+            scheduledTime: req.scheduledTime || req.ScheduledTime || null,
             totalAmount: totalAmount,
             platformFee: platformFee,
             baseAmount: baseAmount, // Owner's net earnings
@@ -63,6 +83,8 @@ const OwnerRequests = () => {
         switch (action) {
           case 'accept': return { ...req, status: 'Accepted' };
           case 'reject': return { ...req, status: 'Rejected' };
+          case 'arrived': return { ...req, status: 'Arrived' };
+          case 'startwork': return { ...req, status: 'InProgress' };
           case 'complete': return { ...req, status: 'Completed' };
           default: return req;
         }
@@ -71,9 +93,13 @@ const OwnerRequests = () => {
       // Show success notification with earnings info
       if (action === 'complete' && updatedRequest) {
         const earnings = updatedRequest.baseAmount || (updatedRequest.totalAmount - updatedRequest.platformFee);
-        showNotification(`Booking completed! You earned ₹${earnings.toLocaleString()}`, 'success');
+        showNotification(`Work completed! You will receive ₹${earnings.toLocaleString()} after payment.`, 'success');
+      } else if (action === 'arrived') {
+        showNotification('Arrival confirmed! Ready to start work.', 'success');
+      } else if (action === 'startwork') {
+        showNotification('Work started!', 'success');
       } else if (action === 'accept') {
-        showNotification('Booking accepted! Waiting for farmer payment.', 'success');
+        showNotification('Booking accepted! Travel to the location on scheduled date.', 'success');
       } else if (action === 'reject') {
         showNotification('Booking rejected.', 'info');
       }
@@ -83,12 +109,55 @@ const OwnerRequests = () => {
     }
   };
 
+  // OTP Verification Functions - OTP is already generated at booking creation
+  const handleShowOtpModal = (bookingId, type) => {
+    setOtpBookingId(bookingId);
+    setOtpType(type);
+    setOtpValue('');
+    setGeneratedOtp(null); // OTP is with farmer, not shown to owner
+    setShowOtpModal(true);
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpValue || otpValue.length !== 6) {
+      showNotification('Please enter a valid 6-digit OTP', 'error');
+      return;
+    }
+
+    try {
+      setOtpLoading(true);
+      const endpoint = otpType === 'arrival'
+        ? `/bookings/${otpBookingId}/verify-arrival-otp`
+        : `/bookings/${otpBookingId}/verify-workstart-otp`;
+
+      const response = await api.post(endpoint, { otp: otpValue });
+
+      if (response.data.success !== false) {
+        const newStatus = otpType === 'arrival' ? 'Arrived' : 'InProgress';
+        setRequests(requests.map(req =>
+          req.id === otpBookingId ? { ...req, status: newStatus } : req
+        ));
+        setShowOtpModal(false);
+        showNotification(response.data.message || `${otpType === 'arrival' ? 'Arrival' : 'Work'} confirmed!`, 'success');
+      } else {
+        showNotification(response.data.message || 'Invalid OTP', 'error');
+      }
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      showNotification(error.response?.data?.message || 'Failed to verify OTP', 'error');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   const getStatusStyle = (status) => {
     const s = status?.toLowerCase() || '';
     if (s === 'pending') return { color: '#facc15', bg: 'rgba(250, 204, 21, 0.1)', border: 'rgba(250, 204, 21, 0.2)' };
     if (s === 'accepted') return { color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', border: 'rgba(59, 130, 246, 0.2)' };
-    if (s === 'active') return { color: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.2)' };
-    if (s === 'completed') return { color: '#22c55e', bg: 'rgba(34, 197, 94, 0.15)', border: 'rgba(34, 197, 94, 0.3)' };
+    if (s === 'arrived') return { color: '#a855f7', bg: 'rgba(168, 85, 247, 0.1)', border: 'rgba(168, 85, 247, 0.2)' };
+    if (s === 'inprogress') return { color: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.2)' };
+    if (s === 'completed') return { color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.2)' };
+    if (s === 'paid') return { color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.3)' };
     if (s === 'rejected') return { color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.2)' };
     return { color: '#a1a1a1', bg: 'rgba(255, 255, 255, 0.05)', border: 'rgba(255, 255, 255, 0.1)' };
   };
@@ -207,8 +276,17 @@ const OwnerRequests = () => {
                           <FiCalendar />
                         </div>
                         <div>
-                          <p className="input-label">Requested Period</p>
-                          <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{new Date(request.createdAt).toLocaleDateString()} (Last {request.hours} hours)</p>
+                          <p className="input-label">Scheduled Date</p>
+                          <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                            {request.scheduledDate 
+                              ? new Date(request.scheduledDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+                              : new Date(request.createdAt).toLocaleDateString()}
+                          </p>
+                          {request.scheduledTime && (
+                            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                              at {formatTime(request.scheduledTime)}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -261,11 +339,47 @@ const OwnerRequests = () => {
                           <span>Reject</span>
                         </motion.button>
                       </div>
-                    ) : request.status === 'Active' ? (
+                    ) : request.status === 'Accepted' ? (
+                      <div className="w-full flex flex-col gap-3">
+                        <div className="p-4 rounded-xl text-center" style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                           <p className="text-sm font-semibold" style={{ color: '#3b82f6' }}>
+                             Booking Accepted - Travel to Location
+                           </p>
+                        </div>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleShowOtpModal(request.id, 'arrival')}
+                          className="primary-button w-full flex items-center justify-center gap-2"
+                          style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+                        >
+                          <FiKey className="text-lg" />
+                          <span>I've Arrived - Enter OTP</span>
+                        </motion.button>
+                      </div>
+                    ) : request.status === 'Arrived' ? (
+                      <div className="w-full flex flex-col gap-3">
+                        <div className="p-4 rounded-xl text-center" style={{ background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.2)' }}>
+                           <p className="text-sm font-semibold" style={{ color: '#a855f7' }}>
+                             Arrived at Location
+                           </p>
+                        </div>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleShowOtpModal(request.id, 'workstart')}
+                          className="primary-button w-full flex items-center justify-center gap-2"
+                          style={{ background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)' }}
+                        >
+                          <FiKey className="text-lg" />
+                          <span>Start Work - Enter OTP</span>
+                        </motion.button>
+                      </div>
+                    ) : request.status === 'InProgress' ? (
                       <div className="w-full flex flex-col gap-3">
                         <div className="p-4 rounded-xl text-center" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
                            <p className="text-sm font-semibold" style={{ color: '#10b981' }}>
-                             Rental in Progress
+                             Work in Progress
                            </p>
                         </div>
                         <motion.button 
@@ -281,9 +395,25 @@ const OwnerRequests = () => {
                       </div>
                     ) : request.status === 'Completed' ? (
                       <div className="w-full flex flex-col gap-3">
+                        <div className="p-4 rounded-xl text-center" style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                           <p className="text-sm font-bold" style={{ color: '#f59e0b' }}>
+                             Work Completed - Awaiting Payment
+                           </p>
+                        </div>
+                        <motion.button 
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setSelectedRequest(request)}
+                          className="secondary-button w-full flex items-center justify-center gap-2"
+                        >
+                          <FiInfo /> View Details
+                        </motion.button>
+                      </div>
+                    ) : request.status === 'Paid' ? (
+                      <div className="w-full flex flex-col gap-3">
                         <div className="p-4 rounded-xl text-center" style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
                            <p className="text-sm font-bold" style={{ color: '#10b981' }}>
-                             Completed
+                             Payment Received - Settled
                            </p>
                         </div>
                         <motion.button 
@@ -386,7 +516,7 @@ const OwnerRequests = () => {
             </div>
           </div>
 
-          <motion.button 
+          <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             onClick={() => setSelectedRequest(null)}
@@ -394,6 +524,62 @@ const OwnerRequests = () => {
           >
             Close
           </motion.button>
+        </Modal>
+
+        {/* OTP Verification Modal */}
+        <Modal isOpen={showOtpModal} onClose={() => setShowOtpModal(false)}>
+          <div className="p-6">
+            <div className="text-center mb-6">
+              <div
+                className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+                style={{ background: 'rgba(59, 130, 246, 0.1)' }}
+              >
+                <FiKey className="text-3xl" style={{ color: '#3b82f6' }} />
+              </div>
+              <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                {otpType === 'arrival' ? 'Confirm Arrival' : 'Start Work'}
+              </h2>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                {otpType === 'arrival'
+                  ? 'Ask the farmer for the OTP to confirm your arrival'
+                  : 'Ask the farmer for the OTP to start the work'}
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="input-label">Enter OTP from Farmer</label>
+              <input
+                type="text"
+                maxLength={6}
+                value={otpValue}
+                onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="Enter 6-digit OTP"
+                className="input-field text-center text-2xl tracking-widest"
+                style={{ letterSpacing: '0.5em' }}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={() => setShowOtpModal(false)}
+                className="secondary-button flex-1"
+              >
+                Cancel
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={handleVerifyOtp}
+                disabled={otpLoading || otpValue.length !== 6}
+                className="primary-button flex-1"
+                style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+              >
+                {otpLoading ? 'Verifying...' : 'Verify OTP'}
+              </motion.button>
+            </div>
+          </div>
         </Modal>
     </div>
   );

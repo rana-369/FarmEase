@@ -180,6 +180,9 @@ builder.Services.AddMediatR(typeof(Program));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuditService, AuditService>();
 
+// --- 5.4. BACKGROUND SERVICES ---
+builder.Services.AddHostedService<PaymentReminderService>();
+
 // --- 6. CORS ---
 builder.Services.AddCors(options =>
 {
@@ -234,7 +237,7 @@ builder.Services.AddHealthChecks()
 
 builder.Services.AddHealthChecksUI(settings =>
 {
-    settings.AddHealthCheckEndpoint("FarmEase API", "/health-ui");
+    settings.AddHealthCheckEndpoint("FarmEase API", "/health");
 }).AddInMemoryStorage();
 
 var app = builder.Build();
@@ -345,6 +348,12 @@ try
     Console.WriteLine("[Startup] Reviews table verified/created.");
     
     await connection.CloseAsync();
+
+    // Fix all booking statuses based on payment existence
+    Console.WriteLine("[Startup] Fixing booking statuses based on payments...");
+    var bookingService = services.GetRequiredService<IBookingService>();
+    var (fixedCount, fixMessage) = await bookingService.FixAllBookingStatusesAsync();
+    Console.WriteLine($"[Startup] {fixMessage}");
 }
 catch (Exception ex)
 {

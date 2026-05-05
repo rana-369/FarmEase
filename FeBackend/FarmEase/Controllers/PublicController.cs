@@ -40,11 +40,13 @@ namespace FarmEase.Controllers
 
             // Single query for booking count and average rating
             var bookingStats = await _unitOfWork.Bookings.Query()
-                .Where(b => b.Status == "Completed")
                 .GroupBy(_ => 1)
                 .Select(g => new
                 {
-                    TotalBookings = g.Count()
+                    TotalBookings = g.Count(),
+                    CompletedBookings = g.Count(b => b.Status == "Completed"),
+                    RejectedBookings = g.Count(b => b.Status == "Rejected"),
+                    CancelledBookings = g.Count(b => b.Status == "Cancelled")
                 })
                 .FirstOrDefaultAsync();
 
@@ -58,7 +60,16 @@ namespace FarmEase.Controllers
                 TotalUsers = (userStats?.TotalFarmers ?? 0) + (userStats?.TotalOwners ?? 0),
                 TotalMachines = machineBookingStats?.TotalMachines ?? 0,
                 TotalBookings = bookingStats?.TotalBookings ?? 0,
-                AverageRating = Math.Round(averageRating, 1)
+                CompletedBookings = bookingStats?.CompletedBookings ?? 0,
+                RejectedBookings = bookingStats?.RejectedBookings ?? 0,
+                CancelledBookings = bookingStats?.CancelledBookings ?? 0,
+                AverageRating = Math.Round(averageRating, 1),
+                // Success rate = Completed / (Completed + Rejected + Cancelled)
+                SuccessRate = CalculateSuccessRate(
+                    bookingStats?.CompletedBookings ?? 0,
+                    bookingStats?.RejectedBookings ?? 0,
+                    bookingStats?.CancelledBookings ?? 0
+                )
             });
         }
 
@@ -86,6 +97,17 @@ namespace FarmEase.Controllers
                 .ToListAsync();
 
             return Ok(machines);
+        }
+
+        /// <summary>
+        /// Calculate success rate: Completed / (Completed + Rejected + Cancelled) × 100
+        /// Returns 0 if no finalized bookings exist
+        /// </summary>
+        private static int CalculateSuccessRate(int completed, int rejected, int cancelled)
+        {
+            int finalizedBookings = completed + rejected + cancelled;
+            if (finalizedBookings == 0) return 0;
+            return (int)Math.Round((double)completed / finalizedBookings * 100);
         }
     }
 }

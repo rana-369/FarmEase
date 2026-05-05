@@ -44,15 +44,17 @@ namespace FECommon.Patterns
             var response = new
             {
                 status = report.Status.ToString(),
-                checks = report.Entries.Select(e => new
-                {
-                    name = e.Key,
-                    status = e.Value.Status.ToString(),
-                    description = e.Value.Description,
-                    duration = e.Value.Duration.TotalMilliseconds,
-                    data = e.Value.Data
-                }),
-                totalDuration = report.TotalDuration.TotalMilliseconds
+                totalDuration = report.TotalDuration.ToString(), // TimeSpan string format for HealthChecks UI
+                entries = report.Entries.ToDictionary(
+                    e => e.Key,
+                    e => new
+                    {
+                        status = e.Value.Status.ToString(),
+                        description = e.Value.Description,
+                        duration = e.Value.Duration.ToString(), // TimeSpan string format
+                        data = e.Value.Data,
+                        tags = e.Value.Tags
+                    })
             };
 
             context.Response.ContentType = "application/json";

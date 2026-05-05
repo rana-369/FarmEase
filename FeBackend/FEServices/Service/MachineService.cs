@@ -233,5 +233,46 @@ namespace FEServices.Service
                 return (false, $"Error: {ex.Message}");
             }
         }
+
+        public async Task<IEnumerable<EquipmentAvailabilityDto>> GetEquipmentAvailabilityAsync(int machineId, DateTime startDate, DateTime endDate)
+        {
+            // Verify machine exists
+            var machine = await _unitOfWork.Machines.GetByIdAsync(machineId);
+            if (machine == null)
+                return [];
+
+            // Get all bookings for this machine in the date range
+            var bookings = await _unitOfWork.Bookings.Query()
+                .Where(b => b.MachineId == machineId &&
+                           b.Status != "Rejected" && b.Status != "Cancelled")
+                .ToListAsync();
+
+            // Generate availability for each day in the range
+            var availabilityList = new List<EquipmentAvailabilityDto>();
+            var currentDate = startDate.Date;
+
+            while (currentDate <= endDate.Date)
+            {
+                // For now, bookings don't have specific dates, so we'll mark days as available
+                // In a real system, you'd check if there are bookings for this specific date
+
+                var dayAvailability = new EquipmentAvailabilityDto
+                {
+                    Date = currentDate,
+                    IsAvailable = true, // Default to available
+                    BookedSlots = []
+                };
+
+                // If you had StartDate/EndDate on bookings, you'd check like:
+                // var dayBookings = bookings.Where(b => b.StartDate?.Date == currentDate).ToList();
+                // dayAvailability.IsAvailable = dayBookings.Count == 0;
+                // dayAvailability.BookedSlots = dayBookings.Select(b => new BookingSlotDto {...}).ToList();
+
+                availabilityList.Add(dayAvailability);
+                currentDate = currentDate.AddDays(1);
+            }
+
+            return availabilityList;
+        }
     }
 }

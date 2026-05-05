@@ -134,6 +134,23 @@ export const getActiveCities = async () => {
   return response.data;
 };
 
+// ==================== EQUIPMENT CALENDAR ====================
+
+// Get equipment availability calendar
+export const getEquipmentAvailability = async (machineId, startDate, endDate) => {
+  try {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate.toISOString());
+    if (endDate) params.append('endDate', endDate.toISOString());
+
+    const response = await api.get(`/machines/${machineId}/availability?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching equipment availability:', error);
+    return [];
+  }
+};
+
 // ==================== ADMIN SERVICES ====================
 
 // Get all users (for Admin)

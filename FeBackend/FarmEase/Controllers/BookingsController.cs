@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using AutoMapper;
 using FEDTO.DTOs;
 using FEServices.Interface;
 using Microsoft.AspNetCore.Authorization;
@@ -8,9 +9,10 @@ namespace FarmEase.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BookingsController(IBookingService bookingService) : ControllerBase
+    public class BookingsController(IBookingService bookingService, IMapper mapper) : ControllerBase
     {
         private readonly IBookingService _bookingService = bookingService;
+        private readonly IMapper _mapper = mapper;
 
         [HttpPost]
         [Authorize(Roles = "Farmer,farmer")]
@@ -27,7 +29,8 @@ namespace FarmEase.Controllers
                 if (!success)
                     return BadRequest(new { Message = message });
 
-                return Ok(new { Message = message, Booking = booking });
+                var bookingDto = _mapper.Map<BookingResponseDto>(booking);
+                return Ok(new { Message = message, Booking = bookingDto });
             }
             catch (Exception ex)
             {
@@ -35,9 +38,9 @@ namespace FarmEase.Controllers
                 System.Diagnostics.Debug.WriteLine($"CreateBooking ERROR: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"Inner: {innerMessage}");
                 System.Diagnostics.Debug.WriteLine($"Stack: {ex.StackTrace}");
-                
-                return StatusCode(500, new { 
-                    Message = ex.Message, 
+
+                return StatusCode(500, new {
+                    Message = ex.Message,
                     InnerException = innerMessage,
                     StackTrace = ex.StackTrace
                 });
@@ -127,6 +130,54 @@ namespace FarmEase.Controllers
             return Ok(new { Message = message });
         }
 
+        [HttpPost("{id}/generate-arrival-otp")]
+        [Authorize(Roles = "Owner,owner")]
+        public async Task<IActionResult> GenerateArrivalOtp(int id)
+        {
+            var userId = GetUserId();
+            var (success, message, otp) = await _bookingService.GenerateArrivalOtpAsync(id, userId ?? "");
+            if (!success)
+                return BadRequest(new { Message = message });
+
+            return Ok(new { Message = message, Otp = otp });
+        }
+
+        [HttpPost("{id}/verify-arrival-otp")]
+        [Authorize(Roles = "Owner,owner")]
+        public async Task<IActionResult> VerifyArrivalOtp(int id, [FromBody] VerifyOtpDto model)
+        {
+            var userId = GetUserId();
+            var (success, message) = await _bookingService.VerifyArrivalOtpAsync(id, model.Otp ?? "", userId ?? "");
+            if (!success)
+                return BadRequest(new { Message = message });
+
+            return Ok(new { Message = message });
+        }
+
+        [HttpPost("{id}/generate-workstart-otp")]
+        [Authorize(Roles = "Owner,owner")]
+        public async Task<IActionResult> GenerateWorkStartOtp(int id)
+        {
+            var userId = GetUserId();
+            var (success, message, otp) = await _bookingService.GenerateWorkStartOtpAsync(id, userId ?? "");
+            if (!success)
+                return BadRequest(new { Message = message });
+
+            return Ok(new { Message = message, Otp = otp });
+        }
+
+        [HttpPost("{id}/verify-workstart-otp")]
+        [Authorize(Roles = "Owner,owner")]
+        public async Task<IActionResult> VerifyWorkStartOtp(int id, [FromBody] VerifyOtpDto model)
+        {
+            var userId = GetUserId();
+            var (success, message) = await _bookingService.VerifyWorkStartOtpAsync(id, model.Otp ?? "", userId ?? "");
+            if (!success)
+                return BadRequest(new { Message = message });
+
+            return Ok(new { Message = message });
+        }
+
         [HttpPut("{id}/complete")]
         [Authorize(Roles = "Owner,owner")]
         public async Task<IActionResult> CompleteBooking(int id)
@@ -134,7 +185,7 @@ namespace FarmEase.Controllers
             var userId = GetUserId();
             var (success, message) = await _bookingService.CompleteAsync(id, userId ?? "");
             if (!success)
-                return Unauthorized(new { Message = message });
+                return BadRequest(new { Message = message });
 
             return Ok(new { Message = message });
         }
@@ -144,14 +195,14 @@ namespace FarmEase.Controllers
         public async Task<IActionResult> UpdateBookingStatus(int id, [FromBody] UpdateBookingStatusDto model)
         {
             var userId = GetUserId();
-            
+
             var (success, message) = model.Status?.ToLower() switch
             {
                 "accepted" or "accept" => await _bookingService.AcceptAsync(id, userId ?? ""),
                 "rejected" or "reject" => await _bookingService.RejectAsync(id, userId ?? ""),
                 "completed" or "complete" => await _bookingService.CompleteAsync(id, userId ?? ""),
-                "active" or "paid" => await _bookingService.PayAsync(id, userId ?? ""),
-                _ => (false, "Invalid status. Use: accepted, rejected, completed, or active.")
+                "paid" or "pay" => await _bookingService.PayAsync(id, userId ?? ""),
+                _ => (false, "Invalid status. Use: accepted, rejected, completed, or paid.")
             };
 
             if (!success)

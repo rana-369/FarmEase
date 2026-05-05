@@ -4,6 +4,7 @@ using FEDomain.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FEDomain.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260505103611_AddScheduledDateTimeToBooking")]
+    partial class AddScheduledDateTimeToBooking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -161,10 +164,6 @@ namespace FEDomain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ArrivalOtp")
-                        .HasMaxLength(6)
-                        .HasColumnType("nvarchar(6)");
-
                     b.Property<decimal>("BaseAmount")
                         .HasColumnType("decimal(18,2)");
 
@@ -187,9 +186,6 @@ namespace FEDomain.Migrations
                     b.Property<string>("MachineName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("OtpGeneratedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("OwnerId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -211,10 +207,6 @@ namespace FEDomain.Migrations
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("WorkStartOtp")
-                        .HasMaxLength(6)
-                        .HasColumnType("nvarchar(6)");
 
                     b.HasKey("Id");
 

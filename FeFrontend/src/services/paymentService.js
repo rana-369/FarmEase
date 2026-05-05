@@ -99,6 +99,26 @@ export const openRazorpayCheckout = (options) => {
       theme: {
         color: '#22c55e'
       },
+      // Configure to show UPI ID input (collect) instead of QR code
+      config: {
+        display: {
+          blocks: {
+            upi: {
+              name: 'UPI',
+              instruments: [
+                {
+                  method: 'upi',
+                  flows: ['collect'] // Only show UPI ID input, not QR
+                }
+              ]
+            }
+          },
+          sequence: ['block.upi'],
+          preferences: {
+            show_default_blocks: true
+          }
+        }
+      },
       modal: {
         ondismiss: () => {
           reject(new Error('Payment cancelled by user'));

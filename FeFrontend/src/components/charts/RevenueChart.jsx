@@ -45,25 +45,30 @@ const RevenueChart = ({
 }) => {
   const { isDark } = useTheme();
   
+  console.log('RevenueChart received data:', data);
+  
   const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
   const textColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)';
 
   if (!data || data.length === 0) {
+    console.log('RevenueChart: No data, showing placeholder');
     return (
       <div className="flex items-center justify-center h-64">
-        <p style={{ color: 'var(--text-muted)' }}>No data available</p>
+        <p style={{ color: 'var(--text-muted)' }}>No data available (from RevenueChart)</p>
       </div>
     );
   }
+  
+  console.log('RevenueChart: Rendering chart with', data.length, 'items');
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col" style={{ minHeight: '320px' }}>
       {title && (
         <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
           {title}
         </h3>
       )}
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center" style={{ minHeight: '280px' }}>
         <ResponsiveContainer width="100%" height={280}>
         <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
           <defs>

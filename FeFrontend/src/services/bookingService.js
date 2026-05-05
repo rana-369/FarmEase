@@ -23,7 +23,9 @@ export const createBooking = async (bookingData) => {
   const response = await api.post('/bookings', {
     machineId: bookingData.machineId,
     machineName: bookingData.machineName,
-    hours: bookingData.hours
+    hours: bookingData.hours,
+    scheduledDate: bookingData.scheduledDate || null,
+    scheduledTime: bookingData.scheduledTime || null
   });
   return response.data;
 };

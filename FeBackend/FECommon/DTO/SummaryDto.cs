@@ -110,12 +110,19 @@ namespace FECommon.DTO
         public string OwnerName { get; init; } = string.Empty;
         public string? Location { get; init; }
         public int Hours { get; init; }
+        public DateTime? ScheduledDate { get; init; }
+        public string? ScheduledTime { get; init; }
         public decimal BaseAmount { get; init; }
         public decimal PlatformFee { get; init; }
         public decimal TotalAmount { get; init; }
         public string Status { get; init; } = string.Empty;
         public DateTime CreatedAt { get; init; }
         public bool IsRefunded { get; init; }
+        public bool IsPaid { get; init; }
+
+        // OTP fields for farmer to see
+        public string? ArrivalOtp { get; init; }
+        public string? WorkStartOtp { get; init; }
     }
 
     /// <summary>

@@ -75,7 +75,7 @@ const OwnerEarnings = () => {
   }
 
   const completedEarnings = activity
-    .filter(a => a.status === 'completed' || a.status === 'active')
+    .filter(a => a.status === 'paid' || a.status === 'completed' || a.status === 'active')
     .reduce((sum, a) => sum + (a.amount || 0), 0);
 
   return (
@@ -200,7 +200,7 @@ const OwnerEarnings = () => {
           </div>
 
           <div className="space-y-3 relative">
-            {activity.filter(a => a.status === 'completed' || a.status === 'active').map((item, index) => (
+            {activity.filter(a => a.status === 'paid' || a.status === 'completed' || a.status === 'active').map((item, index) => (
               <motion.div 
                 key={item.id} 
                 initial={{ opacity: 0, y: 10 }}
@@ -249,7 +249,7 @@ const OwnerEarnings = () => {
               </motion.div>
             ))}
             
-            {activity.filter(a => a.status === 'completed' || a.status === 'active').length === 0 && (
+            {activity.filter(a => a.status === 'paid' || a.status === 'completed' || a.status === 'active').length === 0 && (
               <div className="text-center py-12">
                 <div 
                   className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden"

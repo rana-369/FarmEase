@@ -30,13 +30,21 @@ const OwnerAnalytics = () => {
       if (analyticsData) {
         setAnalytics(analyticsData);
         
+        console.log('Owner Analytics Data:', analyticsData);
+        console.log('Revenue Data:', analyticsData.revenueData);
+        
         // Transform revenue data for chart
         if (analyticsData.revenueData && analyticsData.revenueData.length > 0) {
-          setEarningsData(analyticsData.revenueData.map(item => ({
-            name: item.month || item.name,
-            revenue: item.revenue || item.amount || 0,
-            bookings: item.bookingCount || item.bookings || item.count || 0
-          })));
+          const transformed = analyticsData.revenueData.map(item => {
+            console.log('Revenue item:', item);
+            return {
+              name: item.month || item.name,
+              revenue: item.revenue || item.amount || 0,
+              bookings: item.bookingCount || item.bookings || item.count || 0
+            };
+          });
+          console.log('Transformed Earnings Data:', JSON.stringify(transformed, null, 2));
+          setEarningsData(transformed);
         }
 
         // Transform category data
@@ -133,6 +141,7 @@ const OwnerAnalytics = () => {
           className="chart-card-modern chart-main"
         >
           <RevenueChart 
+            key={`earnings-${earningsData.length}-${period}`}
             data={earningsData} 
             title="Earnings Trend"
             color="#06b6d4"

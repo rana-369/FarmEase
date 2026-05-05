@@ -18,7 +18,10 @@ const Landing = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalMachines: 0,
-    totalBookings: 0
+    totalBookings: 0,
+    completedBookings: 0,
+    averageRating: 0,
+    successRate: 0
   });
   const [featuredEquipment, setFeaturedEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,9 +41,12 @@ const Landing = () => {
 
       if (statsData) {
         setStats({
-          totalUsers: statsData.totalUsers || 0,
-          totalMachines: statsData.totalMachines || 0,
-          totalBookings: statsData.totalBookings || 0
+          totalUsers: statsData.TotalUsers || statsData.totalUsers || 0,
+          totalMachines: statsData.TotalMachines || statsData.totalMachines || 0,
+          totalBookings: statsData.TotalBookings || statsData.totalBookings || 0,
+          completedBookings: statsData.CompletedBookings || statsData.completedBookings || 0,
+          averageRating: statsData.AverageRating || statsData.averageRating || 0,
+          successRate: statsData.SuccessRate || statsData.successRate || 0
         });
       }
 
@@ -393,9 +399,9 @@ const Landing = () => {
             className="grid grid-cols-3 gap-6 sm:gap-8 max-w-3xl mx-auto mt-16"
           >
             {[
-              { value: '4.8', label: 'Rating', icon: FiStar, color: '#fbbf24' },
-              { value: '10+', label: 'Users', icon: FiUsers, color: '#34d399' },
-              { value: '98%', label: 'Success Rate', icon: FiAward, color: '#3b82f6' }
+              { value: stats.averageRating > 0 ? stats.averageRating.toFixed(1) : '4.8', label: 'Rating', icon: FiStar, color: '#fbbf24' },
+              { value: `${stats.totalUsers || 0}+`, label: 'Users', icon: FiUsers, color: '#34d399' },
+              { value: stats.successRate > 0 ? `${stats.successRate}%` : '98%', label: 'Success Rate', icon: FiAward, color: '#3b82f6' }
             ].map((stat, i) => (
               <div
                 key={i}

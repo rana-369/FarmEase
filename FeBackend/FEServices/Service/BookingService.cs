@@ -24,18 +24,21 @@ namespace FEServices.Service
         private readonly IPaymentService _paymentService;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
+        private readonly INotificationService _notificationService;
         private readonly decimal _commissionRate;
 
         public BookingService(
             IUnitOfWork unitOfWork,
             IPaymentService paymentService,
             IConfiguration configuration,
-            IMapper mapper)
+            IMapper mapper,
+            INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _paymentService = paymentService;
             _configuration = configuration;
             _mapper = mapper;
+            _notificationService = notificationService;
 
             // Get commission rate from config, default to 0.10 (10%)
             _commissionRate =
@@ -70,6 +73,8 @@ namespace FEServices.Service
                         OwnerName = "Owner",
                         Location = "",
                         Hours = b.Hours,
+                        ScheduledDate = b.ScheduledDate,
+                        ScheduledTime = b.ScheduledTime,
                         BaseAmount = b.BaseAmount,
                         PlatformFee = b.PlatformFee,
                         TotalAmount = b.TotalAmount,
@@ -141,13 +146,17 @@ namespace FEServices.Service
                 for (int i = 0; i < bookings.Count; i++)
                 {
                     var isRefunded = refundedBookingIds.Contains(bookings[i].Id);
+                    var hasPayment = payments.Any(p => p.BookingId == bookings[i].Id);
                     result[i] = result[i] with
                     {
                         MachineName = bookings[i].MachineName ?? "Unknown",
                         FarmerName = bookings[i].FarmerName ?? "Unknown",
                         OwnerName = "Owner",
                         Location = "",
-                        IsRefunded = isRefunded
+                        IsRefunded = isRefunded,
+                        IsPaid = hasPayment || bookings[i].Status == "Paid",
+                        ArrivalOtp = bookings[i].ArrivalOtp,
+                        WorkStartOtp = bookings[i].WorkStartOtp
                     };
                 }
 
@@ -156,9 +165,9 @@ namespace FEServices.Service
                     .GroupBy(b => 1)
                     .Select(g => new
                     {
-                        ActiveCount = g.Count(b => b.Status == "Active"),
-                        CompletedCount = g.Count(b => b.Status == "Completed"),
-                        TotalRevenue = g.Where(b => b.Status == "Completed").Sum(b => b.PlatformFee)
+                        ActiveCount = g.Count(b => b.Status == "Active" || b.Status == "InProgress" || b.Status == "Accepted" || b.Status == "Arrived"),
+                        CompletedCount = g.Count(b => b.Status == "Completed" || b.Status == "Paid"),
+                        TotalRevenue = g.Where(b => b.Status == "Paid").Sum(b => b.PlatformFee)
                     })
                     .FirstOrDefaultAsync(cancellationToken);
 
@@ -242,7 +251,10 @@ namespace FEServices.Service
                             FarmerName = b.FarmerName ?? "Unknown",
                             OwnerName = "Owner",
                             Location = "",
-                            IsRefunded = payment?.RefundAmount > 0
+                            IsRefunded = payment?.RefundAmount > 0,
+                            IsPaid = payment != null || b.Status == "Paid",
+                            ArrivalOtp = b.ArrivalOtp,
+                            WorkStartOtp = b.WorkStartOtp
                         });
                     }
                     catch (Exception ex)
@@ -285,6 +297,25 @@ namespace FEServices.Service
                 if (machine == null || machine.Status != "Active")
                     return (false, "Invalid or unavailable machine.", null);
 
+                // Check availability if scheduled date is provided
+                if (request.ScheduledDate.HasValue)
+                {
+                    var scheduledDate = request.ScheduledDate.Value.Date;
+                    
+                    // Check if there's already an accepted booking for this machine on the same date
+                    var existingBooking = await _unitOfWork.Bookings.Query()
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(b => b.MachineId == request.MachineId 
+                            && b.ScheduledDate.HasValue 
+                            && b.ScheduledDate.Value.Date == scheduledDate
+                            && b.Status == "Accepted");
+                    
+                    if (existingBooking != null)
+                    {
+                        return (false, "This equipment is already booked for the selected date. Please choose another date.", null);
+                    }
+                }
+
                 int safeHours = request.Hours > 0 ? request.Hours : 1;
                 var rate = machine.Rate > 0 ? machine.Rate : 1;
 
@@ -296,10 +327,14 @@ namespace FEServices.Service
                     FarmerName = farmerName,
                     OwnerId = machine.OwnerId ?? string.Empty,
                     Hours = safeHours,
+                    ScheduledDate = request.ScheduledDate,
+                    ScheduledTime = request.ScheduledTime,
                     BaseAmount = rate * safeHours,
                     PlatformFee = (rate * safeHours) * _commissionRate,
                     TotalAmount = (rate * safeHours) * (1 + _commissionRate),
                     Status = "Pending", // Explicitly set status
+                    ArrivalOtp = GenerateOtp(), // Generate OTP when booking is created (like Rapido)
+                    OtpGeneratedAt = DateTime.UtcNow,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -313,11 +348,16 @@ namespace FEServices.Service
 
                 await _unitOfWork.Bookings.AddAsync(booking);
 
+                // Build notification message with date/time info
+                var dateTimeInfo = request.ScheduledDate.HasValue 
+                    ? $" scheduled for {request.ScheduledDate.Value:MMM dd, yyyy}{(string.IsNullOrEmpty(request.ScheduledTime) ? "" : " at " + FormatTime(request.ScheduledTime))}" 
+                    : "";
+                
                 var ownerNotification = new Notification
                 {
                     UserId = machine.OwnerId ?? string.Empty,
                     Title = "New Booking Request",
-                    Message = $"New rental request from {farmerName} for your {machine.Name ?? "equipment"}.",
+                    Message = $"New rental request from {farmerName} for your {machine.Name ?? "equipment"}{dateTimeInfo}.",
                     Type = "info",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -325,6 +365,26 @@ namespace FEServices.Service
 
                 await _unitOfWork.Notifications.AddAsync(ownerNotification);
                 await _unitOfWork.SaveChangesAsync();
+
+                // Send email notification to owner
+                var owner = await _unitOfWork.Users.Query().AsNoTracking().FirstOrDefaultAsync(u => u.Id == machine.OwnerId);
+                if (owner != null && !string.IsNullOrEmpty(owner.Email))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[CreateAsync] Sending email to owner: {owner.Email}");
+                    try
+                    {
+                        await _notificationService.NotifyBookingCreatedAsync(owner.Email, owner.FullName ?? "Owner", farmerName, machine.Name ?? "equipment", booking.Id);
+                        System.Diagnostics.Debug.WriteLine($"[CreateAsync] Email sent successfully to {owner.Email}");
+                    }
+                    catch (Exception emailEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[CreateAsync] Failed to send email: {emailEx.Message}");
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[CreateAsync] Owner not found or no email. OwnerId: {machine.OwnerId}, Email: {owner?.Email}");
+                }
 
                 return (true, "Booking created!", booking);
             }
@@ -340,6 +400,22 @@ namespace FEServices.Service
             }
         }
 
+        // Helper method to format time string
+        private string FormatTime(string time)
+        {
+            if (string.IsNullOrEmpty(time) || !time.Contains(":"))
+                return time;
+            
+            var parts = time.Split(':');
+            if (parts.Length >= 2 && int.TryParse(parts[0], out int hours))
+            {
+                var period = hours >= 12 ? "PM" : "AM";
+                var displayHours = hours > 12 ? hours - 12 : (hours == 0 ? 12 : hours);
+                return $"{displayHours}:00 {period}";
+            }
+            return time;
+        }
+
         public async Task<(bool Success, string Message)> AcceptAsync(int id, string ownerId)
         {
             try
@@ -349,13 +425,16 @@ namespace FEServices.Service
                     return (false, "Unauthorized or booking not found.");
 
                 booking.Status = "Accepted";
+                // Generate work start OTP when booking is accepted
+                booking.WorkStartOtp = GenerateOtp();
+                booking.OtpGeneratedAt = DateTime.UtcNow;
                 _unitOfWork.Bookings.Update(booking);
 
                 var notification = new Notification
                 {
                     UserId = booking.FarmerId ?? string.Empty,
                     Title = "Booking Accepted",
-                    Message = $"Your request for {booking.MachineName ?? "equipment"} was ACCEPTED!",
+                    Message = $"Your request for {booking.MachineName ?? "equipment"} was ACCEPTED! Arrival OTP: {booking.ArrivalOtp}",
                     Type = "success",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -363,6 +442,13 @@ namespace FEServices.Service
 
                 await _unitOfWork.Notifications.AddAsync(notification);
                 await _unitOfWork.SaveChangesAsync();
+
+                // Send email notification to farmer
+                var farmer = await _unitOfWork.Users.Query().AsNoTracking().FirstOrDefaultAsync(u => u.Id == booking.FarmerId);
+                if (farmer != null && !string.IsNullOrEmpty(farmer.Email))
+                {
+                    _ = _notificationService.NotifyBookingAcceptedAsync(farmer.Email, farmer.FullName ?? "Farmer", booking.MachineName ?? "equipment", booking.Id);
+                }
 
                 return (true, "Booking accepted!");
             }
@@ -384,11 +470,197 @@ namespace FEServices.Service
                 _unitOfWork.Bookings.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
 
+                // Send email notification to farmer
+                var farmer = await _unitOfWork.Users.Query().AsNoTracking().FirstOrDefaultAsync(u => u.Id == booking.FarmerId);
+                if (farmer != null && !string.IsNullOrEmpty(farmer.Email))
+                {
+                    _ = _notificationService.NotifyBookingRejectedAsync(farmer.Email, farmer.FullName ?? "Farmer", booking.MachineName ?? "equipment", booking.Id);
+                }
+
                 return (true, "Booking rejected.");
             }
             catch (Exception ex)
             {
                 throw new AppException("Failed to reject booking", ex);
+            }
+        }
+
+        // Generate 6-digit OTP
+        private string GenerateOtp()
+        {
+            var random = new Random();
+            return random.Next(100000, 999999).ToString();
+        }
+
+        public async Task<(bool Success, string Message, string? Otp)> GenerateArrivalOtpAsync(int id, string ownerId)
+        {
+            try
+            {
+                var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+                if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return (false, "Unauthorized or booking not found.", null);
+
+                if (booking.Status != "Accepted")
+                    return (false, "Only accepted bookings can generate arrival OTP.", null);
+
+                // Generate OTP
+                var otp = GenerateOtp();
+                booking.ArrivalOtp = otp;
+                booking.OtpGeneratedAt = DateTime.UtcNow;
+                _unitOfWork.Bookings.Update(booking);
+
+                // Notify farmer with OTP
+                var notification = new Notification
+                {
+                    UserId = booking.FarmerId ?? string.Empty,
+                    Title = "Equipment Arriving - Share OTP",
+                    Message = $"The owner has arrived at your location for {booking.MachineName ?? "equipment"}. Share this OTP with them to confirm arrival: {otp}",
+                    Type = "info",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.Notifications.AddAsync(notification);
+                await _unitOfWork.SaveChangesAsync();
+
+                return (true, "OTP generated. Ask the farmer for the OTP to confirm arrival.", otp);
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to generate arrival OTP", ex);
+            }
+        }
+
+        public async Task<(bool Success, string Message)> VerifyArrivalOtpAsync(int id, string otp, string ownerId)
+        {
+            try
+            {
+                var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+                if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return (false, "Unauthorized or booking not found.");
+
+                if (booking.Status != "Accepted")
+                    return (false, "Only accepted bookings can verify arrival OTP.");
+
+                if (string.IsNullOrEmpty(booking.ArrivalOtp))
+                    return (false, "No arrival OTP generated. Please generate OTP first.");
+
+                // No expiry check for arrival OTP - it's generated at booking creation and valid until used
+
+                if (booking.ArrivalOtp != otp)
+                    return (false, "Invalid OTP. Please try again.");
+
+                // OTP verified - mark as arrived and generate fresh WorkStartOtp
+                booking.Status = "Arrived";
+                booking.ArrivalOtp = null; // Clear arrival OTP
+                booking.WorkStartOtp = GenerateOtp(); // Generate fresh work start OTP
+                booking.OtpGeneratedAt = DateTime.UtcNow;
+                _unitOfWork.Bookings.Update(booking);
+
+                var notification = new Notification
+                {
+                    UserId = booking.FarmerId ?? string.Empty,
+                    Title = "Arrival Confirmed",
+                    Message = $"Arrival confirmed for {booking.MachineName ?? "equipment"}. Work Start OTP: {booking.WorkStartOtp}",
+                    Type = "success",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.Notifications.AddAsync(notification);
+                await _unitOfWork.SaveChangesAsync();
+
+                return (true, "Arrival confirmed! Ready to start work.");
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to verify arrival OTP", ex);
+            }
+        }
+
+        public async Task<(bool Success, string Message, string? Otp)> GenerateWorkStartOtpAsync(int id, string ownerId)
+        {
+            try
+            {
+                var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+                if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return (false, "Unauthorized or booking not found.", null);
+
+                if (booking.Status != "Arrived")
+                    return (false, "Only arrived bookings can generate work start OTP.", null);
+
+                // Generate OTP
+                var otp = GenerateOtp();
+                booking.WorkStartOtp = otp;
+                booking.OtpGeneratedAt = DateTime.UtcNow;
+                _unitOfWork.Bookings.Update(booking);
+
+                // Notify farmer with OTP
+                var notification = new Notification
+                {
+                    UserId = booking.FarmerId ?? string.Empty,
+                    Title = "Work Starting - Share OTP",
+                    Message = $"Work is about to start for {booking.MachineName ?? "equipment"}. Share this OTP with the owner to confirm: {otp}",
+                    Type = "info",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.Notifications.AddAsync(notification);
+                await _unitOfWork.SaveChangesAsync();
+
+                return (true, "OTP generated. Ask the farmer for the OTP to start work.", otp);
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to generate work start OTP", ex);
+            }
+        }
+
+        public async Task<(bool Success, string Message)> VerifyWorkStartOtpAsync(int id, string otp, string ownerId)
+        {
+            try
+            {
+                var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+                if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return (false, "Unauthorized or booking not found.");
+
+                if (booking.Status != "Arrived")
+                    return (false, "Only arrived bookings can verify work start OTP.");
+
+                if (string.IsNullOrEmpty(booking.WorkStartOtp))
+                    return (false, "No work start OTP generated. Please generate OTP first.");
+
+                // Check OTP expiry (valid for 10 minutes)
+                if (booking.OtpGeneratedAt.HasValue && (DateTime.UtcNow - booking.OtpGeneratedAt.Value).TotalMinutes > 10)
+                    return (false, "OTP has expired. Please generate a new OTP.");
+
+                if (booking.WorkStartOtp != otp)
+                    return (false, "Invalid OTP. Please try again.");
+
+                // OTP verified - start work
+                booking.Status = "InProgress";
+                booking.WorkStartOtp = null; // Clear OTP
+                _unitOfWork.Bookings.Update(booking);
+
+                var notification = new Notification
+                {
+                    UserId = booking.FarmerId ?? string.Empty,
+                    Title = "Work Started",
+                    Message = $"Work has started for {booking.MachineName ?? "equipment"}.",
+                    Type = "success",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.Notifications.AddAsync(notification);
+                await _unitOfWork.SaveChangesAsync();
+
+                return (true, "Work started successfully!");
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to verify work start OTP", ex);
             }
         }
 
@@ -400,14 +672,17 @@ namespace FEServices.Service
                 if (booking == null || !string.Equals(booking.OwnerId?.Trim(), ownerId?.Trim(), StringComparison.OrdinalIgnoreCase))
                     return (false, "Unauthorized or booking not found.");
 
+                if (booking.Status != "InProgress")
+                    return (false, "Only in-progress bookings can be completed.");
+
                 booking.Status = "Completed";
                 _unitOfWork.Bookings.Update(booking);
 
                 var notification = new Notification
                 {
                     UserId = booking.FarmerId ?? string.Empty,
-                    Title = "Booking Completed",
-                    Message = $"The job for {booking.MachineName ?? "equipment"} has been marked as COMPLETED.",
+                    Title = "Work Completed",
+                    Message = $"The work for {booking.MachineName ?? "equipment"} has been completed. Please proceed with payment of ₹{booking.TotalAmount}.",
                     Type = "success",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -416,7 +691,14 @@ namespace FEServices.Service
                 await _unitOfWork.Notifications.AddAsync(notification);
                 await _unitOfWork.SaveChangesAsync();
 
-                return (true, "Booking completed!");
+                // Send email notification to farmer
+                var farmer = await _unitOfWork.Users.Query().AsNoTracking().FirstOrDefaultAsync(u => u.Id == booking.FarmerId);
+                if (farmer != null && !string.IsNullOrEmpty(farmer.Email))
+                {
+                    _ = _notificationService.NotifyBookingCompletedAsync(farmer.Email, farmer.FullName ?? "Farmer", booking.MachineName ?? "equipment", booking.Id, booking.TotalAmount);
+                }
+
+                return (true, "Work completed! Waiting for payment.");
             }
             catch (Exception ex)
             {
@@ -437,6 +719,14 @@ namespace FEServices.Service
                 {
                     _unitOfWork.Bookings.Delete(booking);
                     await _unitOfWork.SaveChangesAsync();
+
+                    // Send email notification to owner about cancellation
+                    var owner = await _unitOfWork.Users.Query().AsNoTracking().FirstOrDefaultAsync(u => u.Id == booking.OwnerId);
+                    if (owner != null && !string.IsNullOrEmpty(owner.Email))
+                    {
+                        _ = _notificationService.NotifyBookingCancelledAsync(owner.Email, owner.FullName ?? "Owner", booking.MachineName ?? "equipment", booking.Id, "Farmer");
+                    }
+
                     return (true, "Booking cancelled.");
                 }
 
@@ -506,6 +796,19 @@ namespace FEServices.Service
                     };
                     await _unitOfWork.Notifications.AddAsync(notification2);
                     await _unitOfWork.SaveChangesAsync();
+
+                    // Send email notifications to both farmer and owner
+                    var farmer = await _unitOfWork.Users.Query().AsNoTracking().FirstOrDefaultAsync(u => u.Id == booking.FarmerId);
+                    var owner = await _unitOfWork.Users.Query().AsNoTracking().FirstOrDefaultAsync(u => u.Id == booking.OwnerId);
+
+                    if (farmer != null && !string.IsNullOrEmpty(farmer.Email))
+                    {
+                        _ = _notificationService.NotifyBookingCancelledAsync(farmer.Email, farmer.FullName ?? "Farmer", booking.MachineName ?? "equipment", booking.Id, "You");
+                    }
+                    if (owner != null && !string.IsNullOrEmpty(owner.Email))
+                    {
+                        _ = _notificationService.NotifyBookingCancelledAsync(owner.Email, owner.FullName ?? "Owner", booking.MachineName ?? "equipment", booking.Id, "Farmer");
+                    }
 
                     return (true, "Booking cancelled and refund processed successfully.");
                 }
@@ -608,17 +911,18 @@ namespace FEServices.Service
                 if (booking == null || !string.Equals(booking.FarmerId?.Trim(), farmerId?.Trim(), StringComparison.OrdinalIgnoreCase))
                     return (false, "Unauthorized or booking not found.");
 
-                if (booking.Status != "Accepted")
-                    return (false, "Only accepted bookings can be paid for.");
+                // NEW FLOW: Payment only after work is completed
+                if (booking.Status != "Completed")
+                    return (false, "Payment can only be made after work is completed.");
 
-                booking.Status = "Active";
+                booking.Status = "Paid";
                 _unitOfWork.Bookings.Update(booking);
 
                 var notification = new Notification
                 {
                     UserId = booking.OwnerId ?? string.Empty,
                     Title = "Payment Received",
-                    Message = $"Payment successful! The rental for {booking.MachineName ?? "equipment"} is now ACTIVE.",
+                    Message = $"Payment of ₹{booking.TotalAmount} received for {booking.MachineName ?? "equipment"}. Booking settled successfully!",
                     Type = "success",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -627,7 +931,7 @@ namespace FEServices.Service
                 await _unitOfWork.Notifications.AddAsync(notification);
                 await _unitOfWork.SaveChangesAsync();
 
-                return (true, "Payment successful!");
+                return (true, "Payment successful! Booking settled.");
             }
             catch (Exception ex)
             {
@@ -664,11 +968,11 @@ namespace FEServices.Service
                     .GroupBy(_ => 1)
                     .Select(g => new
                     {
-                        ActiveCount = g.Count(b => b.Status == "Active"),
-                        CompletedCount = g.Count(b => b.Status == "Completed"),
+                        ActiveCount = g.Count(b => b.Status == "Active" || b.Status == "InProgress" || b.Status == "Accepted" || b.Status == "Arrived"),
+                        CompletedCount = g.Count(b => b.Status == "Completed" || b.Status == "Paid"),
                         PendingCount = g.Count(b => b.Status == "Pending" || b.Status == "PendingOwnerApproval"),
-                        TotalRevenue = g.Where(b => b.Status == "Completed").Sum(b => b.TotalAmount),
-                        PlatformFees = g.Where(b => b.Status == "Completed").Sum(b => b.PlatformFee)
+                        TotalRevenue = g.Where(b => b.Status == "Paid").Sum(b => b.TotalAmount),
+                        PlatformFees = g.Where(b => b.Status == "Paid").Sum(b => b.PlatformFee)
                     })
                     .FirstOrDefaultAsync();
 
@@ -699,10 +1003,10 @@ namespace FEServices.Service
                     .Select(g => new
                     {
                         TotalBookings = g.Count(),
-                        ActiveBookings = g.Count(b => b.Status == "Accepted" || b.Status == "Pending"),
-                        CompletedBookings = g.Count(b => b.Status == "Completed"),
+                        ActiveBookings = g.Count(b => b.Status == "Accepted" || b.Status == "Pending" || b.Status == "Arrived" || b.Status == "InProgress"),
+                        CompletedBookings = g.Count(b => b.Status == "Completed" || b.Status == "Paid"),
                         PendingBookings = g.Count(b => b.Status == "Pending"),
-                        TotalSpent = g.Where(b => b.Status == "Completed").Sum(b => b.TotalAmount)
+                        TotalSpent = g.Where(b => b.Status == "Paid").Sum(b => b.TotalAmount)
                     })
                     .FirstOrDefaultAsync();
 
@@ -745,10 +1049,10 @@ namespace FEServices.Service
                     .Select(g => new
                     {
                         TotalBookings = g.Count(),
-                        ActiveBookings = g.Count(b => b.Status == "Active"),
-                        CompletedBookings = g.Count(b => b.Status == "Completed"),
-                        TotalRevenue = g.Where(b => b.Status == "Completed").Sum(b => b.TotalAmount),
-                        PlatformRevenue = g.Where(b => b.Status == "Completed").Sum(b => b.PlatformFee)
+                        ActiveBookings = g.Count(b => b.Status == "Active" || b.Status == "InProgress"),
+                        CompletedBookings = g.Count(b => b.Status == "Completed" || b.Status == "Paid"),
+                        TotalRevenue = g.Where(b => b.Status == "Paid").Sum(b => b.TotalAmount),
+                        PlatformRevenue = g.Where(b => b.Status == "Paid").Sum(b => b.PlatformFee)
                     })
                     .FirstOrDefaultAsync(cancellationToken);
 
@@ -796,7 +1100,7 @@ namespace FEServices.Service
                 var sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
 
                 var rawData = await _unitOfWork.Bookings.Query()
-                    .Where(b => b.Status == "Completed" && b.CreatedAt >= sixMonthsAgo)
+                    .Where(b => b.Status == "Paid" && b.CreatedAt >= sixMonthsAgo)
                     .GroupBy(b => new { b.CreatedAt.Year, b.CreatedAt.Month })
                     .Select(g => new
                     {
@@ -844,17 +1148,17 @@ namespace FEServices.Service
                     .Select(m => m.Id)
                     .ToListAsync();
 
-                // Revenue data
-                var revenueData = await GetOwnerRevenueDataAsync(machineIds, monthsAgo);
+                // Revenue data - pass ownerId as fallback
+                var revenueData = await GetOwnerRevenueDataAsync(machineIds, monthsAgo, ownerId);
 
                 // Equipment performance
                 var equipmentPerformance = await GetOwnerEquipmentPerformanceAsync(ownerId);
 
-                // Category distribution (booking status)
-                var categoryDistribution = await GetOwnerCategoryDistributionAsync(machineIds);
+                // Category distribution (booking status) - pass ownerId as fallback
+                var categoryDistribution = await GetOwnerCategoryDistributionAsync(machineIds, ownerId);
 
-                // Insights
-                var insights = await GetOwnerInsightsAsync(machineIds);
+                // Insights - pass ownerId as fallback
+                var insights = await GetOwnerInsightsAsync(machineIds, ownerId);
 
                 return new OwnerAnalyticsDto
                 {
@@ -1025,7 +1329,7 @@ namespace FEServices.Service
                 var machineIds = machines.Select(m => m.Id).ToList();
 
                 var bookingStats = await _unitOfWork.Bookings.Query()
-                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Completed")
+                    .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Paid")
                     .GroupBy(b => b.MachineId)
                     .Select(g => new
                     {
@@ -1051,12 +1355,24 @@ namespace FEServices.Service
             }
         }
 
-        private async Task<IEnumerable<MonthlyRevenueDto>> GetOwnerRevenueDataAsync(List<int> machineIds, int monthsAgo)
+        private async Task<IEnumerable<MonthlyRevenueDto>> GetOwnerRevenueDataAsync(List<int> machineIds, int monthsAgo, string? ownerId = null)
         {
             var cutoffDate = monthsAgo > 0 ? DateTime.UtcNow.AddMonths(-monthsAgo) : DateTime.UtcNow.AddDays(-7);
 
-            var rawData = await _unitOfWork.Bookings.Query()
-                .Where(b => machineIds.Contains(b.MachineId) && b.Status == "Completed" && b.CreatedAt >= cutoffDate)
+            var query = _unitOfWork.Bookings.Query()
+                .Where(b => b.Status == "Paid" && b.CreatedAt >= cutoffDate);
+
+            // Filter by machineIds if available, otherwise by ownerId
+            if (machineIds.Count > 0)
+            {
+                query = query.Where(b => machineIds.Contains(b.MachineId));
+            }
+            else if (!string.IsNullOrEmpty(ownerId))
+            {
+                query = query.Where(b => b.OwnerId == ownerId);
+            }
+
+            var rawData = await query
                 .GroupBy(b => new { b.CreatedAt.Year, b.CreatedAt.Month })
                 .Select(g => new
                 {
@@ -1080,10 +1396,21 @@ namespace FEServices.Service
             });
         }
 
-        private async Task<IEnumerable<CategoryDistributionDto>> GetOwnerCategoryDistributionAsync(List<int> machineIds)
+        private async Task<IEnumerable<CategoryDistributionDto>> GetOwnerCategoryDistributionAsync(List<int> machineIds, string? ownerId = null)
         {
-            var statusCounts = await _unitOfWork.Bookings.Query()
-                .Where(b => machineIds.Contains(b.MachineId))
+            var query = _unitOfWork.Bookings.Query();
+
+            // Filter by machineIds if available, otherwise by ownerId
+            if (machineIds.Count > 0)
+            {
+                query = query.Where(b => machineIds.Contains(b.MachineId));
+            }
+            else if (!string.IsNullOrEmpty(ownerId))
+            {
+                query = query.Where(b => b.OwnerId == ownerId);
+            }
+
+            var statusCounts = await query
                 .GroupBy(b => b.Status)
                 .Select(g => new { Status = g.Key ?? "Unknown", Count = g.Count() })
                 .ToListAsync();
@@ -1091,9 +1418,14 @@ namespace FEServices.Service
             var colorMap = new Dictionary<string, string>
             {
                 ["Active"] = "#10b981",
+                ["InProgress"] = "#10b981",
                 ["Completed"] = "#3b82f6",
+                ["Paid"] = "#8b5cf6",
                 ["Pending"] = "#f59e0b",
-                ["Cancelled"] = "#ef4444"
+                ["Accepted"] = "#f59e0b",
+                ["Arrived"] = "#f59e0b",
+                ["Cancelled"] = "#ef4444",
+                ["Rejected"] = "#ef4444"
             };
 
             return statusCounts.Select(s => new CategoryDistributionDto
@@ -1104,10 +1436,26 @@ namespace FEServices.Service
             });
         }
 
-        private async Task<IEnumerable<InsightDto>> GetOwnerInsightsAsync(List<int> machineIds)
+        private async Task<IEnumerable<InsightDto>> GetOwnerInsightsAsync(List<int> machineIds, string? ownerId = null)
         {
-            if (machineIds.Count == 0)
+            var now = DateTime.UtcNow;
+            var thisMonthStart = new DateTime(now.Year, now.Month, 1);
+            var lastMonthStart = thisMonthStart.AddMonths(-1);
+
+            // Build query - filter by machineIds if available, otherwise by ownerId
+            var query = _unitOfWork.Bookings.Query();
+
+            if (machineIds.Count > 0)
             {
+                query = query.Where(b => machineIds.Contains(b.MachineId));
+            }
+            else if (!string.IsNullOrEmpty(ownerId))
+            {
+                query = query.Where(b => b.OwnerId == ownerId);
+            }
+            else
+            {
+                // No machines and no ownerId - return empty insights
                 return new List<InsightDto>
                 {
                     new InsightDto { Title = "Total Revenue", Value = "₹0", Change = "-", Trend = "neutral", Description = "lifetime earnings", Color = "#10b981" },
@@ -1117,29 +1465,24 @@ namespace FEServices.Service
                 };
             }
 
-            var now = DateTime.UtcNow;
-            var thisMonthStart = new DateTime(now.Year, now.Month, 1);
-            var lastMonthStart = thisMonthStart.AddMonths(-1);
-
             // Single optimized query for all booking stats
-            var stats = await _unitOfWork.Bookings.Query()
-                .Where(b => machineIds.Contains(b.MachineId))
+            var stats = await query
                 .GroupBy(_ => 1)
                 .Select(g => new
                 {
                     TotalBookings = g.Count(),
-                    TotalRevenue = g.Where(b => b.Status == "Completed").Sum(b => b.BaseAmount),
-                    ActiveBookings = g.Count(b => b.Status == "Active"),
-                    ThisMonthRevenue = g.Where(b => b.Status == "Completed" && b.CreatedAt >= thisMonthStart).Sum(b => b.BaseAmount),
+                    TotalRevenue = g.Where(b => b.Status == "Paid").Sum(b => b.BaseAmount),
+                    ActiveBookings = g.Count(b => b.Status == "Active" || b.Status == "InProgress" || b.Status == "Accepted" || b.Status == "Arrived"),
+                    ThisMonthRevenue = g.Where(b => b.Status == "Paid" && b.CreatedAt >= thisMonthStart).Sum(b => b.BaseAmount),
                     ThisMonthBookings = g.Count(b => b.CreatedAt >= thisMonthStart),
-                    LastMonthRevenue = g.Where(b => b.Status == "Completed" && b.CreatedAt >= lastMonthStart && b.CreatedAt < thisMonthStart).Sum(b => b.BaseAmount),
+                    LastMonthRevenue = g.Where(b => b.Status == "Paid" && b.CreatedAt >= lastMonthStart && b.CreatedAt < thisMonthStart).Sum(b => b.BaseAmount),
                     LastMonthBookings = g.Count(b => b.CreatedAt >= lastMonthStart && b.CreatedAt < thisMonthStart)
                 })
                 .FirstOrDefaultAsync() ?? new { TotalBookings = 0, TotalRevenue = 0m, ActiveBookings = 0, ThisMonthRevenue = 0m, ThisMonthBookings = 0, LastMonthRevenue = 0m, LastMonthBookings = 0 };
 
             var avgBookingValue = stats.TotalBookings > 0 ? stats.TotalRevenue / stats.TotalBookings : 0;
             var lastAvgBookingValue = stats.LastMonthBookings > 0 ? stats.LastMonthRevenue / stats.LastMonthBookings : 0;
-            var utilizationRate = (stats.ActiveBookings * 100.0 / machineIds.Count);
+            var utilizationRate = machineIds.Count > 0 ? (stats.ActiveBookings * 100.0 / machineIds.Count) : (stats.ActiveBookings > 0 ? 100 : 0);
 
             // Calculate real percentage changes
             var revenueChange = stats.LastMonthRevenue > 0
@@ -1228,12 +1571,12 @@ namespace FEServices.Service
                 .Select(g => new
                 {
                     TotalBookings = g.Count(),
-                    CompletedBookings = g.Count(b => b.Status == "Completed"),
-                    PlatformRevenue = g.Where(b => b.Status == "Completed").Sum(b => b.PlatformFee),
-                    CompletedBeforeLastMonth = g.Count(b => b.Status == "Completed" && b.CreatedAt < lastMonthStart),
+                    CompletedBookings = g.Count(b => b.Status == "Completed" || b.Status == "Paid"),
+                    PlatformRevenue = g.Where(b => b.Status == "Paid").Sum(b => b.PlatformFee),
+                    CompletedBeforeLastMonth = g.Count(b => (b.Status == "Completed" || b.Status == "Paid") && b.CreatedAt < lastMonthStart),
                     TotalBeforeLastMonth = g.Count(b => b.CreatedAt < lastMonthStart),
-                    RevenueThisMonth = g.Where(b => b.Status == "Completed" && b.CreatedAt >= lastMonthStart).Sum(b => b.PlatformFee),
-                    RevenueLastMonth = g.Where(b => b.Status == "Completed" && b.CreatedAt < lastMonthStart && b.CreatedAt >= lastMonthStart.AddMonths(-1)).Sum(b => b.PlatformFee)
+                    RevenueThisMonth = g.Where(b => b.Status == "Paid" && b.CreatedAt >= lastMonthStart).Sum(b => b.PlatformFee),
+                    RevenueLastMonth = g.Where(b => b.Status == "Paid" && b.CreatedAt < lastMonthStart && b.CreatedAt >= lastMonthStart.AddMonths(-1)).Sum(b => b.PlatformFee)
                 })
                 .FirstOrDefaultAsync() ?? new { TotalBookings = 0, CompletedBookings = 0, PlatformRevenue = 0m, CompletedBeforeLastMonth = 0, TotalBeforeLastMonth = 0, RevenueThisMonth = 0m, RevenueLastMonth = 0m };
 
@@ -1297,6 +1640,124 @@ namespace FEServices.Service
                     Color = "#8b5cf6"
                 }
             };
+        }
+
+        /// <summary>
+        /// Fixes all booking statuses based on payment existence and current state
+        /// </summary>
+        public async Task<(int Fixed, string Message)> FixAllBookingStatusesAsync()
+        {
+            try
+            {
+                var bookings = await _unitOfWork.Bookings.Query().ToListAsync();
+                var payments = await _unitOfWork.Payments.Query().ToListAsync();
+                var paymentDict = payments.ToDictionary(p => p.BookingId, p => p);
+
+                int fixedCount = 0;
+
+                foreach (var booking in bookings)
+                {
+                    var hasPayment = paymentDict.TryGetValue(booking.Id, out var payment);
+                    var correctStatus = DetermineCorrectStatus(booking, hasPayment, payment);
+
+                    if (booking.Status != correctStatus)
+                    {
+                        booking.Status = correctStatus;
+                        _unitOfWork.Bookings.Update(booking);
+                        fixedCount++;
+                    }
+                }
+
+                if (fixedCount > 0)
+                {
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
+                return (fixedCount, $"Fixed {fixedCount} booking statuses.");
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to fix booking statuses", ex);
+            }
+        }
+
+        private static string DetermineCorrectStatus(Booking booking, bool hasPayment, Payment? payment)
+        {
+            // If payment exists and is captured/refunded, determine status from payment
+            if (hasPayment && payment != null)
+            {
+                if (payment.Status == "Refunded")
+                    return "Cancelled";
+
+                if (payment.Status == "Captured")
+                    return "Paid";
+            }
+
+            // Otherwise keep the current status if it's valid
+            var validStatuses = new[] { "Pending", "Accepted", "Arrived", "InProgress", "Completed", "Paid", "Cancelled", "Rejected" };
+
+            // If status is invalid or empty, default to Pending
+            if (string.IsNullOrEmpty(booking.Status) || !validStatuses.Contains(booking.Status))
+                return "Pending";
+
+            return booking.Status;
+        }
+
+        /// <summary>
+        /// Manually mark a booking as paid (for payments made outside the system)
+        /// </summary>
+        public async Task<(bool Success, string Message)> MarkAsPaidAsync(int id)
+        {
+            try
+            {
+                var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+                if (booking == null)
+                    return (false, "Booking not found.");
+
+                if (booking.Status == "Paid")
+                    return (false, "Booking is already marked as paid.");
+
+                // Create a manual payment record
+                var payment = new Payment
+                {
+                    BookingId = booking.Id,
+                    RazorpayOrderId = "manual_" + Guid.NewGuid().ToString("N").Substring(0, 8),
+                    RazorpayPaymentId = "manual_payment",
+                    RazorpaySignature = "manual_sig",
+                    Amount = booking.TotalAmount,
+                    Currency = "INR",
+                    Status = "Captured",
+                    OwnerAmount = booking.BaseAmount,
+                    PlatformFeeAmount = booking.PlatformFee,
+                    SettlementStatus = "Settled",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.Payments.AddAsync(payment);
+
+                booking.Status = "Paid";
+                _unitOfWork.Bookings.Update(booking);
+
+                // Notify owner
+                var notification = new Notification
+                {
+                    UserId = booking.OwnerId ?? string.Empty,
+                    Title = "Payment Marked as Received",
+                    Message = $"Admin marked payment of Rs.{booking.TotalAmount} as received for {booking.MachineName ?? "equipment"}.",
+                    Type = "success",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.Notifications.AddAsync(notification);
+                await _unitOfWork.SaveChangesAsync();
+
+                return (true, "Booking marked as paid successfully.");
+            }
+            catch (Exception ex)
+            {
+                throw new AppException("Failed to mark booking as paid", ex);
+            }
         }
     }
 }

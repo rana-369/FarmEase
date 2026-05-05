@@ -21,13 +21,15 @@ namespace FEServices.Service
         IConfiguration configuration,
         ILogger<PaymentService> logger,
         UserManager<ApplicationUser> userManager,
-        IMapper mapper) : IPaymentService
+        IMapper mapper,
+        INotificationService notificationService) : IPaymentService
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly IConfiguration _configuration = configuration;
         private readonly ILogger<PaymentService> _logger = logger;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly IMapper _mapper = mapper;
+        private readonly INotificationService _notificationService = notificationService;
 
         public async Task<(bool Success, string Message, object? OrderData)> CreateOrderAsync(int bookingId)
         {
@@ -36,8 +38,9 @@ namespace FEServices.Service
             if (booking == null)
                 return (false, "Booking not found.", null);
 
-            if (booking.Status != "Accepted" && booking.Status != "Confirmed")
-                return (false, "Booking must be accepted before payment.", null);
+            // NEW FLOW: Payment only after work is completed
+            if (booking.Status != "Completed")
+                return (false, "Payment can only be made after work is completed.", null);
 
             int amountInPaise = (int)(booking.TotalAmount * 100);
 
@@ -53,25 +56,18 @@ namespace FEServices.Service
                 if (owner == null)
                     return (false, "Owner not found.", null);
 
-                // Check if owner has completed payment onboarding
-                if (!owner.IsPaymentOnboardingComplete || string.IsNullOrEmpty(owner.RazorpayAccountId))
-                {
-                    _logger.LogWarning("Owner {OwnerId} has not set up payment account", booking.OwnerId);
-                    return (false, "Equipment owner has not set up their payment account yet. Please contact them.", null);
-                }
-
                 // Calculate amounts
                 decimal platformFeeRate = _configuration.GetValue<decimal>("PlatformSettings:CommissionRate", 0.10m);
                 decimal platformFeeAmount = Math.Round(booking.TotalAmount * platformFeeRate, 2);
                 decimal ownerAmount = Math.Round(booking.TotalAmount - platformFeeAmount, 2);
                 int ownerAmountInPaise = (int)(ownerAmount * 100);
 
-                _logger.LogInformation("Payment split - Total: {Total}, Owner: {Owner}, Platform: {Platform}", 
+                _logger.LogInformation("Payment split - Total: {Total}, Owner: {Owner}, Platform: {Platform}",
                     booking.TotalAmount, ownerAmount, platformFeeAmount);
 
                 var client = new RazorpayClient(keyId, keySecret);
 
-                // Create order with transfers for automatic split (Razorpay Route API)
+                // Create order - with or without transfers based on owner's account setup
                 var options = new Dictionary<string, object>
                 {
                     ["amount"] = amountInPaise,
@@ -83,30 +79,43 @@ namespace FEServices.Service
                         ["booking_id"] = booking.Id.ToString(),
                         ["owner_id"] = booking.OwnerId ?? "",
                         ["farmer_id"] = booking.FarmerId ?? "",
-                        ["equipment_name"] = booking.MachineName ?? ""
+                        ["equipment_name"] = booking.MachineName ?? "",
+                        ["owner_amount"] = ownerAmount.ToString(),
+                        ["platform_fee"] = platformFeeAmount.ToString()
                     }
                 };
 
-                // Add transfers for Route API - automatic split to owner's account
-                var transfers = new List<Dictionary<string, object>>
+                // Check if owner has valid Razorpay account for Route API transfers
+                bool hasValidAccount = !string.IsNullOrEmpty(owner.RazorpayAccountId) &&
+                                       owner.RazorpayAccountId.Length == 18 &&
+                                       owner.IsPaymentOnboardingComplete;
+
+                if (hasValidAccount)
                 {
-                    new()
+                    // Add transfers for Route API - automatic split to owner's account
+                    var transfers = new List<Dictionary<string, object>>
                     {
-                        ["account"] = owner.RazorpayAccountId, // Owner's linked Razorpay account
-                        ["amount"] = ownerAmountInPaise,
-                        ["currency"] = "INR",
-                        ["notes"] = new Dictionary<string, string>
+                        new()
                         {
-                            ["booking_id"] = booking.Id.ToString(),
-                            ["transfer_type"] = "owner_payout"
-                        },
-                        ["on_hold"] = 0 // Release immediately
-                    }
-                };
-
-                options.Add("transfers", transfers);
-
-                _logger.LogInformation("Creating order with transfer to account: {AccountId}", owner.RazorpayAccountId);
+                            ["account"] = owner.RazorpayAccountId!,
+                            ["amount"] = ownerAmountInPaise,
+                            ["currency"] = "INR",
+                            ["notes"] = new Dictionary<string, string>
+                            {
+                                ["booking_id"] = booking.Id.ToString(),
+                                ["transfer_type"] = "owner_payout"
+                            },
+                            ["on_hold"] = 0
+                        }
+                    };
+                    options.Add("transfers", transfers);
+                    _logger.LogInformation("Creating order with transfer to account: {AccountId}", owner.RazorpayAccountId);
+                }
+                else
+                {
+                    _logger.LogWarning("Owner {OwnerId} has not set up valid Razorpay account. Creating order without transfers.", booking.OwnerId);
+                    // Payment will be captured to platform account, manual settlement needed later
+                }
 
                 Order order = client.Order.Create(options);
                 string orderId = order["id"].ToString();
@@ -134,11 +143,11 @@ namespace FEServices.Service
         public async Task<(bool Success, string Message)> VerifyPaymentAsync(VerifyPaymentDto model)
         {
             _logger.LogInformation("Verifying payment for BookingId: {BookingId}", model.BookingId);
-            
+
             string secret = _configuration["Razorpay:Secret"] ?? "";
 
             string generatedSignature = GenerateRazorpaySignature(model.RazorpayOrderId, model.RazorpayPaymentId, secret);
-            
+
             _logger.LogDebug("Signature match: {Match}", generatedSignature == model.RazorpaySignature);
 
             if (generatedSignature != model.RazorpaySignature)
@@ -179,8 +188,8 @@ namespace FEServices.Service
                 CreatedAt = DateTime.UtcNow
             };
             await _unitOfWork.Payments.AddAsync(payment);
-            
-            booking.Status = "Active";
+
+            booking.Status = "Paid";
             _unitOfWork.Bookings.Update(booking);
 
             // Notification for Owner
@@ -188,7 +197,7 @@ namespace FEServices.Service
             {
                 UserId = booking.OwnerId ?? string.Empty,
                 Title = "Payment Received",
-                Message = $"Payment successful! The rental for {booking.MachineName ?? "equipment"} is now ACTIVE.",
+                Message = $"Payment successful! The rental for {booking.MachineName ?? "equipment"} is now SETTLED.",
                 Type = "success",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
@@ -199,7 +208,7 @@ namespace FEServices.Service
             {
                 UserId = booking.FarmerId ?? string.Empty,
                 Title = "Payment Successful",
-                Message = $"Your payment of ₹{booking.TotalAmount} for {booking.MachineName ?? "equipment"} was successful. The rental is now ACTIVE.",
+                Message = $"Your payment of ₹{booking.TotalAmount} for {booking.MachineName ?? "equipment"} was successful. Booking settled!",
                 Type = "success",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
@@ -220,6 +229,29 @@ namespace FEServices.Service
             await _unitOfWork.Notifications.AddAsync(farmerNotification);
             await _unitOfWork.Notifications.AddAsync(adminNotification);
             await _unitOfWork.SaveChangesAsync();
+
+            // Send email notifications
+            var owner = await _userManager.FindByIdAsync(booking.OwnerId ?? "");
+            var farmer = await _userManager.FindByIdAsync(booking.FarmerId ?? "");
+
+            if (owner != null && !string.IsNullOrEmpty(owner.Email))
+            {
+                try
+                {
+                    await _notificationService.NotifyPaymentReceivedAsync(
+                        owner.Email,
+                        owner.FullName ?? "Owner",
+                        farmer?.FullName ?? "Farmer",
+                        booking.MachineName ?? "equipment",
+                        booking.TotalAmount
+                    );
+                    _logger.LogInformation("Payment notification email sent to owner: {Email}", owner.Email);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send payment notification email to owner");
+                }
+            }
 
             _logger.LogInformation("Payment verified successfully for BookingId: {BookingId}", booking.Id);
 
@@ -242,7 +274,7 @@ namespace FEServices.Service
         public async Task<(bool Success, string Message, object? RefundData)> RefundAsync(int bookingId, string? reason = null)
         {
             _logger.LogInformation("Refunding payment for BookingId: {BookingId}, Reason: {Reason}", bookingId, reason);
-            
+
             var booking = await _unitOfWork.Bookings.Query()
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
             if (booking == null)
@@ -254,7 +286,7 @@ namespace FEServices.Service
             // Find the payment for this booking using Query (not GetAllAsync)
             var payment = await _unitOfWork.Payments.Query()
                 .FirstOrDefaultAsync(p => p.BookingId == bookingId && p.Status == "Captured");
-            
+
             if (payment == null)
             {
                 _logger.LogWarning("No captured payment found for booking: {BookingId}", bookingId);
@@ -645,7 +677,7 @@ namespace FEServices.Service
                     return (false, "Payment not found.");
 
                 payment.Status = status;
-                
+
                 if (!string.IsNullOrEmpty(razorpayPaymentId))
                     payment.RazorpayPaymentId = razorpayPaymentId;
 
@@ -688,7 +720,7 @@ namespace FEServices.Service
                     return (false, "Payment not found.");
 
                 payment.Status = "Refunded";
-                
+
                 if (!string.IsNullOrEmpty(razorpayRefundId))
                     payment.RazorpayRefundId = razorpayRefundId;
 

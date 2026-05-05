@@ -122,6 +122,25 @@ namespace FarmEase.Controllers
             return Ok(new { Message = message });
         }
 
+        [HttpGet("{id}/availability")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetEquipmentAvailability(int id, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+        {
+            // Default to current month if not specified
+            var start = startDate ?? DateTime.UtcNow.Date;
+            var end = endDate ?? start.AddMonths(2);
+
+            // Validate date range
+            if (end < start)
+                return BadRequest(new { Message = "End date must be after start date." });
+
+            if (end > start.AddMonths(3))
+                return BadRequest(new { Message = "Date range cannot exceed 3 months." });
+
+            var availability = await _machineService.GetEquipmentAvailabilityAsync(id, start, end);
+            return Ok(availability);
+        }
+
         private string? GetUserId()
         {
             return User.FindFirstValue(ClaimTypes.NameIdentifier)

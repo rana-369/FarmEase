@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiTruck, FiSearch, FiFilter, FiMapPin, FiClock, FiStar, FiX, FiCheckCircle, FiTool, FiUser } from 'react-icons/fi';
+import { FiTruck, FiSearch, FiFilter, FiMapPin, FiClock, FiStar, FiX, FiCheckCircle, FiTool, FiUser, FiCalendar } from 'react-icons/fi';
 import { RupeeIcon } from '../../components/RupeeIcon';
 import Modal from '../../components/Modal';
 import RatingSummary from '../../components/RatingSummary';
 import ReviewList from '../../components/ReviewList';
+import EquipmentCalendar from '../../components/EquipmentCalendar';
 import { getAvailableMachines } from '../../services/machineService';
 import { createBooking } from '../../services/bookingService';
 
@@ -15,6 +16,8 @@ const FarmerMachines = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(true);
   const [bookingModal, setBookingModal] = useState({ open: false, machine: null, hours: 1 });
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState('');
   const [bookingSuccess, setBookingSuccess] = useState(false);
@@ -73,6 +76,8 @@ const FarmerMachines = () => {
 
   const handleBookNow = (machine) => {
     setBookingModal({ open: true, machine, hours: 1 });
+    setSelectedDate(null);
+    setSelectedTime(null);
     setBookingError('');
     setBookingSuccess(false);
   };
@@ -88,11 +93,15 @@ const FarmerMachines = () => {
       await createBooking({
         machineId: bookingModal.machine.id,
         machineName: bookingModal.machine.name,
-        hours: parseInt(bookingModal.hours)
+        hours: parseInt(bookingModal.hours),
+        scheduledDate: selectedDate ? selectedDate.toISOString() : null,
+        scheduledTime: selectedTime || null
       });
       setBookingSuccess(true);
       setTimeout(() => {
         setBookingModal({ open: false, machine: null, hours: 1 });
+        setSelectedDate(null);
+        setSelectedTime(null);
         setBookingSuccess(false);
       }, 2000);
     } catch (error) {
@@ -105,6 +114,8 @@ const FarmerMachines = () => {
 
   const closeBookingModal = () => {
     setBookingModal({ open: false, machine: null, hours: 1 });
+    setSelectedDate(null);
+    setSelectedTime(null);
     setBookingError('');
     setBookingSuccess(false);
   };
@@ -155,6 +166,20 @@ const FarmerMachines = () => {
                   <p className="card-subtitle">{bookingModal.machine?.location}</p>
                 </div>
               </div>
+            </div>
+
+            {/* Availability Calendar */}
+            <div className="mb-6 px-4">
+              <label className="input-label block mb-3 flex items-center gap-2">
+                <FiCalendar /> Select Date & Time (Optional)
+              </label>
+              <EquipmentCalendar
+                equipmentId={bookingModal.machine?.id}
+                selectedDate={selectedDate}
+                onDateSelect={setSelectedDate}
+                selectedTime={selectedTime}
+                onTimeSelect={setSelectedTime}
+              />
             </div>
 
             <div className="mb-6 px-4">

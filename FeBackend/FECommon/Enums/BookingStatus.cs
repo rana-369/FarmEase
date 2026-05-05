@@ -9,11 +9,13 @@ namespace FECommon.Enums
         PendingOwnerApproval = 1,
         Accepted = 2,
         Confirmed = 3,
-        InProgress = 4,
-        Active = 5,
-        Completed = 6,
-        Cancelled = 7,
-        Rejected = 8
+        Arrived = 4,           // Owner has arrived at location
+        InProgress = 5,        // Work is in progress
+        Completed = 6,         // Work completed, awaiting payment
+        Paid = 7,              // Payment done after completion
+        Cancelled = 8,
+        Rejected = 9,
+        Active = 10            // Legacy - kept for backward compatibility
     }
 
     /// <summary>
@@ -29,11 +31,13 @@ namespace FECommon.Enums
                 BookingStatus.PendingOwnerApproval => "Pending Owner Approval",
                 BookingStatus.Accepted => "Accepted",
                 BookingStatus.Confirmed => "Confirmed",
+                BookingStatus.Arrived => "Arrived",
                 BookingStatus.InProgress => "In Progress",
-                BookingStatus.Active => "Active",
                 BookingStatus.Completed => "Completed",
+                BookingStatus.Paid => "Paid",
                 BookingStatus.Cancelled => "Cancelled",
                 BookingStatus.Rejected => "Rejected",
+                BookingStatus.Active => "Active",
                 _ => "Unknown"
             };
         }
@@ -53,11 +57,13 @@ namespace FECommon.Enums
                 "pendingownerapproval" => BookingStatus.PendingOwnerApproval,
                 "accepted" => BookingStatus.Accepted,
                 "confirmed" => BookingStatus.Confirmed,
+                "arrived" => BookingStatus.Arrived,
                 "inprogress" => BookingStatus.InProgress,
-                "active" => BookingStatus.Active,
                 "completed" => BookingStatus.Completed,
+                "paid" => BookingStatus.Paid,
                 "cancelled" => BookingStatus.Cancelled,
                 "rejected" => BookingStatus.Rejected,
+                "active" => BookingStatus.Active,
                 _ => BookingStatus.Pending // Default fallback for unknown values
             };
         }
