@@ -136,24 +136,18 @@ const Sidebar = () => {
   const { logout, user } = useAuth();
   const { toggleTheme, isDark } = useTheme();
 
-  // Memoize menu items based on user role
   const menuItems = useMemo(() => MENU_CONFIGS[user?.role] || [], [user?.role]);
-
-  // Memoize role config
   const roleConfig = useMemo(() => ROLE_CONFIGS[user?.role] || ROLE_CONFIGS.default, [user?.role]);
 
-  // Stable callback for navigation
   const handleNavigate = useCallback((path) => {
     navigate(path);
   }, [navigate]);
 
-  // Stable callback for logout
   const handleLogout = useCallback(() => {
     logout();
     navigate('/login');
   }, [logout, navigate]);
 
-  // Check if path is active
   const isPathActive = useCallback((path) => {
     const isDashboard = path === '/admin' || path === '/farmer' || path === '/owner';
     return isDashboard ? location.pathname === path : location.pathname.startsWith(path);
@@ -166,7 +160,6 @@ const Sidebar = () => {
       transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
       className="sidebar-new"
     >
-      {/* Ambient glow effect */}
       <div 
         className="absolute top-0 left-0 w-64 h-64 pointer-events-none"
         style={{
@@ -174,7 +167,6 @@ const Sidebar = () => {
         }}
       />
       
-      {/* Logo Section */}
       <div className="sidebar-header-new">
         <motion.div 
           className="logo-new"
@@ -198,7 +190,6 @@ const Sidebar = () => {
         </motion.div>
       </div>
 
-      {/* User Profile Section */}
       <AnimatePresence>
         {user && (
           <motion.div 
@@ -207,7 +198,6 @@ const Sidebar = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.4 }}
           >
-            {/* Profile glow */}
             <div 
               className="absolute inset-0 pointer-events-none"
               style={{
@@ -244,7 +234,6 @@ const Sidebar = () => {
         )}
       </AnimatePresence>
       
-      {/* Navigation */}
       <nav className="sidebar-nav-new">
         <div className="nav-section-title">Navigation</div>
         
@@ -262,7 +251,6 @@ const Sidebar = () => {
         </ul>
       </nav>
       
-      {/* Theme Toggle Section */}
       <div style={{ padding: '8px 16px' }}>
         <motion.button
           onClick={toggleTheme}
@@ -303,7 +291,6 @@ const Sidebar = () => {
         </motion.button>
       </div>
       
-      {/* Logout Section */}
       <div className="sidebar-footer-new">
         <motion.button
           onClick={handleLogout}

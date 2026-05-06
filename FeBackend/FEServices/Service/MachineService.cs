@@ -23,21 +23,16 @@ namespace FEServices.Service
 
         public async Task<PagedResult<MachineSummaryDto>> GetAllMachinesPagedAsync(int page, int limit, string? search, string? status)
         {
-            // Validate and sanitize pagination parameters
             var (_, validPage, validLimit) = InputSanitizer.ValidatePagination(page, limit);
-            
-            // Sanitize search input to prevent injection
             var sanitizedSearch = InputSanitizer.SanitizeSearchInput(search);
             
             var query = _unitOfWork.Machines.Query().AsNoTracking();
 
-            // Apply status filter at DB level
             if (!string.IsNullOrEmpty(status) && !string.Equals(status, "all", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(m => m.Status == status);
             }
 
-            // Apply search filter at DB level BEFORE pagination (using sanitized input)
             if (!string.IsNullOrEmpty(sanitizedSearch))
             {
                 query = query.Where(m => 
@@ -46,26 +41,21 @@ namespace FEServices.Service
                     (m.Location != null && m.Location.Contains(sanitizedSearch)));
             }
 
-            // Total count AFTER all filters
             var totalItems = await query.CountAsync();
 
-            // Get paged machines
             var machines = await query
                 .OrderByDescending(m => m.CreatedAt)
                 .Skip((validPage - 1) * validLimit)
                 .Take(validLimit)
                 .ToListAsync();
 
-            // Get owner data only for this page
             var ownerIds = machines.Select(m => m.OwnerId).Where(id => !string.IsNullOrEmpty(id)).Distinct().ToList();
             var users = ownerIds.Count > 0
                 ? await _unitOfWork.Users.Query().AsNoTracking().Where(u => ownerIds.Contains(u.Id)).ToListAsync()
                 : [];
 
-            // Map data to DTO using AutoMapper for base properties, then enrich with owner data
             var result = _mapper.Map<List<MachineSummaryDto>>(machines);
             
-            // Enrich with owner data (preserving existing logic)
             for (int i = 0; i < machines.Count; i++)
             {
                 var owner = users.FirstOrDefault(u => u.Id == machines[i].OwnerId);
@@ -169,7 +159,7 @@ namespace FEServices.Service
             return cities;
         }
 
-        public async Task<(bool Success, string Message)> AddEquipmentAsync(string name, string category, int pricePerHour, string ownerId, IFormFile? image, string? location = null, string? description = null)
+        public async Task<(bool Success, string Message)> AddEquipmentAsync(string name, string category, int pricePerHour, string ownerId, IFormFile? image, string? location = null, string? description = null, double? latitude = null, double? longitude = null, string? city = null, string? state = null, string? pincode = null)
         {
             try
             {
@@ -180,6 +170,10 @@ namespace FEServices.Service
                 Console.WriteLine($"OwnerId: {ownerId}");
                 Console.WriteLine($"Location: {location}");
                 Console.WriteLine($"Description: {description}");
+                Console.WriteLine($"Latitude: {latitude}");
+                Console.WriteLine($"Longitude: {longitude}");
+                Console.WriteLine($"City: {city}");
+                Console.WriteLine($"State: {state}");
                 
                 string imageUrl = string.Empty;
 
@@ -208,7 +202,13 @@ namespace FEServices.Service
                     Location = location,
                     Description = description,
                     Status = "Active",
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    // Location-based search fields
+                    Latitude = latitude,
+                    Longitude = longitude,
+                    City = city,
+                    State = state,
+                    Pincode = pincode
                 };
 
                 Console.WriteLine($"Creating machine: {newMachine.Name}, {newMachine.Type}, {newMachine.Rate}");
@@ -234,20 +234,135 @@ namespace FEServices.Service
             }
         }
 
+        public async Task<(bool Success, string Message)> UpdateEquipmentAsync(int id, string? name, string? category, int? pricePerHour, IFormFile? image, string? location = null, string? description = null, double? latitude = null, double? longitude = null, string? city = null, string? state = null, string? pincode = null)
+        {
+            try
+            {
+                var machine = await _unitOfWork.Machines.GetByIdAsync(id);
+                if (machine == null)
+                {
+                    return (false, "Equipment not found.");
+                }
+
+                if (!string.IsNullOrWhiteSpace(name))
+                    machine.Name = name;
+                
+                if (!string.IsNullOrWhiteSpace(category))
+                    machine.Type = category;
+                
+                if (pricePerHour.HasValue)
+                    machine.Rate = pricePerHour.Value;
+                
+                if (location != null)
+                    machine.Location = location;
+                
+                if (description != null)
+                    machine.Description = description;
+                
+                if (latitude.HasValue)
+                    machine.Latitude = latitude;
+                
+                if (longitude.HasValue)
+                    machine.Longitude = longitude;
+                
+                if (city != null)
+                    machine.City = city;
+                
+                if (state != null)
+                    machine.State = state;
+                
+                if (pincode != null)
+                    machine.Pincode = pincode;
+
+                // Handle image upload - delete old image and save new one
+                if (image != null && image.Length > 0)
+                {
+                    var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "equipment");
+                    if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+
+                    if (!string.IsNullOrEmpty(machine.ImageUrl))
+                    {
+                        var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", machine.ImageUrl.TrimStart('/'));
+                        if (File.Exists(oldImagePath))
+                        {
+                            File.Delete(oldImagePath);
+                        }
+                    }
+
+                    var extension = Path.GetExtension(image.FileName).ToLower();
+                    var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+                    var exactFilePath = Path.Combine(folderPath, uniqueFileName);
+
+                    using var stream = new FileStream(exactFilePath, FileMode.Create);
+                    await image.CopyToAsync(stream);
+                    machine.ImageUrl = $"/uploads/equipment/{uniqueFileName}";
+                }
+
+                _unitOfWork.Machines.Update(machine);
+                await _unitOfWork.SaveChangesAsync();
+
+                return (true, "Equipment updated successfully!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in UpdateEquipmentAsync: {ex.Message}");
+                return (false, $"Error: {ex.Message}");
+            }
+        }
+
+        public async Task<(bool Success, string Message)> DeleteEquipmentAsync(int id)
+        {
+            try
+            {
+                var machine = await _unitOfWork.Machines.GetByIdAsync(id);
+                if (machine == null)
+                {
+                    return (false, "Equipment not found.");
+                }
+
+                // Delete image file
+                if (!string.IsNullOrEmpty(machine.ImageUrl))
+                {
+                    var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", machine.ImageUrl.TrimStart('/'));
+                    if (File.Exists(imagePath))
+                    {
+                        File.Delete(imagePath);
+                    }
+                }
+
+                // Delete related bookings first to maintain referential integrity
+                var bookings = await _unitOfWork.Bookings.Query()
+                    .Where(b => b.MachineId == id)
+                    .ToListAsync();
+                
+                foreach (var booking in bookings)
+                {
+                    _unitOfWork.Bookings.Delete(booking);
+                }
+
+                _unitOfWork.Machines.Delete(machine);
+                await _unitOfWork.SaveChangesAsync();
+
+                return (true, "Equipment deleted successfully!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in DeleteEquipmentAsync: {ex.Message}");
+                return (false, $"Error: {ex.Message}");
+            }
+        }
+
         public async Task<IEnumerable<EquipmentAvailabilityDto>> GetEquipmentAvailabilityAsync(int machineId, DateTime startDate, DateTime endDate)
         {
-            // Verify machine exists
             var machine = await _unitOfWork.Machines.GetByIdAsync(machineId);
             if (machine == null)
                 return [];
 
-            // Get all bookings for this machine in the date range
             var bookings = await _unitOfWork.Bookings.Query()
                 .Where(b => b.MachineId == machineId &&
                            b.Status != "Rejected" && b.Status != "Cancelled")
                 .ToListAsync();
 
-            // Generate availability for each day in the range
             var availabilityList = new List<EquipmentAvailabilityDto>();
             var currentDate = startDate.Date;
 
@@ -273,6 +388,88 @@ namespace FEServices.Service
             }
 
             return availabilityList;
+        }
+
+        /// <summary>
+        /// Get machines near a specific location using Haversine formula
+        /// </summary>
+        public async Task<IEnumerable<NearbyMachineDto>> GetMachinesNearbyAsync(double latitude, double longitude, double radiusKm, string? category = null)
+        {
+            // Get all verified/active machines with coordinates
+            var query = _unitOfWork.Machines.Query()
+                .AsNoTracking()
+                .Where(m => (m.Status == "Verified" || m.Status == "Active") && 
+                           m.Latitude.HasValue && m.Longitude.HasValue);
+
+            // Apply category filter if specified
+            if (!string.IsNullOrEmpty(category) && !string.Equals(category, "All", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(m => m.Type == category);
+            }
+
+            var machines = await query.ToListAsync();
+
+            // Get owner data for all machines
+            var ownerIds = machines.Select(m => m.OwnerId).Where(id => !string.IsNullOrEmpty(id)).Distinct().ToList();
+            var users = ownerIds.Count > 0
+                ? await _unitOfWork.Users.Query().AsNoTracking().Where(u => ownerIds.Contains(u.Id)).ToListAsync()
+                : [];
+
+            // Calculate distance and filter by radius using Haversine formula
+            var nearbyMachines = machines
+                .Select(m =>
+                {
+                    var distance = CalculateHaversineDistance(latitude, longitude, m.Latitude!.Value, m.Longitude!.Value);
+                    var owner = users.FirstOrDefault(u => u.Id == m.OwnerId);
+                    return new NearbyMachineDto
+                    {
+                        Id = m.Id,
+                        Name = m.Name,
+                        Type = m.Type,
+                        Rate = m.Rate,
+                        Location = m.Location ?? owner?.Location ?? "N/A",
+                        Description = m.Description,
+                        ImageUrl = m.ImageUrl,
+                        Status = m.Status,
+                        OwnerId = m.OwnerId,
+                        OwnerName = owner?.FullName ?? "Unknown",
+                        Distance = distance,
+                        Latitude = m.Latitude,
+                        Longitude = m.Longitude,
+                        City = m.City,
+                        State = m.State
+                    };
+                })
+                .Where(m => m.Distance <= radiusKm)
+                .OrderBy(m => m.Distance)
+                .ToList();
+
+            return nearbyMachines;
+        }
+
+        /// <summary>
+        /// Calculate distance between two coordinates using Haversine formula
+        /// Returns distance in kilometers
+        /// </summary>
+        private static double CalculateHaversineDistance(double lat1, double lon1, double lat2, double lon2)
+        {
+            const double R = 6371; // Earth's radius in kilometers
+
+            var dLat = ToRadians(lat2 - lat1);
+            var dLon = ToRadians(lon2 - lon1);
+
+            var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                    Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
+                    Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+            return R * c;
+        }
+
+        private static double ToRadians(double degrees)
+        {
+            return degrees * Math.PI / 180;
         }
     }
 }

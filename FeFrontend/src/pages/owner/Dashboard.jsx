@@ -40,7 +40,6 @@ const OwnerDashboard = () => {
       }
       
       if (statsData) {
-        // Backend returns OwnerDashboardStatsDto with specific property names
         setStats({
           totalMachines: statsData.totalMachines ?? statsData.TotalMachines ?? 0,
           activeRentals: statsData.activeBookings ?? statsData.ActiveBookings ?? 0,
@@ -136,7 +135,7 @@ const OwnerDashboard = () => {
     {
       title: 'Pending Requests',
       value: stats.pendingRequests,
-      subtitle: `${pendingRate}% of total`,
+      subtitle: stats.pendingRequests === 0 ? 'No pending requests' : `${pendingRate}% of total`,
       icon: FiCalendar,
       color: '#06b6d4',
       bgColor: 'rgba(6, 182, 212, 0.15)'

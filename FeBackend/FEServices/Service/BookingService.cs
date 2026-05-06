@@ -40,7 +40,7 @@ namespace FEServices.Service
             _mapper = mapper;
             _notificationService = notificationService;
 
-            // Get commission rate from config, default to 0.10 (10%)
+            // Platform commission rate (default 10%)
             _commissionRate =
                 decimal.TryParse(configuration["PlatformSettings:CommissionRate"], out var rate) ? rate : 0.10m;
         }
@@ -94,23 +94,17 @@ namespace FEServices.Service
         {
             try
             {
-                // Validate and sanitize pagination parameters
                 var (_, validPage, validLimit) = InputSanitizer.ValidatePagination(page, limit);
-
-                // Sanitize search input to prevent injection
                 var sanitizedSearch = InputSanitizer.SanitizeSearchInput(search);
 
-                // Database has no FK relationships - use denormalized data directly
                 IQueryable<Booking> query = _unitOfWork.Bookings.Query()
                     .AsNoTracking();
 
-                // Apply status filter at DB level - compare as string
                 if (!string.IsNullOrEmpty(status) && !string.Equals(status, "all", StringComparison.OrdinalIgnoreCase))
                 {
                     query = query.Where(b => string.Equals(b.Status, status, StringComparison.OrdinalIgnoreCase));
                 }
 
-                // Apply search filter at DB level BEFORE pagination - use denormalized fields (sanitized)
                 if (!string.IsNullOrEmpty(sanitizedSearch))
                 {
                     query = query.Where(b =>

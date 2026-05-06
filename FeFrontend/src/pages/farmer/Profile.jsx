@@ -143,56 +143,119 @@ const FarmerProfile = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
-        <div className="relative">
-          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }} />
-          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }} />
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        backgroundColor: 'var(--bg-primary)'
+      }}>
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            border: '2px solid rgba(16, 185, 129, 0.2)',
+            borderTopColor: '#10b981',
+            borderRadius: '16px',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            width: '56px',
+            height: '56px',
+            borderRadius: '16px',
+            animation: 'pulse 2s ease-in-out infinite',
+            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)'
+          }} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      <div className="max-w-5xl mx-auto">
+    <div style={{
+      minHeight: '100vh',
+      padding: '24px',
+      backgroundColor: 'var(--bg-primary)'
+    }}>
+      <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
         {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }} 
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '32px'
+          }}
         >
-          <div className="flex items-center gap-4">
-            <motion.div 
-              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <motion.div
               whileHover={{ scale: 1.05 }}
-              style={{ 
+              style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                overflow: 'hidden',
                 background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
                 boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
               }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-              <FiUser className="text-xl text-white relative z-10" />
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%)'
+              }} />
+              <FiUser style={{ fontSize: '20px', color: '#ffffff', position: 'relative', zIndex: 10 }} />
             </motion.div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Profile Settings</h1>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Manage your personal information and farm details</p>
+              <h1 style={{
+                fontSize: '24px',
+                fontWeight: 700,
+                letterSpacing: '-0.025em',
+                color: 'var(--text-primary)'
+              }}>Profile Settings</h1>
+              <p style={{
+                fontSize: '14px',
+                fontWeight: 500,
+                color: 'var(--text-secondary)'
+              }}>Manage your personal information and farm details</p>
             </div>
           </div>
-          
+
           {!isEditing && (
             <motion.button
               whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setIsEditing(true)}
-              className="px-5 py-3 rounded-xl font-semibold flex items-center gap-2 relative overflow-hidden"
-              style={{ 
+              style={{
+                padding: '12px 20px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                position: 'relative',
+                overflow: 'hidden',
                 background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
-                color: '#ffffff'
+                color: '#ffffff',
+                border: 'none',
+                cursor: 'pointer'
               }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-              <FiEdit2 className="w-4 h-4 relative z-10" />
-              <span className="relative z-10">Edit Profile</span>
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%)'
+              }} />
+              <FiEdit2 style={{ width: '16px', height: '16px', position: 'relative', zIndex: 10 }} />
+              <span style={{ position: 'relative', zIndex: 10 }}>Edit Profile</span>
             </motion.button>
           )}
         </motion.div>
@@ -201,76 +264,113 @@ const FarmerProfile = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 rounded-2xl flex items-center gap-3"
-            style={{ 
-              background: message.type === 'success' 
+            style={{
+              marginBottom: '24px',
+              padding: '16px',
+              borderRadius: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              background: message.type === 'success'
                 ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)'
                 : 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%)',
-              border: message.type === 'success' 
+              border: message.type === 'success'
                 ? '1px solid rgba(16, 185, 129, 0.25)'
                 : '1px solid rgba(239, 68, 68, 0.25)',
               color: message.type === 'success' ? '#10b981' : '#f87171'
             }}
           >
             {message.type === 'success' ? <FiCheck /> : <FiX />}
-            <span className="text-sm font-semibold">{message.text}</span>
+            <span style={{ fontSize: '14px', fontWeight: 600 }}>{message.text}</span>
           </motion.div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(12, 1fr)',
+          gap: '24px'
+        }}>
           {/* Avatar Card */}
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }} 
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-4"
+            style={{ gridColumn: 'span 4' }}
           >
-            <div 
-              className="p-6 rounded-3xl text-center relative overflow-hidden"
-              style={{ 
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-primary)',
-                backdropFilter: 'blur(10px)'
-              }}
-            >
-              <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 60%)' }} />
+            <div style={{
+              padding: '24px',
+              borderRadius: '24px',
+              textAlign: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-primary)',
+              backdropFilter: 'blur(10px)'
+            }}>
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: 0.3,
+                background: 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 60%)'
+              }} />
+
               {/* Avatar */}
-              <div className="relative inline-block mb-4">
-                <div 
-                  className="w-28 h-28 rounded-2xl overflow-hidden flex items-center justify-center mx-auto relative"
-                  style={{ 
-                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%)',
-                    border: '2px solid rgba(16, 185, 129, 0.3)',
-                    boxShadow: '0 8px 32px rgba(16, 185, 129, 0.2)'
-                  }}
-                >
+              <div style={{ position: 'relative', display: 'inline-block', marginBottom: '16px' }}>
+                <div style={{
+                  width: '112px',
+                  height: '112px',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto',
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%)',
+                  border: '2px solid rgba(16, 185, 129, 0.3)',
+                  boxShadow: '0 8px 32px rgba(16, 185, 129, 0.2)'
+                }}>
                   {profile.profileImageUrl ? (
-                    <img 
-                      src={profile.profileImageUrl} 
-                      alt="Profile" 
-                      className="w-full h-full object-cover"
+                    <img
+                      src={profile.profileImageUrl}
+                      alt="Profile"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       onError={(e) => { e.target.style.display = 'none'; }}
                     />
                   ) : (
-                    <FiUser className="text-5xl" style={{ color: '#10b981' }} />
+                    <FiUser style={{ fontSize: '40px', color: '#10b981' }} />
                   )}
                 </div>
-                <motion.button 
+                <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={handleImageClick}
                   disabled={uploading}
-                  className="absolute -bottom-1 -right-1 w-10 h-10 rounded-xl flex items-center justify-center relative overflow-hidden"
-                  style={{ 
+                  style={{
+                    position: 'absolute',
+                    bottom: '-4px',
+                    right: '-4px',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
                     background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
                     boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)',
-                    opacity: uploading ? 0.7 : 1
+                    opacity: uploading ? 0.7 : 1,
+                    border: 'none',
+                    cursor: 'pointer'
                   }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                  <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%)'
+                  }} />
                   {uploading ? (
-                    <FiRefreshCw className="text-white text-sm animate-spin relative z-10" />
+                    <FiRefreshCw style={{ color: '#ffffff', fontSize: '14px', position: 'relative', zIndex: 10, animation: 'spin 1s linear infinite' }} />
                   ) : (
-                    <FiCamera className="text-white text-sm relative z-10" />
+                    <FiCamera style={{ color: '#ffffff', fontSize: '14px', position: 'relative', zIndex: 10 }} />
                   )}
                 </motion.button>
                 <input
@@ -280,50 +380,75 @@ const FarmerProfile = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="hidden"
+                  style={{ display: 'none' }}
                 />
               </div>
 
               {/* User Info */}
-              <h3 className="text-lg font-bold mb-1 relative" style={{ color: 'var(--text-primary)' }}>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: 700,
+                marginBottom: '4px',
+                position: 'relative',
+                color: 'var(--text-primary)'
+              }}>
                 {profile.fullName || 'User Name'}
               </h3>
-              <span 
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold relative"
-                style={{ 
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%)',
-                  color: '#10b981',
-                  border: '1px solid rgba(16, 185, 129, 0.3)'
-                }}
-              >
-                <FiCheck className="text-xs" />
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 16px',
+                borderRadius: '9999px',
+                fontSize: '12px',
+                fontWeight: 600,
+                position: 'relative',
+                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%)',
+                color: '#10b981',
+                border: '1px solid rgba(16, 185, 129, 0.3)'
+              }}>
+                <FiCheck style={{ fontSize: '12px' }} />
                 Farmer
               </span>
 
               {/* Quick Stats */}
-              <div className="mt-6 pt-4 relative" style={{ borderTop: '1px solid var(--border-secondary)' }}>
-                <div className="grid grid-cols-2 gap-3">
-                  <div 
-                    className="p-4 rounded-2xl"
-                    style={{ 
-                      background: 'var(--bg-button)',
-                      border: '1px solid var(--border-tertiary)'
-                    }}
-                  >
-                    <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Farm Size</p>
-                    <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+              <div style={{
+                marginTop: '24px',
+                paddingTop: '16px',
+                position: 'relative',
+                borderTop: '1px solid var(--border-secondary)'
+              }}>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px'
+                }}>
+                  <div style={{
+                    padding: '16px',
+                    borderRadius: '16px',
+                    background: 'var(--bg-button)',
+                    border: '1px solid var(--border-tertiary)'
+                  }}>
+                    <p style={{ fontSize: '12px', fontWeight: 500, marginBottom: '4px', color: 'var(--text-secondary)' }}>Farm Size</p>
+                    <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
                       {profile.farmSize || '0'} Acres
                     </p>
                   </div>
-                  <div 
-                    className="p-4 rounded-2xl"
-                    style={{ 
-                      background: 'var(--bg-button)',
-                      border: '1px solid var(--border-tertiary)'
-                    }}
-                  >
-                    <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Location</p>
-                    <p className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                  <div style={{
+                    padding: '16px',
+                    borderRadius: '16px',
+                    background: 'var(--bg-button)',
+                    border: '1px solid var(--border-tertiary)'
+                  }}>
+                    <p style={{ fontSize: '12px', fontWeight: 500, marginBottom: '4px', color: 'var(--text-secondary)' }}>Location</p>
+                    <p style={{
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      color: 'var(--text-primary)'
+                    }}>
                       {profile.location || 'N/A'}
                     </p>
                   </div>
@@ -333,38 +458,73 @@ const FarmerProfile = () => {
           </motion.div>
 
           {/* Form Section */}
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }} 
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-8"
+            style={{ gridColumn: 'span 8' }}
           >
-            <div 
-              className="rounded-3xl overflow-hidden relative"
-              style={{ 
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-primary)',
-                backdropFilter: 'blur(10px)'
-              }}
-            >
-              <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.03) 0%, transparent 50%)' }} />
-              <form onSubmit={handleSave} className="p-6 relative">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div style={{
+              borderRadius: '24px',
+              overflow: 'hidden',
+              position: 'relative',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-primary)',
+              backdropFilter: 'blur(10px)'
+            }}>
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: 0.3,
+                background: 'radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.03) 0%, transparent 50%)'
+              }} />
+
+              <form onSubmit={handleSave} style={{ padding: '24px', position: 'relative' }}>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                  gap: '20px'
+                }}>
                   {/* Full Name */}
-                  <div className="space-y-2">
-                    <label htmlFor="fullName" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>
-                      <FiUser style={{ color: '#10b981' }} />
+                  <div>
+                    <label htmlFor="fullName" style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      marginBottom: '8px',
+                      color: 'var(--text-muted)'
+                    }}>
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(16, 185, 129, 0.1) 100%)'
+                      }}>
+                        <FiUser style={{ fontSize: '10px', color: '#10b981' }} />
+                      </div>
                       Full Name
                     </label>
-                    <input 
+                    <input
                       id="fullName"
-                      name="fullName" 
-                      value={profile.fullName} 
+                      name="fullName"
+                      value={profile.fullName}
                       onChange={handleChange}
                       disabled={!isEditing}
                       autoComplete="name"
-                      className="w-full px-4 py-3.5 rounded-2xl outline-none transition-all duration-200 font-medium"
-                      style={{ 
-                        background: isEditing ? 'var(--bg-input)' : 'var(--bg-button)', 
+                      style={{
+                        width: '100%',
+                        padding: '14px 16px',
+                        borderRadius: '12px',
+                        outline: 'none',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        transition: 'all 0.2s ease',
+                        boxSizing: 'border-box',
+                        background: isEditing ? 'var(--bg-input)' : 'var(--bg-button)',
                         border: isEditing ? '1px solid var(--border-primary)' : '1px solid var(--border-tertiary)',
                         color: isEditing ? 'var(--text-primary)' : 'var(--text-muted)',
                         cursor: isEditing ? 'text' : 'default'
@@ -373,42 +533,92 @@ const FarmerProfile = () => {
                   </div>
 
                   {/* Email */}
-                  <div className="space-y-2">
-                    <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>
-                      <FiMail style={{ color: '#3b82f6' }} />
+                  <div>
+                    <label htmlFor="email" style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      marginBottom: '8px',
+                      color: 'var(--text-muted)'
+                    }}>
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.1) 100%)'
+                      }}>
+                        <FiMail style={{ fontSize: '10px', color: '#60a5fa' }} />
+                      </div>
                       Email Address
                     </label>
-                    <input 
+                    <input
                       id="email"
                       name="email"
-                      disabled 
-                      value={profile.email} 
+                      disabled
+                      value={profile.email}
                       autoComplete="email"
-                      className="w-full px-4 py-3.5 rounded-2xl outline-none cursor-not-allowed font-medium"
-                      style={{ 
-                        background: 'var(--bg-button)', 
-                        border: '1px solid var(--border-tertiary)', 
+                      style={{
+                        width: '100%',
+                        padding: '14px 16px',
+                        borderRadius: '12px',
+                        outline: 'none',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        cursor: 'not-allowed',
+                        boxSizing: 'border-box',
+                        background: 'var(--bg-button)',
+                        border: '1px solid var(--border-tertiary)',
                         color: 'var(--text-muted)'
                       }}
                     />
                   </div>
 
                   {/* Phone */}
-                  <div className="space-y-2">
-                    <label htmlFor="phoneNumber" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>
-                      <FiPhone style={{ color: '#a855f7' }} />
+                  <div>
+                    <label htmlFor="phoneNumber" style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      marginBottom: '8px',
+                      color: 'var(--text-muted)'
+                    }}>
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(168, 85, 247, 0.1) 100%)'
+                      }}>
+                        <FiPhone style={{ fontSize: '10px', color: '#c084fc' }} />
+                      </div>
                       Phone Number
                     </label>
-                    <input 
+                    <input
                       id="phoneNumber"
-                      name="phoneNumber" 
-                      value={profile.phoneNumber} 
+                      name="phoneNumber"
+                      value={profile.phoneNumber}
                       onChange={handleChange}
                       disabled={!isEditing}
                       autoComplete="tel"
-                      className="w-full px-4 py-3.5 rounded-2xl outline-none transition-all duration-200 font-medium"
-                      style={{ 
-                        background: isEditing ? 'var(--bg-input)' : 'var(--bg-button)', 
+                      style={{
+                        width: '100%',
+                        padding: '14px 16px',
+                        borderRadius: '12px',
+                        outline: 'none',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        transition: 'all 0.2s ease',
+                        boxSizing: 'border-box',
+                        background: isEditing ? 'var(--bg-input)' : 'var(--bg-button)',
                         border: isEditing ? '1px solid var(--border-primary)' : '1px solid var(--border-tertiary)',
                         color: isEditing ? 'var(--text-primary)' : 'var(--text-muted)',
                         cursor: isEditing ? 'text' : 'default'
@@ -417,21 +627,46 @@ const FarmerProfile = () => {
                   </div>
 
                   {/* Location */}
-                  <div className="space-y-2">
-                    <label htmlFor="location" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>
-                      <FiMapPin style={{ color: '#ef4444' }} />
+                  <div>
+                    <label htmlFor="location" style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      marginBottom: '8px',
+                      color: 'var(--text-muted)'
+                    }}>
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(239, 68, 68, 0.1) 100%)'
+                      }}>
+                        <FiMapPin style={{ fontSize: '10px', color: '#f87171' }} />
+                      </div>
                       Location
                     </label>
-                    <input 
+                    <input
                       id="location"
-                      name="location" 
-                      value={profile.location} 
+                      name="location"
+                      value={profile.location}
                       onChange={handleChange}
                       disabled={!isEditing}
                       autoComplete="address-level2"
-                      className="w-full px-4 py-3.5 rounded-2xl outline-none transition-all duration-200 font-medium"
-                      style={{ 
-                        background: isEditing ? 'var(--bg-input)' : 'var(--bg-button)', 
+                      style={{
+                        width: '100%',
+                        padding: '14px 16px',
+                        borderRadius: '12px',
+                        outline: 'none',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        transition: 'all 0.2s ease',
+                        boxSizing: 'border-box',
+                        background: isEditing ? 'var(--bg-input)' : 'var(--bg-button)',
                         border: isEditing ? '1px solid var(--border-primary)' : '1px solid var(--border-tertiary)',
                         color: isEditing ? 'var(--text-primary)' : 'var(--text-muted)',
                         cursor: isEditing ? 'text' : 'default'
@@ -440,22 +675,47 @@ const FarmerProfile = () => {
                   </div>
 
                   {/* Farm Size */}
-                  <div className="space-y-2 md:col-span-2">
-                    <label htmlFor="farmSize" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>
-                      <FiGrid style={{ color: '#f59e0b' }} />
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label htmlFor="farmSize" style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      marginBottom: '8px',
+                      color: 'var(--text-muted)'
+                    }}>
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(245, 158, 11, 0.1) 100%)'
+                      }}>
+                        <FiGrid style={{ fontSize: '10px', color: '#fbbf24' }} />
+                      </div>
                       Farm Size (Acres)
                     </label>
-                    <input 
+                    <input
                       id="farmSize"
-                      name="farmSize" 
-                      value={profile.farmSize} 
+                      name="farmSize"
+                      value={profile.farmSize}
                       onChange={handleChange}
                       disabled={!isEditing}
                       placeholder="e.g. 50"
                       autoComplete="off"
-                      className="w-full px-4 py-3.5 rounded-2xl outline-none transition-all duration-200 font-medium"
-                      style={{ 
-                        background: isEditing ? 'var(--bg-input)' : 'var(--bg-button)', 
+                      style={{
+                        width: '100%',
+                        padding: '14px 16px',
+                        borderRadius: '12px',
+                        outline: 'none',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        transition: 'all 0.2s ease',
+                        boxSizing: 'border-box',
+                        background: isEditing ? 'var(--bg-input)' : 'var(--bg-button)',
                         border: isEditing ? '1px solid var(--border-primary)' : '1px solid var(--border-tertiary)',
                         color: isEditing ? 'var(--text-primary)' : 'var(--text-muted)',
                         cursor: isEditing ? 'text' : 'default'
@@ -466,50 +726,79 @@ const FarmerProfile = () => {
 
                 {/* Action Buttons */}
                 {isEditing && (
-                  <div 
-                    className="flex justify-end gap-3 mt-6 pt-6 relative"
-                    style={{ borderTop: '1px solid var(--border-secondary)' }}
-                  >
-                    <motion.button 
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: '12px',
+                    marginTop: '24px',
+                    paddingTop: '24px',
+                    position: 'relative',
+                    borderTop: '1px solid var(--border-secondary)'
+                  }}>
+                    <motion.button
                       type="button"
                       onClick={handleCancel}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="px-5 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all"
-                      style={{ 
-                        backgroundColor: 'var(--bg-button)', 
-                        border: '1px solid var(--border-primary)', 
-                        color: 'var(--text-muted)'
+                      style={{
+                        padding: '12px 20px',
+                        borderRadius: '12px',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        background: 'var(--bg-button)',
+                        border: '1px solid var(--border-primary)',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer'
                       }}
                     >
-                      <FiX className="w-4 h-4" />
+                      <FiX style={{ width: '16px', height: '16px' }} />
                       Cancel
                     </motion.button>
-                    <motion.button 
+                    <motion.button
                       type="submit"
                       disabled={saving}
                       whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}
                       whileTap={{ scale: 0.98 }}
-                      className="px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all relative overflow-hidden"
-                      style={{ 
+                      style={{
+                        padding: '12px 24px',
+                        borderRadius: '12px',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        position: 'relative',
+                        overflow: 'hidden',
                         background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
-                        color: '#ffffff'
+                        color: '#ffffff',
+                        border: 'none',
+                        cursor: 'pointer'
                       }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-                      {saving ? <FiRefreshCw className="w-4 h-4 animate-spin relative z-10" /> : <FiSave className="w-4 h-4 relative z-10" />}
-                      <span className="relative z-10">{saving ? 'Saving...' : 'Save Changes'}</span>
+                      <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%)'
+                      }} />
+                      {saving ? (
+                        <FiRefreshCw style={{ width: '16px', height: '16px', position: 'relative', zIndex: 10, animation: 'spin 1s linear infinite' }} />
+                      ) : (
+                        <FiSave style={{ width: '16px', height: '16px', position: 'relative', zIndex: 10 }} />
+                      )}
+                      <span style={{ position: 'relative', zIndex: 10 }}>{saving ? 'Saving...' : 'Save Changes'}</span>
                     </motion.button>
                   </div>
                 )}
               </form>
 
               {/* 2FA Section */}
-              <div 
-                className="px-6 pb-6 relative"
-                style={{ borderTop: '1px solid var(--border-secondary)' }}
-              >
-                <div className="pt-6">
+              <div style={{
+                padding: '0 24px 24px',
+                position: 'relative',
+                borderTop: '1px solid var(--border-secondary)'
+              }}>
+                <div style={{ paddingTop: '24px' }}>
                   <TwoFactorSetup
                     currentSettings={twoFASettings}
                     onUpdate={handle2FAUpdate}
@@ -518,24 +807,35 @@ const FarmerProfile = () => {
               </div>
 
               {/* Write a Review Section */}
-              <div 
-                className="px-6 pb-6 relative"
-                style={{ borderTop: '1px solid var(--border-secondary)' }}
-              >
-                <div className="pt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-10 h-10 rounded-xl flex items-center justify-center"
-                        style={{ background: 'rgba(245, 158, 11, 0.15)' }}
-                      >
-                        <FiStar className="w-5 h-5" style={{ color: '#f59e0b' }} />
+              <div style={{
+                padding: '0 24px 24px',
+                position: 'relative',
+                borderTop: '1px solid var(--border-secondary)'
+              }}>
+                <div style={{ paddingTop: '24px' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '16px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'rgba(245, 158, 11, 0.15)'
+                      }}>
+                        <FiStar style={{ width: '20px', height: '20px', color: '#f59e0b' }} />
                       </div>
                       <div>
-                        <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                        <h3 style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                           Share Your Experience
                         </h3>
-                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                        <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
                           Write a review about FarmEase platform
                         </p>
                       </div>
@@ -545,20 +845,27 @@ const FarmerProfile = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setShowTestimonial(true)}
-                        className="px-4 py-2 rounded-xl font-medium flex items-center gap-2"
-                        style={{ 
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '12px',
+                          fontWeight: 500,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
                           background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                          color: '#fff'
+                          color: '#ffffff',
+                          border: 'none',
+                          cursor: 'pointer'
                         }}
                       >
-                        <FiMessageSquare className="w-4 h-4" />
+                        <FiMessageSquare style={{ width: '16px', height: '16px' }} />
                         Write a Review
                       </motion.button>
                     )}
                   </div>
 
                   {showTestimonial && (
-                    <SubmitTestimonial 
+                    <SubmitTestimonial
                       onClose={() => setShowTestimonial(false)}
                       onSubmitSuccess={() => {
                         setShowTestimonial(false);

@@ -79,7 +79,6 @@ const Register = () => {
         display: 'flex',
         backgroundColor: '#0a0a0a'
       }}>
-        {/* Left Side - Dark Green Panel */}
         <div style={{
           display: 'none',
           width: '50%',
@@ -94,7 +93,6 @@ const Register = () => {
           }} />
         </div>
 
-        {/* Right Side - Success Message */}
         <div style={{
           width: '100%',
           display: 'flex',
@@ -155,7 +153,6 @@ const Register = () => {
       display: 'flex',
       backgroundColor: '#0a0a0a'
     }}>
-      {/* Left Side - Dark Green Panel with FarmEase Branding */}
       <div style={{
         display: 'none',
         width: '50%',
@@ -163,7 +160,6 @@ const Register = () => {
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #0d2818 0%, #1a4d3a 50%, #0d2818 100%)'
       }} className="lg:block">
-        {/* Radial gradient overlays */}
         <div style={{
           position: 'absolute',
           inset: 0,
@@ -175,7 +171,6 @@ const Register = () => {
           background: 'radial-gradient(ellipse at bottom right, rgba(5,150,105,0.1) 0%, transparent 50%)'
         }} />
 
-        {/* Content */}
         <div style={{
           position: 'relative',
           zIndex: 10,
@@ -185,7 +180,6 @@ const Register = () => {
           padding: '0 64px',
           height: '100%'
         }}>
-          {/* Back to Home Button */}
           <motion.button
             onClick={() => navigate('/')}
             initial={{ opacity: 0, x: -20 }}
@@ -220,7 +214,6 @@ const Register = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            {/* Logo */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
               <div style={{
                 width: '56px',
@@ -249,7 +242,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Headline */}
             <h2 style={{
               fontSize: '48px',
               fontWeight: 700,
@@ -269,7 +261,6 @@ const Register = () => {
               Create your account and start accessing farm equipment today.
             </p>
 
-            {/* Step Cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {steps.map((step, index) => (
                 <motion.div
@@ -328,7 +319,6 @@ const Register = () => {
         </div>
       </div>
 
-      {/* Right Side - Register Form */}
       <div style={{
         width: '100%',
         display: 'flex',
@@ -344,7 +334,6 @@ const Register = () => {
           transition={{ duration: 0.5 }}
           style={{ width: '100%', maxWidth: '400px' }}
         >
-          {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <h2 style={{
               fontSize: '24px',

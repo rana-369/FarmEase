@@ -141,6 +141,32 @@ namespace FarmEase.Controllers
             return Ok(availability);
         }
 
+        /// <summary>
+        /// Get machines near a specific location - Like Uber/Rapido for finding nearby equipment
+        /// </summary>
+        [HttpGet("nearby")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetMachinesNearby(
+            [FromQuery] double lat, 
+            [FromQuery] double lng, 
+            [FromQuery] double radius = 10,
+            [FromQuery] string? category = null)
+        {
+            // Validate coordinates
+            if (lat < -90 || lat > 90)
+                return BadRequest(new { Message = "Latitude must be between -90 and 90." });
+            
+            if (lng < -180 || lng > 180)
+                return BadRequest(new { Message = "Longitude must be between -180 and 180." });
+
+            // Validate radius (max 100km)
+            if (radius <= 0 || radius > 100)
+                return BadRequest(new { Message = "Radius must be between 1 and 100 km." });
+
+            var nearbyMachines = await _machineService.GetMachinesNearbyAsync(lat, lng, radius, category);
+            return Ok(nearbyMachines);
+        }
+
         private string? GetUserId()
         {
             return User.FindFirstValue(ClaimTypes.NameIdentifier)

@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiTruck, FiCamera, FiMapPin, FiFileText, FiSave, FiX, FiRefreshCw, FiTool, FiCheckCircle, FiNavigation } from 'react-icons/fi';
-import { addEquipmentWithImage } from '../../services/machineService';
+import { FiTruck, FiCamera, FiMapPin, FiFileText, FiSave, FiX, FiRefreshCw, FiTool, FiCheckCircle, FiNavigation, FiArrowLeft } from 'react-icons/fi';
+import api from '../../services/api';
 import LocationSearch from '../../components/LocationSearch';
 
-const AddMachine = () => {
+const EditMachine = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [locationConfirmed, setLocationConfirmed] = useState(false);
+  
   const [formData, setFormData] = useState({
     name: '',
     category: 'Tractor',
@@ -23,10 +30,6 @@ const AddMachine = () => {
     state: '',
     pincode: ''
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [locationConfirmed, setLocationConfirmed] = useState(false);
 
   const categories = [
     'Tractor',
@@ -39,6 +42,45 @@ const AddMachine = () => {
     'Other'
   ];
 
+  useEffect(() => {
+    fetchMachine();
+  }, [id]);
+
+  const fetchMachine = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/machines/${id}`);
+      const machine = response.data;
+      
+      setFormData({
+        name: machine.name || machine.Name || '',
+        category: machine.type || machine.Type || 'Tractor',
+        description: machine.description || machine.Description || '',
+        rate: machine.rate || machine.Rate || machine.pricePerHour || '',
+        location: machine.location || machine.Location || '',
+        specifications: '',
+        availability: machine.status === 'Verified' || machine.status === 'Active',
+        images: machine.imageUrl ? [machine.imageUrl] : [],
+        imageFiles: [],
+        latitude: machine.latitude || machine.Latitude || null,
+        longitude: machine.longitude || machine.Longitude || null,
+        city: machine.city || '',
+        state: machine.state || '',
+        pincode: machine.pincode || ''
+      });
+      
+      if (machine.latitude && machine.longitude) {
+        setLocationConfirmed(true);
+      }
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching machine:', error);
+      setError('Failed to load equipment details');
+      setLoading(false);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -50,55 +92,75 @@ const AddMachine = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     setError('');
 
     if (!formData.name || !formData.rate || !formData.location) {
       setError('Equipment name, hourly rate, and location are required');
-      setLoading(false);
+      setSaving(false);
       return;
     }
 
     try {
-      const formDataObj = new FormData();
-      formDataObj.append('name', formData.name);
-      formDataObj.append('category', formData.category);
-      formDataObj.append('pricePerHour', parseInt(formData.rate));
-      formDataObj.append('location', formData.location);
-      formDataObj.append('description', formData.description);
+      const updateData = {
+        name: formData.name,
+        type: formData.category,
+        pricePerHour: parseInt(formData.rate),
+        location: formData.location,
+        description: formData.description,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode
+      };
       
-      if (formData.latitude !== null) {
-        formDataObj.append('latitude', formData.latitude);
-      }
-      if (formData.longitude !== null) {
-        formDataObj.append('longitude', formData.longitude);
-      }
-      if (formData.city) {
-        formDataObj.append('city', formData.city);
-      }
-      if (formData.state) {
-        formDataObj.append('state', formData.state);
-      }
-      if (formData.pincode) {
-        formDataObj.append('pincode', formData.pincode);
-      }
-      
+      // If there's a new image, use FormData with /equipment endpoint
       if (formData.imageFiles && formData.imageFiles.length > 0) {
+        const formDataObj = new FormData();
+        formDataObj.append('name', formData.name);
+        formDataObj.append('type', formData.category);
+        formDataObj.append('pricePerHour', parseInt(formData.rate));
+        formDataObj.append('location', formData.location);
+        formDataObj.append('description', formData.description);
+        if (formData.latitude !== null) formDataObj.append('latitude', formData.latitude);
+        if (formData.longitude !== null) formDataObj.append('longitude', formData.longitude);
+        if (formData.city) formDataObj.append('city', formData.city);
+        if (formData.state) formDataObj.append('state', formData.state);
+        if (formData.pincode) formDataObj.append('pincode', formData.pincode);
         formDataObj.append('image', formData.imageFiles[0]);
+        
+        await api.put(`/equipment/${id}`, formDataObj, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        // No new image, send as JSON - but backend expects FormData
+        const formDataObj = new FormData();
+        formDataObj.append('name', formData.name);
+        formDataObj.append('category', formData.category);
+        formDataObj.append('pricePerHour', parseInt(formData.rate));
+        if (formData.location) formDataObj.append('location', formData.location);
+        if (formData.description) formDataObj.append('description', formData.description);
+        if (formData.latitude !== null) formDataObj.append('latitude', formData.latitude);
+        if (formData.longitude !== null) formDataObj.append('longitude', formData.longitude);
+        if (formData.city) formDataObj.append('city', formData.city);
+        if (formData.state) formDataObj.append('state', formData.state);
+        if (formData.pincode) formDataObj.append('pincode', formData.pincode);
+        
+        await api.put(`/equipment/${id}`, formDataObj, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       }
-      
-      await addEquipmentWithImage(formDataObj);
       
       setSuccess(true);
       setTimeout(() => {
-        setSuccess(false);
         navigate('/owner/machines');
       }, 2000);
     } catch (error) {
-      console.error('Error adding machine:', error);
-      setError(error.response?.data?.message || 'Failed to add equipment. Please check your connection.');
+      console.error('Error updating machine:', error);
+      setError(error.response?.data?.message || 'Failed to update equipment. Please try again.');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -124,7 +186,6 @@ const AddMachine = () => {
     });
   };
 
-  // Handle location selection from LocationSearch component
   const handleLocationSelect = (location) => {
     if (location) {
       setFormData(prev => ({
@@ -138,6 +199,27 @@ const AddMachine = () => {
       setLocationConfirmed(true);
     }
   };
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'var(--bg-primary)'
+      }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          border: '3px solid var(--border-primary)',
+          borderTopColor: '#10b981',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+      </div>
+    );
+  }
 
   if (success) {
     return (
@@ -158,19 +240,10 @@ const AddMachine = () => {
             maxWidth: '400px',
             width: '100%',
             textAlign: 'center',
-            position: 'relative',
-            overflow: 'hidden',
             background: 'var(--bg-card)',
-            border: '1px solid var(--border-primary)',
-            backdropFilter: 'blur(10px)'
+            border: '1px solid var(--border-primary)'
           }}
         >
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            opacity: 0.3,
-            background: 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.1) 0%, transparent 60%)'
-          }} />
           <div style={{
             width: '80px',
             height: '80px',
@@ -179,8 +252,6 @@ const AddMachine = () => {
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 24px',
-            position: 'relative',
-            overflow: 'hidden',
             background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%)',
             border: '1px solid rgba(16, 185, 129, 0.3)'
           }}>
@@ -190,15 +261,13 @@ const AddMachine = () => {
             fontSize: '20px',
             fontWeight: 700,
             marginBottom: '8px',
-            position: 'relative',
             color: 'var(--text-primary)'
-          }}>Listed Successfully!</h2>
+          }}>Updated Successfully!</h2>
           <p style={{
             fontSize: '14px',
             fontWeight: 500,
-            position: 'relative',
             color: 'var(--text-secondary)'
-          }}>Your machinery has been added and is pending verification.</p>
+          }}>Your equipment details have been saved.</p>
         </motion.div>
       </div>
     );
@@ -223,40 +292,36 @@ const AddMachine = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <motion.div
+            <motion.button
               whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/owner/machines')}
               style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                position: 'relative',
-                overflow: 'hidden',
-                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)',
-                boxShadow: '0 8px 32px rgba(59, 130, 246, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
+                border: '1px solid var(--border-primary)',
+                background: 'var(--bg-card)',
+                cursor: 'pointer',
+                color: 'var(--text-secondary)'
               }}
             >
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%)'
-              }} />
-              <FiTool style={{ fontSize: '20px', color: '#ffffff', position: 'relative', zIndex: 10 }} />
-            </motion.div>
+              <FiArrowLeft style={{ fontSize: '20px' }} />
+            </motion.button>
             <div>
               <h1 style={{
                 fontSize: '24px',
                 fontWeight: 700,
-                letterSpacing: '-0.025em',
                 color: 'var(--text-primary)'
-              }}>Add Equipment</h1>
+              }}>Edit Equipment</h1>
               <p style={{
                 fontSize: '14px',
                 fontWeight: 500,
                 color: 'var(--text-secondary)'
-              }}>List new machinery for rent</p>
+              }}>Update machinery details</p>
             </div>
           </div>
         </motion.div>
@@ -289,17 +354,9 @@ const AddMachine = () => {
               padding: '24px',
               position: 'relative',
               background: 'var(--bg-card)',
-              border: '1px solid var(--border-primary)',
-              backdropFilter: 'blur(10px)'
+              border: '1px solid var(--border-primary)'
             }}
           >
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              opacity: 0.3,
-              background: 'radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)'
-            }} />
-            
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -317,17 +374,7 @@ const AddMachine = () => {
                   color: 'var(--text-muted)',
                   marginBottom: '10px'
                 }}>
-                  <div style={{
-                    width: '20px',
-                    height: '20px',
-                    borderRadius: '6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.1) 100%)'
-                  }}>
-                    <FiTool style={{ fontSize: '10px', color: '#60a5fa' }} />
-                  </div>
+                  <FiTool style={{ fontSize: '14px', color: '#60a5fa' }} />
                   Machinery Name
                 </label>
                 <input
@@ -368,17 +415,7 @@ const AddMachine = () => {
                   color: 'var(--text-muted)',
                   marginBottom: '10px'
                 }}>
-                  <div style={{
-                    width: '20px',
-                    height: '20px',
-                    borderRadius: '6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(168, 85, 247, 0.1) 100%)'
-                  }}>
-                    <FiTruck style={{ fontSize: '10px', color: '#c084fc' }} />
-                  </div>
+                  <FiTruck style={{ fontSize: '14px', color: '#c084fc' }} />
                   Category
                 </label>
                 <select
@@ -426,17 +463,7 @@ const AddMachine = () => {
                   color: 'var(--text-muted)',
                   marginBottom: '10px'
                 }}>
-                  <div style={{
-                    width: '20px',
-                    height: '20px',
-                    borderRadius: '6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(16, 185, 129, 0.1) 100%)'
-                  }}>
-                    <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 700 }}>₹</span>
-                  </div>
+                  <span style={{ fontSize: '14px', color: '#10b981', fontWeight: 700 }}>₹</span>
                   Hourly Rate (₹)
                 </label>
                 <input
@@ -478,17 +505,7 @@ const AddMachine = () => {
                   color: 'var(--text-muted)',
                   marginBottom: '10px'
                 }}>
-                  <div style={{
-                    width: '20px',
-                    height: '20px',
-                    borderRadius: '6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(239, 68, 68, 0.1) 100%)'
-                  }}>
-                    <FiNavigation style={{ fontSize: '10px', color: '#10b981' }} />
-                  </div>
+                  <FiMapPin style={{ fontSize: '14px', color: '#10b981' }} />
                   Equipment Location
                   {locationConfirmed && (
                     <span style={{
@@ -502,9 +519,7 @@ const AddMachine = () => {
                 </label>
                 
                 {/* Location Picker */}
-                <div style={{
-                  marginBottom: '12px'
-                }}>
+                <div style={{ marginBottom: '12px' }}>
                   <LocationSearch
                     onLocationSelect={handleLocationSelect}
                     showRadiusSelector={false}
@@ -535,7 +550,7 @@ const AddMachine = () => {
                     transition: 'border-color 0.2s ease',
                     boxSizing: 'border-box'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(239, 68, 68, 0.5)'}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(16, 185, 129, 0.5)'}
                   onBlur={(e) => e.target.style.borderColor = 'var(--border-primary)'}
                 />
                 
@@ -570,17 +585,7 @@ const AddMachine = () => {
                   color: 'var(--text-muted)',
                   marginBottom: '10px'
                 }}>
-                  <div style={{
-                    width: '20px',
-                    height: '20px',
-                    borderRadius: '6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(245, 158, 11, 0.1) 100%)'
-                  }}>
-                    <FiFileText style={{ fontSize: '10px', color: '#fbbf24' }} />
-                  </div>
+                  <FiFileText style={{ fontSize: '14px', color: '#fbbf24' }} />
                   Description
                 </label>
                 <textarea
@@ -622,17 +627,7 @@ const AddMachine = () => {
                   color: 'var(--text-muted)',
                   marginBottom: '10px'
                 }}>
-                  <div style={{
-                    width: '20px',
-                    height: '20px',
-                    borderRadius: '6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.1) 100%)'
-                  }}>
-                    <FiCamera style={{ fontSize: '10px', color: '#60a5fa' }} />
-                  </div>
+                  <FiCamera style={{ fontSize: '14px', color: '#60a5fa' }} />
                   Equipment Image
                 </label>
                 <div style={{
@@ -641,7 +636,6 @@ const AddMachine = () => {
                   padding: '32px',
                   textAlign: 'center',
                   cursor: 'pointer',
-                  transition: 'border-color 0.2s ease',
                   background: 'var(--bg-button)'
                 }}>
                   <div style={{
@@ -749,7 +743,6 @@ const AddMachine = () => {
               display: 'flex',
               justifyContent: 'flex-end',
               gap: '12px',
-              position: 'relative',
               borderTop: '1px solid var(--border-secondary)'
             }}>
               <motion.button
@@ -765,8 +758,7 @@ const AddMachine = () => {
                   background: 'var(--bg-button)',
                   border: '1px solid var(--border-primary)',
                   color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
+                  cursor: 'pointer'
                 }}
               >
                 Cancel
@@ -775,7 +767,7 @@ const AddMachine = () => {
                 whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                disabled={loading}
+                disabled={saving}
                 style={{
                   padding: '12px 24px',
                   borderRadius: '12px',
@@ -784,26 +776,19 @@ const AddMachine = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                   border: 'none',
                   color: '#ffffff',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  opacity: loading ? 0.7 : 1
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  opacity: saving ? 0.7 : 1
                 }}
               >
-                <div style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%)'
-                }} />
-                {loading ? (
-                  <FiRefreshCw style={{ position: 'relative', zIndex: 10, animation: 'spin 1s linear infinite' }} />
+                {saving ? (
+                  <FiRefreshCw style={{ animation: 'spin 1s linear infinite' }} />
                 ) : (
-                  <FiSave style={{ position: 'relative', zIndex: 10 }} />
+                  <FiSave />
                 )}
-                <span style={{ position: 'relative', zIndex: 10 }}>{loading ? 'Processing...' : 'Add Equipment'}</span>
+                <span>{saving ? 'Saving...' : 'Save Changes'}</span>
               </motion.button>
             </div>
           </motion.div>
@@ -813,4 +798,4 @@ const AddMachine = () => {
   );
 };
 
-export default AddMachine;
+export default EditMachine;

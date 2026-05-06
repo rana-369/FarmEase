@@ -27,22 +27,44 @@ const RatingSummary = ({ machineId, showDetails = false }) => {
 
   if (!summary || summary.totalReviews === 0) {
     return (
-      <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-semibold" 
-        style={{ background: 'rgba(250, 204, 21, 0.1)', border: '1px solid rgba(250, 204, 21, 0.2)', color: 'var(--text-muted)' }}>
-        <FiStar size={12} />
-        <span>No reviews</span>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        padding: '8px 14px',
+        borderRadius: '20px',
+        fontSize: '12px',
+        fontWeight: 600,
+        background: 'rgba(0, 0, 0, 0.7)',
+        border: '1px solid rgba(250, 204, 21, 0.3)',
+        backdropFilter: 'blur(12px)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+      }}>
+        <FiStar size={14} style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+        <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>No reviews</span>
       </div>
     );
   }
 
   if (!showDetails) {
-    // Compact view for cards
+    // Compact view for cards - improved visibility
     return (
-      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold"
-        style={{ background: 'linear-gradient(135deg, rgba(250, 204, 21, 0.2) 0%, rgba(245, 158, 11, 0.15) 100%)', border: '1px solid rgba(250, 204, 21, 0.25)', color: '#facc15' }}>
-        <FiStar size={12} style={{ fill: '#facc15' }} />
-        <span>{summary.averageRating.toFixed(1)}</span>
-        <span style={{ color: 'var(--text-muted)' }}>({summary.totalReviews})</span>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        padding: '8px 14px',
+        borderRadius: '20px',
+        fontSize: '12px',
+        fontWeight: 700,
+        background: 'rgba(0, 0, 0, 0.7)',
+        border: '1px solid rgba(250, 204, 21, 0.5)',
+        backdropFilter: 'blur(12px)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+      }}>
+        <FiStar size={14} style={{ color: '#facc15', fill: '#facc15' }} />
+        <span style={{ color: '#facc15' }}>{summary.averageRating.toFixed(1)}</span>
+        <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>({summary.totalReviews})</span>
       </div>
     );
   }

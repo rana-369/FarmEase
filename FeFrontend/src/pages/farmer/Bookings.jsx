@@ -23,7 +23,6 @@ const FarmerBookings = () => {
   const [reviewEligibility, setReviewEligibility] = useState(null);
   const [bookingReview, setBookingReview] = useState(null);
 
-  // Helper function to format time (e.g., "06:00" -> "6:00 AM")
   const formatTime = (time) => {
     if (!time || !time.includes(':')) return time;
     const [hours] = time.split(':');
@@ -58,7 +57,6 @@ const FarmerBookings = () => {
           refundDate: booking.payment?.refundedAt || booking.Payment?.RefundedAt || booking.payment?.RefundedAt || null,
           refundReason: booking.payment?.refundReason || booking.Payment?.RefundReason || booking.payment?.RefundReason || null,
           hasReviewed: booking.hasReviewed || booking.HasReviewed || false,
-          // OTP fields
           arrivalOtp: booking.arrivalOtp || booking.ArrivalOtp || null,
           workStartOtp: booking.workStartOtp || booking.WorkStartOtp || null
         }));
@@ -74,7 +72,6 @@ const FarmerBookings = () => {
     fetchBookings();
   }, []);
 
-  // Fetch review when selected booking changes
   useEffect(() => {
     const fetchReview = async () => {
       if (selectedBooking?.hasReviewed && selectedBooking?.id) {
@@ -316,16 +313,17 @@ const FarmerBookings = () => {
                         <FiTruck />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center justify-between mb-1" style={{ minWidth: 0 }}>
                           <h3 className="card-title">{booking.machineName}</h3>
-                          <span 
+                          <span
                             className="badge"
-                            style={{ 
+                            style={{
                               background: `${config.color}20`,
-                              color: config.color
+                              color: config.color,
+                              flexShrink: 0
                             }}
                           >
-                            <Icon className="w-3 h-3" />
+                            <Icon style={{ width: '0.75rem', height: '0.75rem', flexShrink: 0 }} />
                             {booking.status}
                           </span>
                         </div>

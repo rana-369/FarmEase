@@ -21,7 +21,8 @@ const Landing = () => {
     totalBookings: 0,
     completedBookings: 0,
     averageRating: 0,
-    successRate: 0
+    successRate: 0,
+    machineCategories: {}
   });
   const [featuredEquipment, setFeaturedEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +47,8 @@ const Landing = () => {
           totalBookings: statsData.TotalBookings || statsData.totalBookings || 0,
           completedBookings: statsData.CompletedBookings || statsData.completedBookings || 0,
           averageRating: statsData.AverageRating || statsData.averageRating || 0,
-          successRate: statsData.SuccessRate || statsData.successRate || 0
+          successRate: statsData.SuccessRate || statsData.successRate || 0,
+          machineCategories: statsData.MachineCategories || statsData.machineCategories || {}
         });
       }
 
@@ -60,33 +62,33 @@ const Landing = () => {
     }
   };
 
-  // Equipment categories for showcase
+  // Equipment categories for showcase - use real counts from API
   const equipmentCategories = [
-    { 
-      name: 'Tractors', 
-      image: '/Tractors', 
-      count: stats.totalMachines, 
+    {
+      name: 'Tractors',
+      image: '/Tractors',
+      count: stats.machineCategories['Tractor'] || stats.machineCategories['tractors'] || 0,
       icon: 'tractor',
       fallback: '🚜'
     },
-    { 
-      name: 'Harvesters', 
-      image: '/Harvester', 
-      count: Math.round(stats.totalMachines * 0.3), 
+    {
+      name: 'Harvesters',
+      image: '/Harvester',
+      count: stats.machineCategories['Harvester'] || stats.machineCategories['harvesters'] || 0,
       icon: 'harvester',
       fallback: '🌾'
     },
-    { 
-      name: 'Plows', 
-      image: '/Plows', 
-      count: Math.round(stats.totalMachines * 0.2), 
+    {
+      name: 'Plows',
+      image: '/Plows',
+      count: stats.machineCategories['Plow'] || stats.machineCategories['plows'] || 0,
       icon: 'plow',
       fallback: '⛏️'
     },
-    { 
-      name: 'Sprayers', 
-      image: '/Sprayers', 
-      count: Math.round(stats.totalMachines * 0.15), 
+    {
+      name: 'Sprayers',
+      image: '/Sprayers',
+      count: stats.machineCategories['Sprayer'] || stats.machineCategories['sprayers'] || 0,
       icon: 'sprayer',
       fallback: '🔧'
     }
@@ -100,7 +102,6 @@ const Landing = () => {
     { icon: FiShield, title: 'Secure Payments', desc: '100% secure transactions' }
   ];
 
-  // How it works steps
   const steps = [
     { icon: FiSearch, title: 'Search', desc: 'Find equipment near you' },
     { icon: FiCheck, title: 'Book', desc: 'Reserve instantly online' },
@@ -108,7 +109,6 @@ const Landing = () => {
     { icon: FiHeart, title: 'Return', desc: 'Easy return process' }
   ];
 
-  // Locations for explore section - showing regions where FarmEase operates
   const locations = [
     { name: 'Punjab', image: '/Punjab', fallback: '🌾' },
     { name: 'Haryana', image: '/Haryana', fallback: '🚜' },
@@ -117,61 +117,149 @@ const Landing = () => {
   ];
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${isDark ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
-      {/* Navigation */}
-      <nav 
-        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b transition-colors duration-500"
+    <>
+      <style>{`html { scroll-behavior: smooth; }`}</style>
+      <div style={{
+        minHeight: '100vh',
+        transition: 'background-color 0.5s ease',
+        backgroundColor: isDark ? '#0a0a0a' : '#ffffff'
+      }}>
+      <nav
         style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid',
+          transition: 'all 0.5s ease',
           backgroundColor: isDark ? 'rgba(10, 10, 10, 0.9)' : 'rgba(255, 255, 255, 0.9)',
           borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e5e7eb'
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 py-3">
-          <div className="flex items-center justify-between">
-            <a href="/" className="flex items-center gap-3 group">
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '12px 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
               <motion.img
                 src="/Logo.png"
                 alt="FarmEase"
-                className="h-14 w-20 object-contain transition-transform group-hover:scale-105 relative z-10"
                 style={{
-                  filter: isDark ? 'drop-shadow(0 0 12px rgba(16, 185, 129, 0.6))' : 'none'
+                  height: '56px',
+                  width: '80px',
+                  objectFit: 'contain',
+                  transition: 'transform 0.3s ease',
+                  filter: isDark ? 'drop-shadow(0 0 12px rgba(16, 185, 129, 0.6))' : 'none',
+                  position: 'relative',
+                  zIndex: 10
                 }}
+                whileHover={{ scale: 1.05 }}
               />
-              <span className={`text-xl font-bold tracking-tight transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>FarmEase</span>
+              <span style={{
+                fontSize: '20px',
+                fontWeight: 700,
+                letterSpacing: '-0.025em',
+                transition: 'color 0.5s ease',
+                color: isDark ? '#ffffff' : '#111827'
+              }}>FarmEase</span>
             </a>
             
-            <div className="flex items-center gap-3">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+              <motion.a 
+                href="#equipment" 
+                whileHover={{ color: '#10b981', y: -2 }}
+                style={{ 
+                  fontSize: '14px', 
+                  fontWeight: 500, 
+                  textDecoration: 'none',
+                  transition: 'color 0.5s ease',
+                  color: isDark ? '#9ca3af' : '#4b5563'
+                }}
+              >
+                Equipment
+              </motion.a>
+              <motion.a 
+                href="#benefits" 
+                whileHover={{ color: '#10b981', y: -2 }}
+                style={{ 
+                  fontSize: '14px', 
+                  fontWeight: 500, 
+                  textDecoration: 'none',
+                  transition: 'color 0.5s ease',
+                  color: isDark ? '#9ca3af' : '#4b5563'
+                }}
+              >
+                Features
+              </motion.a>
+              <motion.a 
+                href="#how-it-works" 
+                whileHover={{ color: '#10b981', y: -2 }}
+                style={{ 
+                  fontSize: '14px', 
+                  fontWeight: 500, 
+                  textDecoration: 'none',
+                  transition: 'color 0.5s ease',
+                  color: isDark ? '#9ca3af' : '#4b5563'
+                }}
+              >
+                How It Works
+              </motion.a>
+              <motion.a 
+                href="#testimonials" 
+                whileHover={{ color: '#10b981', y: -2 }}
+                style={{ 
+                  fontSize: '14px', 
+                  fontWeight: 500, 
+                  textDecoration: 'none',
+                  transition: 'color 0.5s ease',
+                  color: isDark ? '#9ca3af' : '#4b5563'
+                }}
+              >
+                Reviews
+              </motion.a>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {/* Theme Toggle - Modern Switch */}
               <motion.button
                 onClick={toggleTheme}
-                className="relative flex items-center w-20 h-10 rounded-full p-1 transition-all duration-500"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label="Toggle theme"
                 style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  width: '80px',
+                  height: '40px',
+                  borderRadius: '9999px',
+                  padding: '4px',
+                  transition: 'all 0.5s ease',
                   background: isDark 
                     ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' 
                     : 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
                   boxShadow: isDark
                     ? 'inset 0 2px 10px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-                    : 'inset 0 2px 10px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.1)'
+                    : 'inset 0 2px 10px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.1)',
+                  border: 'none',
+                  cursor: 'pointer'
                 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                aria-label="Toggle theme"
               >
                 {/* Background Stars for Dark Mode */}
                 {isDark && (
-                  <div className="absolute inset-0 overflow-hidden rounded-full">
+                  <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: '9999px' }}>
                     {[...Array(5)].map((_, i) => (
                       <motion.div
                         key={i}
-                        className="absolute w-1 h-1 bg-white rounded-full"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: [0.3, 0.8, 0.3] }}
-                        transition={{ 
-                          duration: 2, 
-                          repeat: Infinity, 
-                          delay: i * 0.3 
-                        }}
+                        transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
                         style={{
+                          position: 'absolute',
+                          width: '4px',
+                          height: '4px',
+                          background: '#ffffff',
+                          borderRadius: '50%',
                           top: `${20 + Math.random() * 60}%`,
                           left: `${10 + i * 18}%`
                         }}
@@ -182,27 +270,37 @@ const Landing = () => {
                 
                 {/* Sun Rays for Light Mode */}
                 {!isDark && (
-                  <div className="absolute inset-0 overflow-hidden rounded-full">
+                  <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: '9999px' }}>
                     <motion.div
-                      className="absolute w-12 h-12 rounded-full"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 3, repeat: Infinity }}
                       style={{
+                        position: 'absolute',
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '50%',
                         background: 'radial-gradient(circle, rgba(251, 191, 36, 0.15) 0%, transparent 70%)',
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)'
                       }}
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 3, repeat: Infinity }}
                     />
                   </div>
                 )}
                 
                 {/* Toggle Ball */}
                 <motion.div
-                  className="relative z-10 w-8 h-8 rounded-full flex items-center justify-center"
                   animate={{ x: isDark ? 40 : 0 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   style={{
+                    position: 'relative',
+                    zIndex: 10,
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     background: isDark 
                       ? 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'
                       : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
@@ -232,14 +330,14 @@ const Landing = () => {
                 
                 {/* Static Icons */}
                 <motion.div 
-                  className="absolute left-2"
                   animate={{ opacity: isDark ? 0.3 : 0.8, scale: isDark ? 0.8 : 1 }}
+                  style={{ position: 'absolute', left: '8px' }}
                 >
                   <FiSun size={14} style={{ color: '#fbbf24' }} />
                 </motion.div>
                 <motion.div 
-                  className="absolute right-2"
                   animate={{ opacity: isDark ? 0.8 : 0.3, scale: isDark ? 1 : 0.8 }}
+                  style={{ position: 'absolute', right: '8px' }}
                 >
                   <FiMoon size={14} style={{ color: '#94a3b8' }} />
                 </motion.div>
@@ -254,7 +352,7 @@ const Landing = () => {
                   position: 'relative',
                   padding: '12px 28px',
                   borderRadius: '50px',
-                  fontWeight: '600',
+                  fontWeight: 600,
                   fontSize: '14px',
                   overflow: 'hidden',
                   background: isDark 
@@ -271,18 +369,6 @@ const Landing = () => {
                   cursor: 'pointer'
                 }}
               >
-                {/* Shine effect */}
-                <motion.div
-                  initial={{ x: '-100%' }}
-                  whileHover={{ x: '200%' }}
-                  transition={{ duration: 0.8 }}
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.25) 45%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.25) 55%, transparent 60%)',
-                    pointerEvents: 'none'
-                  }}
-                />
                 <span style={{ position: 'relative', zIndex: 10 }}>Login</span>
               </motion.button>
               
@@ -291,34 +377,23 @@ const Landing = () => {
                 onClick={() => navigate('/register')}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
+                animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
                 style={{
                   position: 'relative',
                   padding: '12px 32px',
                   borderRadius: '50px',
-                  fontWeight: '600',
+                  fontWeight: 600,
                   fontSize: '14px',
                   color: '#ffffff',
                   overflow: 'hidden',
                   background: 'linear-gradient(135deg, #059669 0%, #10b981 25%, #34d399 50%, #10b981 75%, #059669 100%)',
                   backgroundSize: '200% 200%',
                   boxShadow: '0 8px 32px rgba(16, 185, 129, 0.45), 0 0 60px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255,255,255,0.25)',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  border: 'none'
                 }}
-                animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
               >
-                {/* Animated shine */}
-                <motion.div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.35) 45%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0.35) 55%, transparent 65%)',
-                    backgroundSize: '200% 100%',
-                    pointerEvents: 'none'
-                  }}
-                  animate={{ backgroundPosition: ['200% 0', '-200% 0'] }}
-                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 1, ease: 'easeInOut' }}
-                />
                 <span style={{ position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   Get Started
                   <motion.div
@@ -335,52 +410,38 @@ const Landing = () => {
       </nav>
 
       {/* Hero Section with Background Image */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
         {/* Background Image */}
-        <div className="absolute inset-0 z-0">
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
           <img
             src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&h=1080&fit=crop"
             alt="Farm landscape"
-            className="w-full h-full object-cover"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
           <div
-            className="absolute inset-0"
-            style={{ backgroundColor: isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.4)' }}
+            style={{ position: 'absolute', inset: 0, backgroundColor: isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.4)' }}
           />
         </div>
 
-        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center py-28 pt-24">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full mb-8"
-            style={{ backgroundColor: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.3)' }}
-          >
-            <div 
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: '#34d399' }}
-            />
-            <span 
-              className="text-sm font-semibold"
-              style={{ color: '#34d399' }}
-            >
-              {stats.totalMachines || 0} Equipment Available
-            </span>
-          </motion.div>
-
+        <div style={{ position: 'relative', zIndex: 10, maxWidth: '64rem', margin: '0 auto', padding: '0 24px', textAlign: 'center', paddingTop: '96px', paddingBottom: '112px' }}>
           {/* Main Title */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-tight tracking-tight"
+            style={{
+              fontSize: 'clamp(3rem, 8vw, 6rem)',
+              fontWeight: 900,
+              color: '#ffffff',
+              marginBottom: '24px',
+              lineHeight: 1.1,
+              letterSpacing: '-0.025em'
+            }}
           >
             FARM
             <span
-              className="block"
               style={{
+                display: 'block',
                 background: 'linear-gradient(to right, #34d399, #2dd4bf, #22d3ee)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -391,25 +452,99 @@ const Landing = () => {
             </span>
           </motion.h1>
 
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.6 }}
+            style={{
+              fontSize: 'clamp(1.125rem, 2.5vw, 1.5rem)',
+              color: 'rgba(255, 255, 255, 0.9)',
+              marginBottom: '40px',
+              maxWidth: '36rem',
+              margin: '0 auto 40px',
+              lineHeight: 1.6
+            }}
+          >
+            Rent farming equipment near you. Save money, boost productivity.
+          </motion.p>
+
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.6 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '16px',
+              marginBottom: '48px'
+            }}
+          >
+            <motion.button
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate('/register')}
+              style={{
+                padding: '16px 32px',
+                borderRadius: '50px',
+                fontWeight: 600,
+                fontSize: '16px',
+                color: '#ffffff',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.45)',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              Get Started <FiArrowRight size={18} />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate('/login')}
+              style={{
+                padding: '16px 32px',
+                borderRadius: '50px',
+                fontWeight: 600,
+                fontSize: '16px',
+                color: '#ffffff',
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                cursor: 'pointer'
+              }}
+            >
+              Login
+            </motion.button>
+          </motion.div>
+
           {/* Stats */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="grid grid-cols-3 gap-6 sm:gap-8 max-w-3xl mx-auto mt-16"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '24px',
+              maxWidth: '48rem',
+              margin: '64px auto 0'
+            }}
           >
             {[
               { value: stats.averageRating > 0 ? stats.averageRating.toFixed(1) : '4.8', label: 'Rating', icon: FiStar, color: '#fbbf24' },
               { value: `${stats.totalUsers || 0}+`, label: 'Users', icon: FiUsers, color: '#34d399' },
               { value: stats.successRate > 0 ? `${stats.successRate}%` : '98%', label: 'Success Rate', icon: FiAward, color: '#3b82f6' }
             ].map((stat, i) => (
-              <div
-                key={i}
-                className="text-center text-white"
-              >
-                <stat.icon style={{ color: stat.color }} className="mx-auto mb-2" size={24} />
-                <div className="text-xl md:text-2xl font-bold mb-1">{stat.value}</div>
-                <div className="text-xs text-white/80">{stat.label}</div>
+              <div key={i} style={{ textAlign: 'center', color: '#ffffff' }}>
+                <stat.icon style={{ color: stat.color }} size={24} />
+                <div style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: 700, marginTop: '8px', marginBottom: '4px' }}>{stat.value}</div>
+                <div style={{ fontSize: '12px', opacity: 0.8 }}>{stat.label}</div>
               </div>
             ))}
           </motion.div>
@@ -417,20 +552,27 @@ const Landing = () => {
       </section>
 
       {/* Equipment Categories */}
-      <section id="equipment" className={`py-24 transition-colors duration-500 ${isDark ? 'bg-gradient-to-b from-[#0a0a0a] to-[#0f0f0f]' : 'bg-gradient-to-b from-white to-gray-50'}`}>
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="equipment" style={{ padding: '96px 0', transition: 'background-color 0.5s ease', background: isDark ? 'linear-gradient(to bottom, #0a0a0a, #0f0f0f)' : 'linear-gradient(to bottom, #ffffff, #f9fafb)' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            style={{ textAlign: 'center', marginBottom: '64px' }}
           >
             <motion.span 
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="inline-block px-4 py-1.5 rounded-full text-sm font-bold tracking-wider uppercase mb-4"
               style={{
+                display: 'inline-block',
+                padding: '6px 16px',
+                borderRadius: '9999px',
+                fontSize: '14px',
+                fontWeight: 700,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                marginBottom: '16px',
                 background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(20,184,166,0.2) 100%)',
                 color: '#10b981',
                 border: '1px solid rgba(16,185,129,0.3)'
@@ -438,11 +580,11 @@ const Landing = () => {
             >
               Explore
             </motion.span>
-            <h2 className={`text-4xl md:text-5xl font-bold mb-4 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>Equipment Categories</h2>
-            <p className={`max-w-2xl mx-auto text-lg transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Premium farming machinery available for rent</p>
+            <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 700, marginBottom: '16px', transition: 'color 0.5s ease', color: isDark ? '#ffffff' : '#111827' }}>Equipment Categories</h2>
+            <p style={{ maxWidth: '42rem', margin: '0 auto', fontSize: '18px', transition: 'color 0.5s ease', color: isDark ? '#9ca3af' : '#4b5563' }}>Premium farming machinery available for rent</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
             {equipmentCategories.map((category, i) => (
               <motion.div
                 key={i}
@@ -451,30 +593,30 @@ const Landing = () => {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
                 whileHover={{ y: -8, scale: 1.02 }}
-                className="rounded-2xl overflow-hidden cursor-pointer group"
+                onClick={() => navigate('/register')}
                 style={{
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
                   backgroundColor: isDark ? 'rgba(26,26,26,0.8)' : 'rgba(255,255,255,0.9)',
                   border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.08)',
                   boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.3)' : '0 4px 24px rgba(0,0,0,0.08)',
                   backdropFilter: 'blur(12px)'
                 }}
-                onClick={() => navigate('/register')}
               >
-                <div className="aspect-[4/3] relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%)' }}>
+                <div style={{ aspectRatio: '4/3', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%)' }}>
                   <img 
                     src={category.image} 
                     alt={category.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    onError={(e) => { 
-                      e.target.style.display = 'none';
-                    }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                   />
-                  {/* Fallback emoji when image fails */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                     <span style={{ fontSize: '48px', opacity: 0.4 }}>{category.fallback}</span>
                   </div>
-                  {/* Category icon overlay */}
-                  <div className="absolute bottom-3 left-3 w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)' }}>
+                  <div style={{ position: 'absolute', bottom: '12px', left: '12px', width: '40px', height: '40px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)' }}>
                     {category.icon === 'tractor' && (
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
                         <rect x="3" y="10" width="14" height="6" rx="1"/>
@@ -509,9 +651,9 @@ const Landing = () => {
                     )}
                   </div>
                 </div>
-                <div className="p-6">
-                  <h3 className={`text-lg font-bold mb-1 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{category.name}</h3>
-                  <p className="text-emerald-500 text-sm font-medium">{category.count || 0} Available</p>
+                <div style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '4px', transition: 'color 0.5s ease', color: isDark ? '#ffffff' : '#111827' }}>{category.name}</h3>
+                  <p style={{ color: '#10b981', fontSize: '14px', fontWeight: 500 }}>{category.count || 0} Available</p>
                 </div>
               </motion.div>
             ))}
@@ -520,20 +662,27 @@ const Landing = () => {
       </section>
 
       {/* Why Choose Us */}
-      <section id="benefits" className={`py-24 transition-colors duration-500 ${isDark ? 'bg-gradient-to-b from-[#0f0f0f] to-[#0a0a0a]' : 'bg-gradient-to-b from-gray-50 to-white'}`}>
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="benefits" style={{ padding: '96px 0', transition: 'background-color 0.5s ease', background: isDark ? 'linear-gradient(to bottom, #0f0f0f, #0a0a0a)' : 'linear-gradient(to bottom, #f9fafb, #ffffff)' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            style={{ textAlign: 'center', marginBottom: '64px' }}
           >
             <motion.span 
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="inline-block px-4 py-1.5 rounded-full text-sm font-bold tracking-wider uppercase mb-4"
               style={{
+                display: 'inline-block',
+                padding: '6px 16px',
+                borderRadius: '9999px',
+                fontSize: '14px',
+                fontWeight: 700,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                marginBottom: '16px',
                 background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(20,184,166,0.2) 100%)',
                 color: '#10b981',
                 border: '1px solid rgba(16,185,129,0.3)'
@@ -541,10 +690,10 @@ const Landing = () => {
             >
               Benefits
             </motion.span>
-            <h2 className={`text-4xl md:text-5xl font-bold mb-4 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>Why Choose FarmEase?</h2>
+            <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 700, marginBottom: '16px', transition: 'color 0.5s ease', color: isDark ? '#ffffff' : '#111827' }}>Why Choose FarmEase?</h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
             {benefits.map((benefit, i) => (
               <motion.div
                 key={i}
@@ -553,8 +702,11 @@ const Landing = () => {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
                 whileHover={{ y: -8, scale: 1.02 }}
-                className="text-center p-8 rounded-2xl transition-all duration-300"
                 style={{
+                  textAlign: 'center',
+                  padding: '32px',
+                  borderRadius: '16px',
+                  transition: 'all 0.3s ease',
                   backgroundColor: isDark ? 'rgba(26,26,26,0.6)' : 'rgba(255,255,255,0.8)',
                   border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.06)',
                   boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.2)' : '0 4px 24px rgba(0,0,0,0.06)',
@@ -563,16 +715,22 @@ const Landing = () => {
               >
                 <motion.div 
                   whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5"
                   style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 20px',
                     background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                     boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)'
                   }}
                 >
                   <benefit.icon style={{ color: '#ffffff' }} size={24} />
                 </motion.div>
-                <h3 className={`text-lg font-bold mb-2 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{benefit.title}</h3>
-                <p className={`text-sm transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{benefit.desc}</p>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', transition: 'color 0.5s ease', color: isDark ? '#ffffff' : '#111827' }}>{benefit.title}</h3>
+                <p style={{ fontSize: '14px', transition: 'color 0.5s ease', color: isDark ? '#9ca3af' : '#4b5563' }}>{benefit.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -580,20 +738,27 @@ const Landing = () => {
       </section>
 
       {/* How It Works */}
-      <section className={`py-24 transition-colors duration-500 ${isDark ? 'bg-gradient-to-b from-[#0a0a0a] to-[#0f0f0f]' : 'bg-gradient-to-b from-white to-gray-50'}`}>
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="how-it-works" style={{ padding: '96px 0', transition: 'background-color 0.5s ease', background: isDark ? 'linear-gradient(to bottom, #0a0a0a, #0f0f0f)' : 'linear-gradient(to bottom, #ffffff, #f9fafb)' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            style={{ textAlign: 'center', marginBottom: '64px' }}
           >
             <motion.span 
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="inline-block px-4 py-1.5 rounded-full text-sm font-bold tracking-wider uppercase mb-4"
               style={{
+                display: 'inline-block',
+                padding: '6px 16px',
+                borderRadius: '9999px',
+                fontSize: '14px',
+                fontWeight: 700,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                marginBottom: '16px',
                 background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(20,184,166,0.2) 100%)',
                 color: '#10b981',
                 border: '1px solid rgba(16,185,129,0.3)'
@@ -601,14 +766,14 @@ const Landing = () => {
             >
               Process
             </motion.span>
-            <h2 className={`text-4xl md:text-5xl font-bold mb-4 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>How It Works</h2>
-            <p className={`max-w-2xl mx-auto text-lg transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 700, marginBottom: '16px', transition: 'color 0.5s ease', color: isDark ? '#ffffff' : '#111827' }}>How It Works</h2>
+            <p style={{ maxWidth: '42rem', margin: '0 auto', fontSize: '18px', transition: 'color 0.5s ease', color: isDark ? '#9ca3af' : '#4b5563' }}>
               Renting equipment has never been easier. Follow these simple steps.
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {steps.map((step, i) => (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
+            {steps.map((step, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
@@ -616,8 +781,11 @@ const Landing = () => {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
                 whileHover={{ y: -8, scale: 1.02 }}
-                className="text-center p-6 rounded-2xl transition-all duration-300"
                 style={{
+                  textAlign: 'center',
+                  padding: '24px',
+                  borderRadius: '16px',
+                  transition: 'all 0.3s ease',
                   backgroundColor: isDark ? 'rgba(26,26,26,0.6)' : 'rgba(255,255,255,0.8)',
                   border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.06)',
                   boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.2)' : '0 4px 24px rgba(0,0,0,0.06)',
@@ -626,37 +794,50 @@ const Landing = () => {
               >
                 <motion.div 
                   whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
                   style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px',
                     background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                     boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)'
                   }}
                 >
                   <step.icon style={{ color: '#ffffff' }} size={24} />
                 </motion.div>
-                <h3 className={`text-lg font-bold mb-2 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{step.title}</h3>
-                <p className={`text-sm transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{step.desc}</p>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', transition: 'color 0.5s ease', color: isDark ? '#ffffff' : '#111827' }}>{step.title}</h3>
+                <p style={{ fontSize: '14px', transition: 'color 0.5s ease', color: isDark ? '#9ca3af' : '#4b5563' }}>{step.desc}</p>
               </motion.div>
-                ))}
+            ))}
           </div>
         </div>
       </section>
 
       {/* Locations */}
-      <section id="locations" className={`py-24 transition-colors duration-500 ${isDark ? 'bg-gradient-to-b from-[#0f0f0f] to-[#0a0a0a]' : 'bg-gradient-to-b from-gray-50 to-white'}`}>
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="locations" style={{ padding: '96px 0', transition: 'background-color 0.5s ease', background: isDark ? 'linear-gradient(to bottom, #0f0f0f, #0a0a0a)' : 'linear-gradient(to bottom, #f9fafb, #ffffff)' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            style={{ textAlign: 'center', marginBottom: '64px' }}
           >
             <motion.span 
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="inline-block px-4 py-1.5 rounded-full text-sm font-bold tracking-wider uppercase mb-4"
               style={{
+                display: 'inline-block',
+                padding: '6px 16px',
+                borderRadius: '9999px',
+                fontSize: '14px',
+                fontWeight: 700,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                marginBottom: '16px',
                 background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(20,184,166,0.2) 100%)',
                 color: '#10b981',
                 border: '1px solid rgba(16,185,129,0.3)'
@@ -664,11 +845,11 @@ const Landing = () => {
             >
               Locations
             </motion.span>
-            <h2 className={`text-4xl md:text-5xl font-bold mb-4 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>Explore Regions</h2>
-            <p className={`max-w-2xl mx-auto text-lg transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Find equipment across major farming regions</p>
+            <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 700, marginBottom: '16px', transition: 'color 0.5s ease', color: isDark ? '#ffffff' : '#111827' }}>Explore Regions</h2>
+            <p style={{ maxWidth: '42rem', margin: '0 auto', fontSize: '18px', transition: 'color 0.5s ease', color: isDark ? '#9ca3af' : '#4b5563' }}>Find equipment across major farming regions</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
             {locations.map((location, i) => (
               <motion.div
                 key={i}
@@ -677,32 +858,33 @@ const Landing = () => {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
                 whileHover={{ y: -8, scale: 1.02 }}
-                className="rounded-2xl overflow-hidden cursor-pointer group"
+                onClick={() => navigate('/register')}
                 style={{
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
                   backgroundColor: isDark ? 'rgba(26,26,26,0.8)' : 'rgba(255,255,255,0.9)',
                   border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.08)',
                   boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.3)' : '0 4px 24px rgba(0,0,0,0.08)',
                   backdropFilter: 'blur(12px)'
                 }}
-                onClick={() => navigate('/register')}
               >
-                <div className="aspect-[4/3] relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%)' }}>
+                <div style={{ aspectRatio: '4/3', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%)' }}>
                   <img 
                     src={location.image} 
                     alt={location.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    onError={(e) => { 
-                      e.target.style.display = 'none';
-                    }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                   />
-                  {/* Fallback emoji when image fails */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                     <span style={{ fontSize: '48px', opacity: 0.4 }}>{location.fallback}</span>
                   </div>
                 </div>
-                <div className="p-6">
-                  <h3 className={`text-lg font-bold mb-1 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{location.name}</h3>
-                  <p className="text-emerald-500 text-sm font-medium">Explore Region</p>
+                <div style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '4px', transition: 'color 0.5s ease', color: isDark ? '#ffffff' : '#111827' }}>{location.name}</h3>
+                  <p style={{ color: '#10b981', fontSize: '14px', fontWeight: 500 }}>Explore Region</p>
                 </div>
               </motion.div>
             ))}
@@ -715,40 +897,48 @@ const Landing = () => {
 
       {/* Footer */}
       <footer
-        className="py-12 border-t transition-colors duration-500"
         style={{
+          padding: '48px 0',
+          borderTop: '1px solid',
+          transition: 'all 0.5s ease',
           backgroundColor: isDark ? 'rgba(10,10,10,0.9)' : 'rgba(255,255,255,0.9)',
           borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
           backdropFilter: 'blur(16px)'
         }}
       >
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', gap: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <motion.div
                 whileHover={{ scale: 1.05, rotate: 5 }}
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
                 style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                   boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)'
                 }}
               >
                 <FiTruck style={{ color: '#ffffff' }} size={20} />
               </motion.div>
-              <span className={`text-lg font-bold transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>FarmEase</span>
+              <span style={{ fontSize: '18px', fontWeight: 700, transition: 'color 0.5s ease', color: isDark ? '#ffffff' : '#111827' }}>FarmEase</span>
             </div>
 
-            <div className={`flex items-center gap-8 text-sm transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              <motion.a href="#" whileHover={{ color: '#10b981', y: -2 }} style={{ color: 'inherit' }} className="font-medium transition-colors">Privacy</motion.a>
-              <motion.a href="#" whileHover={{ color: '#10b981', y: -2 }} style={{ color: 'inherit' }} className="font-medium transition-colors">Terms</motion.a>
-              <motion.a href="#" whileHover={{ color: '#10b981', y: -2 }} style={{ color: 'inherit' }} className="font-medium transition-colors">Contact</motion.a>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '32px', fontSize: '14px', transition: 'color 0.5s ease', color: isDark ? '#9ca3af' : '#4b5563' }}>
+              <motion.a href="#" whileHover={{ color: '#10b981', y: -2 }} style={{ color: 'inherit', fontWeight: 500, textDecoration: 'none' }}>Privacy</motion.a>
+              <motion.a href="#" whileHover={{ color: '#10b981', y: -2 }} style={{ color: 'inherit', fontWeight: 500, textDecoration: 'none' }}>Terms</motion.a>
+              <motion.a href="#" whileHover={{ color: '#10b981', y: -2 }} style={{ color: 'inherit', fontWeight: 500, textDecoration: 'none' }}>Contact</motion.a>
             </div>
 
-            <p className={`text-sm transition-colors ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>© 2024 FarmEase. All rights reserved.</p>
+            <p style={{ fontSize: '14px', transition: 'color 0.5s ease', color: isDark ? '#6b7280' : '#9ca3af' }}>© 2024 FarmEase. All rights reserved.</p>
           </div>
         </div>
       </footer>
     </div>
+    </>
   );
 };
 

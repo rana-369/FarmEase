@@ -69,6 +69,15 @@ namespace FEDomain.Data
                 .HasIndex(m => m.CreatedAt)
                 .HasDatabaseName("IX_Machines_CreatedAt");
 
+            // Location-based search indexes
+            modelBuilder.Entity<Machine>()
+                .HasIndex(m => m.City)
+                .HasDatabaseName("IX_Machines_City");
+
+            modelBuilder.Entity<Machine>()
+                .HasIndex(m => new { m.Latitude, m.Longitude })
+                .HasDatabaseName("IX_Machines_Latitude_Longitude");
+
             // Payment indexes
             modelBuilder.Entity<Payment>()
                 .HasIndex(p => p.BookingId)

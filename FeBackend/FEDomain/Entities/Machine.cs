@@ -21,5 +21,12 @@ namespace FEDomain
         public string? Location { get; set; }
         public string? Description { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Location-based search fields
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string? City { get; set; }
+        public string? State { get; set; }
+        public string? Pincode { get; set; }
     }
 }

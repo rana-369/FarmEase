@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   FiCreditCard,
   FiCheckCircle,
@@ -8,7 +9,8 @@ import {
   FiExternalLink,
   FiShield,
   FiEdit,
-  FiMail
+  FiMail,
+  FiDollarSign
 } from 'react-icons/fi';
 import { RupeeIcon } from '../../components/RupeeIcon';
 import {
@@ -26,7 +28,6 @@ const PaymentSettings = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   
-  // Update verification state
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [verifyOtp, setVerifyOtp] = useState('');
   const [sendingOtp, setSendingOtp] = useState(false);
@@ -61,7 +62,6 @@ const PaymentSettings = () => {
       
       if (result.success) {
         if (result.data?.onboardingUrl) {
-          // Extract the path from the full URL and navigate within the app
           console.log('Navigating to:', result.data.onboardingUrl);
           const url = new URL(result.data.onboardingUrl);
           const path = url.pathname + url.search;
@@ -83,7 +83,6 @@ const PaymentSettings = () => {
     }
   };
 
-  // Send OTP for verification before update
   const handleSendUpdateOtp = async () => {
     try {
       setSendingOtp(true);
@@ -105,7 +104,6 @@ const PaymentSettings = () => {
     }
   };
 
-  // Verify OTP and proceed to update
   const handleVerifyOtp = async () => {
     try {
       setVerifyingOtp(true);
@@ -120,7 +118,6 @@ const PaymentSettings = () => {
         setShowVerifyModal(false);
         setVerifyOtp('');
         setSuccess('Identity verified! Redirecting to update form...');
-        // Proceed to update after verification
         setTimeout(() => {
           handleStartOnboarding();
         }, 500);
@@ -156,288 +153,588 @@ const PaymentSettings = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <FiLoader className="w-8 h-8 animate-spin" style={{ color: 'var(--success-color, #10b981)' }} />
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '400px',
+        backgroundColor: 'var(--bg-primary)'
+      }}>
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            border: '2px solid rgba(16, 185, 129, 0.2)',
+            borderTopColor: '#10b981',
+            borderRadius: '16px',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            width: '56px',
+            height: '56px',
+            borderRadius: '16px',
+            animation: 'pulse 2s ease-in-out infinite',
+            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)'
+          }} />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
-          <RupeeIcon className="w-7 h-7" style={{ color: 'var(--success-color, #10b981)' }} />
-          Payment Settings
-        </h1>
-        <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>
-          Set up your payout account to receive payments directly when farmers book your equipment.
-        </p>
-      </div>
-
-      {/* Status Banner */}
-      {settings?.canReceivePayments ? (
-        <div className="rounded-lg p-4 mb-6" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-          <div className="flex items-center gap-3">
-            <FiCheckCircle className="w-6 h-6" style={{ color: 'var(--success-color, #10b981)' }} />
-            <div>
-              <h3 className="font-semibold" style={{ color: 'var(--success-color, #10b981)' }}>Payment Account Active</h3>
-              <p className="text-sm" style={{ color: 'var(--success-color, #10b981)', opacity: 0.8 }}>
-                You're all set to receive payments directly to your linked bank account.
-              </p>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-lg p-4 mb-6" style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-          <div className="flex items-center gap-3">
-            <FiAlertCircle className="w-6 h-6" style={{ color: 'var(--warning-color, #f59e0b)' }} />
-            <div>
-              <h3 className="font-semibold" style={{ color: 'var(--warning-color, #f59e0b)' }}>Payment Setup Required</h3>
-              <p className="text-sm" style={{ color: 'var(--warning-color, #f59e0b)', opacity: 0.8 }}>
-                Complete your payment setup to receive earnings directly to your bank account.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Error/Success Messages */}
-      {error && (
-        <div className="rounded-lg p-4 mb-6" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-          <p style={{ color: 'var(--error-color, #ef4444)' }}>{error}</p>
-        </div>
-      )}
-      
-      {success && (
-        <div className="rounded-lg p-4 mb-6" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-          <p style={{ color: 'var(--success-color, #10b981)' }}>{success}</p>
-        </div>
-      )}
-
-      {/* How It Works */}
-      <div className="table-container-new p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>How Direct Payments Work</h2>
-        
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="flex gap-3">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(16, 185, 129, 0.2)' }}>
-              <span className="font-bold" style={{ color: 'var(--success-color, #10b981)' }}>1</span>
-            </div>
-            <div>
-              <h3 className="font-medium" style={{ color: 'var(--text-primary)' }}>Farmer Pays</h3>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                When a farmer books your equipment, they pay via Razorpay checkout.
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex gap-3">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(16, 185, 129, 0.2)' }}>
-              <span className="font-bold" style={{ color: 'var(--success-color, #10b981)' }}>2</span>
-            </div>
-            <div>
-              <h3 className="font-medium" style={{ color: 'var(--text-primary)' }}>Automatic Split</h3>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Payment is automatically split - your share goes to your bank, platform fee stays separate.
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex gap-3">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(16, 185, 129, 0.2)' }}>
-              <span className="font-bold" style={{ color: 'var(--success-color, #10b981)' }}>3</span>
-            </div>
-            <div>
-              <h3 className="font-medium" style={{ color: 'var(--text-primary)' }}>Instant Transfer</h3>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Your earnings are transferred instantly to your linked bank account.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Security Info */}
-      <div className="rounded-xl p-6 mb-6" style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-        <div className="flex gap-3">
-          <FiShield className="w-6 h-6 flex-shrink-0" style={{ color: 'var(--info-color, #3b82f6)' }} />
+    <div style={{
+      minHeight: '100vh',
+      padding: '24px',
+      backgroundColor: 'var(--bg-primary)'
+    }}>
+      <div style={{ maxWidth: '896px', margin: '0 auto' }}>
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            marginBottom: '32px'
+          }}
+        >
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+              boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
+            }}
+          >
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%)'
+            }} />
+            <FiDollarSign style={{ fontSize: '24px', color: '#ffffff', position: 'relative', zIndex: 10 }} />
+          </motion.div>
           <div>
-            <h3 className="font-semibold" style={{ color: 'var(--info-color, #3b82f6)' }}>Secure & Private</h3>
-            <p className="text-sm mt-1" style={{ color: 'var(--info-color, #3b82f6)', opacity: 0.85 }}>
-              Your bank details are stored securely with Razorpay - we never see or store your actual 
-              account information. Only Razorpay handles your financial data with bank-grade security.
-            </p>
+            <h1 style={{
+              fontSize: '24px',
+              fontWeight: 700,
+              letterSpacing: '-0.025em',
+              color: 'var(--text-primary)'
+            }}>Payment Settings</h1>
+            <p style={{
+              fontSize: '14px',
+              fontWeight: 500,
+              color: 'var(--text-secondary)'
+            }}>Set up your payout account to receive payments directly</p>
           </div>
-        </div>
-      </div>
+        </motion.div>
 
-      {/* Setup Card */}
-      <div className="table-container-new p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex gap-4">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(16, 185, 129, 0.2)' }}>
-              <FiCreditCard className="w-6 h-6" style={{ color: 'var(--success-color, #10b981)' }} />
+        {/* Status Banner */}
+        {settings?.canReceivePayments ? (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              padding: '20px',
+              borderRadius: '16px',
+              marginBottom: '24px',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.3)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(16, 185, 129, 0.2)'
+              }}>
+                <FiCheckCircle style={{ width: '24px', height: '24px', color: '#10b981' }} />
+              </div>
+              <div>
+                <h3 style={{ fontWeight: 600, color: '#10b981', marginBottom: '4px' }}>Payment Account Active</h3>
+                <p style={{ fontSize: '14px', color: '#10b981', opacity: 0.85 }}>
+                  You're all set to receive payments directly to your linked bank account.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              padding: '20px',
+              borderRadius: '16px',
+              marginBottom: '24px',
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%)',
+              border: '1px solid rgba(245, 158, 11, 0.3)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(245, 158, 11, 0.2)'
+              }}>
+                <FiAlertCircle style={{ width: '24px', height: '24px', color: '#f59e0b' }} />
+              </div>
+              <div>
+                <h3 style={{ fontWeight: 600, color: '#f59e0b', marginBottom: '4px' }}>Payment Setup Required</h3>
+                <p style={{ fontSize: '14px', color: '#f59e0b', opacity: 0.85 }}>
+                  Complete your payment setup to receive earnings directly to your bank account.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Error/Success Messages */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '24px',
+              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%)',
+              border: '1px solid rgba(239, 68, 68, 0.3)'
+            }}
+          >
+            <p style={{ color: '#f87171', fontWeight: 500 }}>{error}</p>
+          </motion.div>
+        )}
+        
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '24px',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.3)'
+            }}
+          >
+            <p style={{ color: '#10b981', fontWeight: 500 }}>{success}</p>
+          </motion.div>
+        )}
+
+        {/* How It Works */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            padding: '24px',
+            borderRadius: '20px',
+            marginBottom: '24px',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-primary)',
+            backdropFilter: 'blur(10px)'
+          }}
+        >
+          <h2 style={{
+            fontSize: '18px',
+            fontWeight: 600,
+            marginBottom: '20px',
+            color: 'var(--text-primary)'
+          }}>How Direct Payments Work</h2>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '24px'
+          }}>
+            {[
+              { step: '1', title: 'Farmer Pays', desc: 'When a farmer books your equipment, they pay via Razorpay checkout.' },
+              { step: '2', title: 'Automatic Split', desc: 'Payment is automatically split - your share goes to your bank, platform fee stays separate.' },
+              { step: '3', title: 'Instant Transfer', desc: 'Your earnings are transferred instantly to your linked bank account.' }
+            ].map((item, index) => (
+              <motion.div
+                key={item.step}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                style={{ display: 'flex', gap: '12px' }}
+              >
+                <div style={{
+                  flexShrink: 0,
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                }}>
+                  <span style={{ fontWeight: 700, color: '#10b981' }}>{item.step}</span>
+                </div>
+                <div>
+                  <h3 style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: '4px' }}>{item.title}</h3>
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{item.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Security Info */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            padding: '20px',
+            borderRadius: '16px',
+            marginBottom: '24px',
+            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(37, 99, 235, 0.08) 100%)',
+            border: '1px solid rgba(59, 130, 246, 0.25)'
+          }}
+        >
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(59, 130, 246, 0.2)',
+              flexShrink: 0
+            }}>
+              <FiShield style={{ width: '24px', height: '24px', color: '#3b82f6' }} />
             </div>
             <div>
-              <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Payout Account</h3>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-                {settings?.canReceivePayments 
-                  ? `Active since ${new Date(settings.onboardingCompletedAt).toLocaleDateString()}`
-                  : 'Link your bank account to receive payments directly'}
+              <h3 style={{ fontWeight: 600, color: '#3b82f6', marginBottom: '4px' }}>Secure & Private</h3>
+              <p style={{ fontSize: '14px', color: '#3b82f6', opacity: 0.85, lineHeight: 1.5 }}>
+                Your bank details are stored securely with Razorpay - we never see or store your actual 
+                account information. Only Razorpay handles your financial data with bank-grade security.
               </p>
-              {settings?.accountStatus && (
-                <span className="inline-flex items-center mt-2 px-2.5 py-0.5 rounded-full text-xs font-medium" style={{
-                  background: settings.accountStatus === 'active' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                  color: settings.accountStatus === 'active' ? 'var(--success-color, #10b981)' : 'var(--warning-color, #f59e0b)'
-                }}>
-                  {settings.accountStatus.charAt(0).toUpperCase() + settings.accountStatus.slice(1)}
-                </span>
-              )}
             </div>
           </div>
-          
-          {!settings?.canReceivePayments ? (
-            <button
-              onClick={handleStartOnboarding}
-              disabled={onboardingLoading}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              style={{ background: 'var(--success-color, #10b981)', color: '#fff' }}
-            >
-              {onboardingLoading ? (
-                <>
-                  <FiLoader className="w-4 h-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  Setup Payout Account
-                  <FiExternalLink className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          ) : (
-            <button
-              onClick={handleSendUpdateOtp}
-              disabled={sendingOtp}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors disabled:opacity-50"
-              style={{ 
-                borderColor: 'var(--border-color)',
-                color: 'var(--text-secondary)',
-                background: 'var(--bg-secondary)'
-              }}
-            >
-              {sendingOtp ? (
-                <>
-                  <FiLoader className="w-4 h-4 animate-spin" />
-                  Sending OTP...
-                </>
-              ) : (
-                <>
-                  <FiEdit className="w-4 h-4" />
-                  Update Account
-                </>
-              )}
-            </button>
-          )}
-        </div>
-      </div>
+        </motion.div>
 
-      {/* OTP Verification Modal */}
-      {showVerifyModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-md p-6 rounded-xl" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}>
-            <div className="text-center mb-6">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'rgba(59, 130, 246, 0.2)' }}>
-                <FiMail className="w-6 h-6" style={{ color: 'var(--info-color, #3b82f6)' }} />
+        {/* Setup Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            padding: '24px',
+            borderRadius: '20px',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-primary)',
+            backdropFilter: 'blur(10px)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%)',
+                border: '1px solid rgba(16, 185, 129, 0.3)'
+              }}>
+                <FiCreditCard style={{ width: '24px', height: '24px', color: '#10b981' }} />
               </div>
-              <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Verify Your Identity</h3>
-              <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
-                Enter the OTP sent to your email to update payment details
-              </p>
+              <div>
+                <h3 style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>Payout Account</h3>
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                  {settings?.canReceivePayments 
+                    ? `Active since ${new Date(settings.onboardingCompletedAt).toLocaleDateString()}`
+                    : 'Link your bank account to receive payments directly'}
+                </p>
+                {settings?.accountStatus && (
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    marginTop: '8px',
+                    padding: '4px 12px',
+                    borderRadius: '9999px',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    background: settings.accountStatus === 'active' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                    color: settings.accountStatus === 'active' ? '#10b981' : '#f59e0b',
+                    border: settings.accountStatus === 'active' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(245, 158, 11, 0.3)'
+                  }}>
+                    {settings.accountStatus.charAt(0).toUpperCase() + settings.accountStatus.slice(1)}
+                  </span>
+                )}
+              </div>
             </div>
-
-            <div className="mb-4">
-              <label htmlFor="verify-otp" className="sr-only">Enter 6-digit OTP</label>
-              <input
-                id="verify-otp"
-                name="verifyOtp"
-                type="text"
-                value={verifyOtp}
-                onChange={(e) => setVerifyOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="Enter 6-digit OTP"
-                maxLength={6}
-                autoComplete="one-time-code"
-                className="w-full px-4 py-3 text-center text-xl tracking-widest rounded-lg border focus:outline-none focus:ring-2"
+            
+            {!settings?.canReceivePayments ? (
+              <motion.button
+                whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleStartOnboarding}
+                disabled={onboardingLoading}
                 style={{
-                  background: 'var(--bg-secondary)',
-                  borderColor: 'var(--border-color)',
-                  color: 'var(--text-primary)'
-                }}
-              />
-            </div>
-
-            {error && (
-              <p className="text-sm text-center mb-4" style={{ color: 'var(--error-color, #ef4444)' }}>{error}</p>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowVerifyModal(false);
-                  setVerifyOtp('');
-                  setError(null);
-                }}
-                className="flex-1 py-3 rounded-lg font-medium transition-colors"
-                style={{ 
-                  background: 'var(--bg-secondary)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid var(--border-color)'
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  cursor: 'pointer',
+                  opacity: onboardingLoading ? 0.7 : 1
                 }}
               >
-                Cancel
-              </button>
-              <button
-                onClick={handleVerifyOtp}
-                disabled={verifyingOtp || verifyOtp.length !== 6}
-                className="flex-1 py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
-                style={{ background: 'var(--success-color, #10b981)', color: '#fff' }}
-              >
-                {verifyingOtp ? (
+                {onboardingLoading ? (
                   <>
-                    <FiLoader className="w-4 h-4 animate-spin" />
-                    Verifying...
+                    <FiLoader style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
+                    Processing...
                   </>
                 ) : (
-                  'Verify & Proceed'
+                  <>
+                    Setup Payout Account
+                    <FiExternalLink style={{ width: '16px', height: '16px' }} />
+                  </>
                 )}
-              </button>
-            </div>
-
-            <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>
-              Didn't receive OTP? <button onClick={handleSendUpdateOtp} className="underline" style={{ color: 'var(--info-color, #3b82f6)' }}>Resend</button>
-            </p>
+              </motion.button>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleSendUpdateOtp}
+                disabled={sendingOtp}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  borderRadius: '12px',
+                  fontWeight: 500,
+                  background: 'var(--bg-button)',
+                  border: '1px solid var(--border-primary)',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  opacity: sendingOtp ? 0.7 : 1
+                }}
+              >
+                {sendingOtp ? (
+                  <>
+                    <FiLoader style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
+                    Sending OTP...
+                  </>
+                ) : (
+                  <>
+                    <FiEdit style={{ width: '16px', height: '16px' }} />
+                    Update Account
+                  </>
+                )}
+              </motion.button>
+            )}
           </div>
-        </div>
-      )}
+        </motion.div>
 
-      {/* Current Status Details */}
-      {settings?.isOnboardingComplete && (
-        <div className="mt-6 rounded-lg p-4" style={{ background: 'var(--bg-secondary)' }}>
-          <h4 className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Account Details</h4>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>Status:</span>
-              <span className="ml-2 font-medium" style={{ color: 'var(--success-color, #10b981)' }}>Verified</span>
-            </div>
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>Setup Date:</span>
-              <span className="ml-2" style={{ color: 'var(--text-primary)' }}>
-                {new Date(settings.onboardingCompletedAt).toLocaleDateString()}
-              </span>
-            </div>
+        {/* OTP Verification Modal */}
+        {showVerifyModal && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: '16px',
+            backdropFilter: 'blur(4px)'
+          }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              style={{
+                width: '100%',
+                maxWidth: '400px',
+                padding: '24px',
+                borderRadius: '20px',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-primary)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+              }}
+            >
+              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <div style={{
+                  width: '56px',
+                  height: '56px',
+                  margin: '0 auto 16px',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)'
+                }}>
+                  <FiMail style={{ width: '24px', height: '24px', color: '#3b82f6' }} />
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>Verify Your Identity</h3>
+                <p style={{ fontSize: '14px', marginTop: '8px', color: 'var(--text-secondary)' }}>
+                  Enter the OTP sent to your email to update payment details
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <input
+                  id="verify-otp"
+                  name="verifyOtp"
+                  type="text"
+                  value={verifyOtp}
+                  onChange={(e) => setVerifyOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Enter 6-digit OTP"
+                  maxLength={6}
+                  autoComplete="one-time-code"
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    textAlign: 'center',
+                    fontSize: '20px',
+                    letterSpacing: '0.3em',
+                    borderRadius: '12px',
+                    border: '1px solid var(--border-primary)',
+                    background: 'var(--bg-input)',
+                    color: 'var(--text-primary)',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {error && (
+                <p style={{ fontSize: '14px', textAlign: 'center', marginBottom: '16px', color: '#f87171' }}>{error}</p>
+              )}
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setShowVerifyModal(false);
+                    setVerifyOtp('');
+                    setError(null);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '12px',
+                    fontWeight: 500,
+                    background: 'var(--bg-button)',
+                    border: '1px solid var(--border-primary)',
+                    color: 'var(--text-primary)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleVerifyOtp}
+                  disabled={verifyingOtp || verifyOtp.length !== 6}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '12px',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    cursor: 'pointer',
+                    opacity: (verifyingOtp || verifyOtp.length !== 6) ? 0.7 : 1
+                  }}
+                >
+                  {verifyingOtp ? (
+                    <>
+                      <FiLoader style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
+                      Verifying...
+                    </>
+                  ) : (
+                    'Verify & Proceed'
+                  )}
+                </motion.button>
+              </div>
+
+              <p style={{ fontSize: '12px', textAlign: 'center', marginTop: '16px', color: 'var(--text-muted)' }}>
+                Didn't receive OTP?{' '}
+                <button
+                  onClick={handleSendUpdateOtp}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#3b82f6',
+                    textDecoration: 'underline',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Resend
+                </button>
+              </p>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Current Status Details */}
+        {settings?.isOnboardingComplete && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              marginTop: '24px',
+              padding: '20px',
+              borderRadius: '16px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-primary)'
+            }}
+          >
+            <h4 style={{ fontSize: '14px', fontWeight: 500, marginBottom: '12px', color: 'var(--text-secondary)' }}>Account Details</h4>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: '16px',
+              fontSize: '14px'
+            }}>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Status:</span>
+                <span style={{ marginLeft: '8px', fontWeight: 500, color: '#10b981' }}>Verified</span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Setup Date:</span>
+                <span style={{ marginLeft: '8px', color: 'var(--text-primary)' }}>
+                  {new Date(settings.onboardingCompletedAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </div>
   );
 };

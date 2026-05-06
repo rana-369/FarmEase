@@ -32,7 +32,6 @@ const AdminDashboard = () => {
         if (!isMounted) return;
 
         if (dashboardData) {
-          // Backend returns AdminDashboardStatsDto directly (not nested under stats)
           const bookingsArr = dashboardData.recentBookings || dashboardData.RecentBookings || [];
 
           setStats({
@@ -74,7 +73,6 @@ const AdminDashboard = () => {
     return () => { isMounted = false; };
   }, []);
 
-  // Calculate meaningful metrics
   const userGrowthRate = stats.totalUsers > 0 
     ? Math.round(((stats.totalFarmers + stats.totalOwners) / stats.totalUsers) * 100) 
     : 0;

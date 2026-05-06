@@ -134,6 +134,39 @@ export const getActiveCities = async () => {
   return response.data;
 };
 
+// ==================== LOCATION-BASED SEARCH ====================
+
+// Get machines near a location
+export const getMachinesNearLocation = async (lat, lng, radiusKm = 10, category = null) => {
+  try {
+    const params = new URLSearchParams();
+    params.append('lat', lat.toString());
+    params.append('lng', lng.toString());
+    params.append('radius', radiusKm.toString());
+    if (category && category !== 'All') {
+      params.append('category', category);
+    }
+
+    const response = await api.get(`/machines/nearby?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching nearby machines:', error);
+    // Fallback: filter client-side if endpoint not available
+    return null;
+  }
+};
+
+// Geocode address to coordinates
+export const geocodeAddress = async (address) => {
+  try {
+    const response = await api.get(`/geocode?address=${encodeURIComponent(address)}`);
+    return response.data;
+  } catch (error) {
+    console.error('Geocoding error:', error);
+    return null;
+  }
+};
+
 // ==================== EQUIPMENT CALENDAR ====================
 
 // Get equipment availability calendar

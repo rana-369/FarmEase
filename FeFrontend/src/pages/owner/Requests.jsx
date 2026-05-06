@@ -11,15 +11,14 @@ const OwnerRequests = () => {
   const [notification, setNotification] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
-  // OTP Modal states
+  // OTP Modal states - 'arrival' or 'workstart'
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [otpType, setOtpType] = useState(null); // 'arrival' or 'workstart'
+  const [otpType, setOtpType] = useState(null);
   const [otpBookingId, setOtpBookingId] = useState(null);
   const [otpValue, setOtpValue] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState(null);
 
-  // Helper function to format time (e.g., "06:00" -> "6:00 AM")
   const formatTime = (time) => {
     if (!time || !time.includes(':')) return time;
     const [hours] = time.split(':');
@@ -37,9 +36,8 @@ const OwnerRequests = () => {
       try {
         setLoading(true);
         const response = await api.get('/bookings/owner');
-        // Ensure property names match backend (PascalCase fallback)
+        // Handle PascalCase fallback from backend
         const transformedRequests = (response.data || []).map(req => {
-          // Calculate owner's net earnings (totalAmount - platformFee)
           const totalAmount = req.totalAmount || req.TotalAmount || 0;
           const platformFee = req.platformFee || req.PlatformFee || 0;
           const baseAmount = req.baseAmount || req.BaseAmount || (totalAmount - platformFee);
@@ -54,7 +52,7 @@ const OwnerRequests = () => {
             scheduledTime: req.scheduledTime || req.ScheduledTime || null,
             totalAmount: totalAmount,
             platformFee: platformFee,
-            baseAmount: baseAmount, // Owner's net earnings
+            baseAmount: baseAmount,
             createdAt: req.createdAt || req.CreatedAt || new Date().toISOString()
           };
         });
@@ -235,29 +233,31 @@ const OwnerRequests = () => {
               >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                   <div className="flex-1">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div 
+                    <div className="flex items-center gap-4 mb-4" style={{ minWidth: 0 }}>
+                      <div
                         className="nav-item-icon"
-                        style={{ 
+                        style={{
                           background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.15) 100%)',
-                          color: '#3b82f6'
+                          color: '#3b82f6',
+                          flexShrink: 0
                         }}
                       >
                         <FiUser />
                       </div>
-                      <div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <h3 className="card-title">{request.farmerName}</h3>
                         <div className="flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
                           <FiTruck className="text-sm" />
                           <span className="text-sm">Requested {request.machineName}</span>
                         </div>
                       </div>
-                      <span 
-                        className="badge ml-auto lg:ml-4" 
-                        style={{ 
+                      <span
+                        className="badge"
+                        style={{
                           background: getStatusStyle(request.status).bg,
                           color: getStatusStyle(request.status).color,
-                          border: `1px solid ${getStatusStyle(request.status).border}`
+                          border: `1px solid ${getStatusStyle(request.status).border}`,
+                          flexShrink: 0
                         }}
                       >
                         {request.status}
@@ -492,12 +492,13 @@ const OwnerRequests = () => {
             </div>
             <div>
               <p className="input-label">Status</p>
-              <span 
+              <span
                 className="badge"
-                style={{ 
-                  background: getStatusStyle(selectedRequest?.status).bg, 
+                style={{
+                  background: getStatusStyle(selectedRequest?.status).bg,
                   color: getStatusStyle(selectedRequest?.status).color,
-                  border: `1px solid ${getStatusStyle(selectedRequest?.status).border}`
+                  border: `1px solid ${getStatusStyle(selectedRequest?.status).border}`,
+                  flexShrink: 0
                 }}
               >
                 {selectedRequest?.status}

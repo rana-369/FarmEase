@@ -25,7 +25,6 @@ const OwnerEarnings = () => {
         console.log('Earnings Stats Received:', statsData);
         
         if (statsData) {
-          // Backend returns OwnerDashboardStatsDto with specific property names
           setStats({
             totalEarnings: statsData.totalRevenue ?? statsData.TotalRevenue ?? 0,
             activeRentals: statsData.activeBookings ?? statsData.ActiveBookings ?? 0,
@@ -65,10 +64,31 @@ const OwnerEarnings = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
-        <div className="relative">
-          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }} />
-          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }} />
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        backgroundColor: 'var(--bg-primary)'
+      }}>
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            border: '2px solid rgba(16, 185, 129, 0.2)',
+            borderTopColor: '#10b981',
+            borderRadius: '16px',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            width: '56px',
+            height: '56px',
+            borderRadius: '16px',
+            animation: 'pulse 2s ease-in-out infinite',
+            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)'
+          }} />
         </div>
       </div>
     );
@@ -78,171 +98,268 @@ const OwnerEarnings = () => {
     .filter(a => a.status === 'paid' || a.status === 'completed' || a.status === 'active')
     .reduce((sum, a) => sum + (a.amount || 0), 0);
 
+  const statsConfig = [
+    { label: 'Total Earnings', value: `₹${(stats.totalEarnings || 0).toLocaleString()}`, color: '#10b981', bgGradient: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.3)', icon: RupeeIcon },
+    { label: 'Active Rentals', value: stats.activeRentals || 0, color: '#3b82f6', bgGradient: 'rgba(59, 130, 246, 0.12)', borderColor: 'rgba(59, 130, 246, 0.3)', icon: FiTruck },
+    { label: 'Fleet Size', value: stats.totalMachines || 0, color: '#a855f7', bgGradient: 'rgba(168, 85, 247, 0.12)', borderColor: 'rgba(168, 85, 247, 0.3)', icon: FiTrendingUp }
+  ];
+
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      <div className="max-w-7xl mx-auto">
+    <div style={{
+      minHeight: '100vh',
+      padding: '24px',
+      backgroundColor: 'var(--bg-primary)'
+    }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
         {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }} 
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '32px'
+          }}
         >
-          <div className="flex items-center gap-4">
-            <motion.div 
-              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <motion.div
               whileHover={{ scale: 1.05 }}
-              style={{ 
+              style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                overflow: 'hidden',
                 background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
                 boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
               }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-              <FiTrendingUp className="text-xl text-white relative z-10" />
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%)'
+              }} />
+              <FiTrendingUp style={{ fontSize: '24px', color: '#ffffff', position: 'relative', zIndex: 10 }} />
             </motion.div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Earnings</h1>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Track your rental income</p>
+              <h1 style={{
+                fontSize: '24px',
+                fontWeight: 700,
+                letterSpacing: '-0.025em',
+                color: 'var(--text-primary)'
+              }}>Earnings</h1>
+              <p style={{
+                fontSize: '14px',
+                fontWeight: 500,
+                color: 'var(--text-secondary)'
+              }}>Track your rental income</p>
             </div>
           </div>
         </motion.div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {[
-            { label: 'Total Earnings', value: `₹${(stats.totalEarnings || 0).toLocaleString()}`, color: '#10b981', icon: FiTrendingUp },
-            { label: 'Active Rentals', value: stats.activeRentals || 0, color: '#3b82f6', icon: FiTruck },
-            { label: 'Fleet Size', value: stats.totalMachines || 0, color: '#a855f7', icon: FiTrendingUp }
-          ].map((stat, index) => {
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '16px',
+          marginBottom: '32px'
+        }}>
+          {statsConfig.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <motion.div 
+              <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.02, y: -4 }}
-                className="p-5 rounded-2xl relative overflow-hidden group"
-                style={{ 
-                  background: `linear-gradient(135deg, ${stat.color}10 0%, ${stat.color}05 100%)`,
-                  border: `1px solid ${stat.color}20`,
-                  textAlign: 'center'
+                style={{
+                  padding: '20px',
+                  borderRadius: '20px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  textAlign: 'center',
+                  background: `linear-gradient(135deg, ${stat.bgGradient} 0%, rgba(255,255,255,0.03) 100%)`,
+                  border: `1px solid ${stat.borderColor}`,
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
                 }}
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}15 0%, transparent 60%)` }} />
-                <div 
-                  className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3"
-                  style={{ 
-                    background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}15 100%)`,
-                    border: `1px solid ${stat.color}30`
-                  }}
-                >
-                  <Icon className="text-lg" style={{ color: stat.color }} />
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 12px',
+                  background: `linear-gradient(135deg, ${stat.bgGradient} 0%, rgba(255,255,255,0.05) 100%)`,
+                  border: `1px solid ${stat.borderColor}`
+                }}>
+                  <Icon style={{ width: '18px', height: '18px', color: stat.color }} />
                 </div>
-                <p className="text-2xl font-bold relative" style={{ color: stat.color }}>{stat.value}</p>
-                <p className="text-xs font-medium relative" style={{ color: 'var(--text-secondary)' }}>{stat.label}</p>
+                <p style={{
+                  fontSize: '24px',
+                  fontWeight: 700,
+                  position: 'relative',
+                  color: stat.color
+                }}>{stat.value}</p>
+                <p style={{
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  position: 'relative',
+                  color: 'var(--text-secondary)'
+                }}>{stat.label}</p>
               </motion.div>
             );
           })}
         </div>
 
         {/* Transactions */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="rounded-3xl p-6 relative overflow-hidden" 
-          style={{ 
+          style={{
+            borderRadius: '24px',
+            padding: '24px',
+            position: 'relative',
+            overflow: 'hidden',
             background: 'var(--bg-card)',
             border: '1px solid var(--border-primary)',
             backdropFilter: 'blur(10px)'
           }}
         >
-          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)' }} />
-          <div className="flex items-center justify-between mb-6 relative">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden"
-                style={{ 
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)',
-                  border: '1px solid rgba(16, 185, 129, 0.25)'
-                }}
-              >
-                <FiTrendingUp className="text-lg" style={{ color: '#10b981' }} />
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            opacity: 0.3,
+            background: 'radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)'
+          }} />
+          
+          {/* Transactions Header */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '24px',
+            position: 'relative'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                overflow: 'hidden',
+                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)',
+                border: '1px solid rgba(16, 185, 129, 0.3)'
+              }}>
+                <FiTrendingUp style={{ width: '20px', height: '20px', color: '#10b981' }} />
               </div>
-              <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Recent Transactions</h2>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Recent Transactions</h2>
             </div>
-            <div className="flex gap-2">
+            <div style={{ display: 'flex', gap: '8px' }}>
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                className="p-2.5 rounded-xl"
-                style={{ 
+                style={{
+                  padding: '10px',
+                  borderRadius: '12px',
                   background: 'var(--bg-button)',
                   border: '1px solid var(--border-primary)',
-                  color: 'var(--text-muted)'
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer'
                 }}
               >
-                <FiFilter className="w-4 h-4" />
+                <FiFilter style={{ width: '16px', height: '16px' }} />
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                className="p-2.5 rounded-xl"
-                style={{ 
+                style={{
+                  padding: '10px',
+                  borderRadius: '12px',
                   background: 'var(--bg-button)',
                   border: '1px solid var(--border-primary)',
-                  color: 'var(--text-muted)'
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer'
                 }}
               >
-                <FiDownload className="w-4 h-4" />
+                <FiDownload style={{ width: '16px', height: '16px' }} />
               </motion.button>
             </div>
           </div>
 
-          <div className="space-y-3 relative">
+          {/* Transaction List */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
             {activity.filter(a => a.status === 'paid' || a.status === 'completed' || a.status === 'active').map((item, index) => (
-              <motion.div 
-                key={item.id} 
+              <motion.div
+                key={item.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.03 }}
                 whileHover={{ scale: 1.01, x: 4 }}
-                className="p-4 rounded-2xl flex items-center justify-between transition-all group"
-                style={{ 
+                style={{
+                  padding: '16px',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
                   background: 'var(--bg-button)',
-                  border: '1px solid var(--border-secondary)'
+                  border: '1px solid var(--border-secondary)',
+                  transition: 'all 0.2s ease'
                 }}
               >
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden transition-transform duration-300 group-hover:scale-105"
-                    style={{ 
-                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)',
-                      border: '1px solid rgba(16, 185, 129, 0.25)'
-                    }}
-                  >
-                    <FiTrendingUp className="text-lg" style={{ color: '#10b981' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }}>
+                    <FiTrendingUp style={{ width: '18px', height: '18px', color: '#10b981' }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{item.machineName}</p>
-                    <div className="flex items-center gap-2 text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                      <FiCalendar className="w-3 h-3" />
+                    <p style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary)' }}>{item.machineName}</p>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      color: 'var(--text-secondary)'
+                    }}>
+                      <FiCalendar style={{ width: '12px', height: '12px' }} />
                       <span>{new Date(item.time).toLocaleDateString()}</span>
                       <span>•</span>
                       <span>{item.farmerName}</span>
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold" style={{ color: '#10b981' }}>+₹{(item.amount || 0).toLocaleString()}</p>
-                  <span 
-                    className="text-xs font-semibold px-3 py-1 rounded-full"
-                    style={{ 
-                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)',
-                      border: '1px solid rgba(16, 185, 129, 0.25)',
-                      color: '#10b981'
-                    }}
-                  >
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ fontSize: '18px', fontWeight: 700, color: '#10b981' }}>+₹{(item.amount || 0).toLocaleString()}</p>
+                  <span style={{
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    padding: '4px 12px',
+                    borderRadius: '9999px',
+                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    color: '#10b981'
+                  }}>
                     {item.status}
                   </span>
                 </div>
@@ -250,18 +367,24 @@ const OwnerEarnings = () => {
             ))}
             
             {activity.filter(a => a.status === 'paid' || a.status === 'completed' || a.status === 'active').length === 0 && (
-              <div className="text-center py-12">
-                <div 
-                  className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden"
-                  style={{ 
-                    background: 'var(--bg-button)',
-                    border: '1px solid var(--border-secondary)'
-                  }}
-                >
-                  <FiTrendingUp className="text-3xl" style={{ color: 'var(--text-muted)' }} />
+              <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  background: 'var(--bg-button)',
+                  border: '1px solid var(--border-secondary)'
+                }}>
+                  <FiTrendingUp style={{ width: '32px', height: '32px', color: 'var(--text-muted)' }} />
                 </div>
-                <p className="text-sm mb-1 font-semibold" style={{ color: 'var(--text-primary)' }}>No transactions yet</p>
-                <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Earnings will appear here after rentals</p>
+                <p style={{ fontSize: '14px', marginBottom: '4px', fontWeight: 600, color: 'var(--text-primary)' }}>No transactions yet</p>
+                <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)' }}>Earnings will appear here after rentals</p>
               </div>
             )}
           </div>

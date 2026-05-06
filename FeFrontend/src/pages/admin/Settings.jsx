@@ -93,10 +93,31 @@ const SettingsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64" style={{ backgroundColor: 'var(--bg-primary)' }}>
-        <div className="relative">
-          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }} />
-          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }} />
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'var(--bg-primary)'
+      }}>
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            border: '2px solid rgba(16, 185, 129, 0.2)',
+            borderTopColor: '#10b981',
+            borderRadius: '16px',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            width: '56px',
+            height: '56px',
+            borderRadius: '16px',
+            animation: 'pulse 2s ease-in-out infinite',
+            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)'
+          }} />
         </div>
       </div>
     );
@@ -109,104 +130,112 @@ const SettingsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }} 
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '48px',
+      backgroundColor: 'var(--bg-primary)'
+    }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          transition={{ duration: 0.5 }}
+          style={{ width: '100%', maxWidth: '600px' }}
         >
-          <div className="flex items-center gap-4 mb-2">
-            <motion.div 
-              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
-              whileHover={{ scale: 1.05 }}
-              style={{ 
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
-                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
-              }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-              <FiSettings className="text-xl text-white relative z-10" />
-            </motion.div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>System Settings</h1>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Configure platform parameters and security policies</p>
-            </div>
+          {/* Header */}
+          <div style={{ marginBottom: '32px' }}>
+            <h2 style={{
+              fontSize: '24px',
+              fontWeight: 700,
+              color: 'var(--text-primary)',
+              marginBottom: '8px'
+            }}>System Settings</h2>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+              Configure platform parameters and security policies
+            </p>
           </div>
-        </motion.div>
 
-        {/* Tabs */}
-        <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
-          {tabs.map((tab, index) => (
-            <motion.button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="flex items-center gap-3 px-6 py-4 rounded-2xl transition-all flex-shrink-0 relative overflow-hidden group"
-              style={{ 
-                background: activeTab === tab.id 
-                  ? `linear-gradient(135deg, ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.2)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(16, 185, 129, 0.2)'} 0%, ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.05)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.05)' : 'rgba(16, 185, 129, 0.05)'} 100%)`
-                  : 'var(--bg-button)',
-                border: activeTab === tab.id 
-                  ? `1px solid ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.4)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(16, 185, 129, 0.4)'}`
-                  : '1px solid var(--border-primary)',
-                boxShadow: activeTab === tab.id 
-                  ? `0 4px 20px ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.2)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`
-                  : 'none',
-                color: activeTab === tab.id 
-                  ? (tab.id === 'general' ? '#60a5fa' : tab.id === 'security' ? '#c084fc' : '#34d399') 
-                  : 'var(--text-muted)'
-              }}
-            >
-              <div 
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          {/* Tabs */}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            {tabs.map((tab, index) => (
+              <motion.button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
                 style={{
-                  background: `radial-gradient(circle at 50% 0%, ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.15)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.15)' : 'rgba(16, 185, 129, 0.15)'} 0%, transparent 70%)`
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '14px 20px',
+                  borderRadius: '14px',
+                  border: activeTab === tab.id 
+                    ? `1px solid ${tab.id === 'general' ? 'rgba(59, 130, 246, 0.5)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.5)' : 'rgba(16, 185, 129, 0.5)'}`
+                    : '1px solid var(--border-primary)',
+                  background: activeTab === tab.id 
+                    ? `${tab.id === 'general' ? 'rgba(59, 130, 246, 0.15)' : tab.id === 'security' ? 'rgba(168, 85, 247, 0.15)' : 'rgba(16, 185, 129, 0.15)'}`
+                    : 'var(--bg-button)',
+                  color: activeTab === tab.id 
+                    ? (tab.id === 'general' ? '#60a5fa' : tab.id === 'security' ? '#c084fc' : '#34d399') 
+                    : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  flexShrink: 0
                 }}
-              />
-              <tab.icon className="text-lg relative z-10" />
-              <div className="text-left relative z-10">
-                <div className="font-bold text-sm">{tab.label}</div>
-                <div className="text-xs opacity-60">{tab.description}</div>
-              </div>
-            </motion.button>
-          ))}
-        </div>
+              >
+                <tab.icon style={{ fontSize: '18px' }} />
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontWeight: 600, fontSize: '13px' }}>{tab.label}</div>
+                  <div style={{ fontSize: '11px', opacity: 0.7 }}>{tab.description}</div>
+                </div>
+              </motion.button>
+            ))}
+          </div>
 
-        {/* Content */}
-        <motion.div 
-          key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-3xl overflow-hidden relative"
-          style={{ 
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-primary)',
-            backdropFilter: 'blur(10px)'
-          }}
-        >
-          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)' }} />
+          {/* Content Card */}
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              borderRadius: '20px',
+              overflow: 'hidden',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-primary)'
+            }}
+          >
           {activeTab === 'general' && (
-            <div className="p-6 lg:p-8 relative">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div style={{ padding: '32px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
                 {/* Platform Name */}
-                <motion.div 
-                  className="space-y-2"
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                 >
-                  <label htmlFor="siteName" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
-                    <div 
-                      className="w-6 h-6 rounded-lg flex items-center justify-center"
-                      style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.1) 100%)' }}
-                    >
-                      <FiGlobe className="text-xs" style={{ color: '#60a5fa' }} />
+                  <label htmlFor="siteName" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: 'var(--text-secondary)',
+                    marginBottom: '10px'
+                  }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.1) 100%)'
+                    }}>
+                      <FiGlobe style={{ fontSize: '12px', color: '#60a5fa' }} />
                     </div>
                     Platform Name
                   </label>
@@ -217,28 +246,48 @@ const SettingsPage = () => {
                     value={settings.general.siteName}
                     onChange={(e) => handleChange('general', 'siteName', e.target.value)}
                     autoComplete="organization"
-                    className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-blue-500/30"
-                    style={{ 
-                      background: 'var(--bg-input)', 
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: 'var(--bg-input)',
                       border: '1px solid var(--border-primary)',
-                      color: 'var(--text-primary)'
+                      color: 'var(--text-primary)',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease',
+                      boxSizing: 'border-box'
                     }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--border-focus)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-primary)'}
                   />
                 </motion.div>
 
                 {/* Support Email */}
-                <motion.div 
-                  className="space-y-2"
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}
                 >
-                  <label htmlFor="supportEmail" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
-                    <div 
-                      className="w-6 h-6 rounded-lg flex items-center justify-center"
-                      style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(168, 85, 247, 0.1) 100%)' }}
-                    >
-                      <FiBell className="text-xs" style={{ color: '#c084fc' }} />
+                  <label htmlFor="supportEmail" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: 'var(--text-secondary)',
+                    marginBottom: '10px'
+                  }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(168, 85, 247, 0.1) 100%)'
+                    }}>
+                      <FiBell style={{ fontSize: '12px', color: '#c084fc' }} />
                     </div>
                     Support Email
                   </label>
@@ -249,28 +298,48 @@ const SettingsPage = () => {
                     value={settings.general.supportEmail}
                     onChange={(e) => handleChange('general', 'supportEmail', e.target.value)}
                     autoComplete="email"
-                    className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-purple-500/30"
-                    style={{ 
-                      background: 'var(--bg-input)', 
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: 'var(--bg-input)',
                       border: '1px solid var(--border-primary)',
-                      color: 'var(--text-primary)'
+                      color: 'var(--text-primary)',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease',
+                      boxSizing: 'border-box'
                     }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--border-focus)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-primary)'}
                   />
                 </motion.div>
 
                 {/* Platform Fee */}
-                <motion.div 
-                  className="space-y-2"
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <label htmlFor="platformFee" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
-                    <div 
-                      className="w-6 h-6 rounded-lg flex items-center justify-center"
-                      style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(245, 158, 11, 0.1) 100%)' }}
-                    >
-                      <FiDatabase className="text-xs" style={{ color: '#fbbf24' }} />
+                  <label htmlFor="platformFee" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: 'var(--text-secondary)',
+                    marginBottom: '10px'
+                  }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(245, 158, 11, 0.1) 100%)'
+                    }}>
+                      <FiDatabase style={{ fontSize: '12px', color: '#fbbf24' }} />
                     </div>
                     Platform Fee (%)
                   </label>
@@ -281,67 +350,92 @@ const SettingsPage = () => {
                     value={settings.general.platformFee}
                     onChange={(e) => handleChange('general', 'platformFee', parseInt(e.target.value))}
                     autoComplete="off"
-                    className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-amber-500/30"
-                    style={{ 
-                      background: 'var(--bg-input)', 
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: 'var(--bg-input)',
                       border: '1px solid var(--border-primary)',
-                      color: 'var(--text-primary)'
+                      color: 'var(--text-primary)',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease',
+                      boxSizing: 'border-box'
                     }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--border-focus)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-primary)'}
                   />
                 </motion.div>
 
                 {/* Maintenance Mode */}
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25 }}
-                  className="p-5 rounded-2xl flex items-center justify-between relative overflow-hidden group"
-                  style={{ 
-                    background: settings.general.maintenanceMode 
+                  style={{
+                    padding: '20px',
+                    borderRadius: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: settings.general.maintenanceMode
                       ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%)'
                       : 'var(--bg-button)',
-                    border: settings.general.maintenanceMode 
+                    border: settings.general.maintenanceMode
                       ? '1px solid rgba(239, 68, 68, 0.3)'
-                      : '1px solid var(--border-secondary)'
+                      : '1px solid var(--border-primary)'
                   }}
                 >
-                  <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{ background: 'radial-gradient(circle at 50% 0%, rgba(239, 68, 68, 0.1) 0%, transparent 70%)' }}
-                  />
-                  <div className="flex items-center gap-3 relative z-10">
-                    <div 
-                      className="w-11 h-11 rounded-xl flex items-center justify-center"
-                      style={{ 
-                        background: settings.general.maintenanceMode 
-                          ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%)'
-                          : 'var(--bg-input)',
-                        border: settings.general.maintenanceMode 
-                          ? '1px solid rgba(239, 68, 68, 0.3)'
-                          : '1px solid var(--border-tertiary)'
-                      }}
-                    >
-                      <FiSettings style={{ color: settings.general.maintenanceMode ? '#f87171' : 'var(--text-secondary)' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: settings.general.maintenanceMode
+                        ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%)'
+                        : 'var(--bg-button)',
+                      border: settings.general.maintenanceMode
+                        ? '1px solid rgba(239, 68, 68, 0.3)'
+                        : '1px solid var(--border-secondary)'
+                    }}>
+                      <FiSettings style={{ color: settings.general.maintenanceMode ? '#f87171' : 'var(--text-muted)' }} />
                     </div>
                     <div>
-                      <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Maintenance Mode</p>
-                      <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Disable platform for users</p>
+                      <p style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)', margin: 0 }}>Maintenance Mode</p>
+                      <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>Disable platform for users</p>
                     </div>
                   </div>
                   <button
                     onClick={() => handleChange('general', 'maintenanceMode', !settings.general.maintenanceMode)}
-                    className="w-14 h-7 rounded-full transition-all duration-300 relative"
-                    style={{ 
-                      background: settings.general.maintenanceMode 
+                    style={{
+                      width: '52px',
+                      height: '28px',
+                      borderRadius: '14px',
+                      border: 'none',
+                      background: settings.general.maintenanceMode
                         ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
-                        : 'var(--bg-input)',
-                      boxShadow: settings.general.maintenanceMode ? '0 4px 16px rgba(239, 68, 68, 0.4)' : 'none'
+                        : 'var(--bg-button)',
+                      boxShadow: settings.general.maintenanceMode ? '0 4px 16px rgba(239, 68, 68, 0.4)' : 'none',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'all 0.3s ease'
                     }}
                   >
                     <motion.div
-                      animate={{ x: settings.general.maintenanceMode ? 28 : 2 }}
+                      animate={{ x: settings.general.maintenanceMode ? 24 : 2 }}
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                      className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-md"
+                      style={{
+                        position: 'absolute',
+                        top: '2px',
+                        width: '24px',
+                        height: '24px',
+                        background: '#ffffff',
+                        borderRadius: '12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+                      }}
                     />
                   </button>
                 </motion.div>
@@ -350,21 +444,33 @@ const SettingsPage = () => {
           )}
 
           {activeTab === 'security' && (
-            <div className="p-6 lg:p-8 relative">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div style={{ padding: '32px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
                 {/* Session Timeout */}
-                <motion.div 
-                  className="space-y-2"
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                 >
-                  <label htmlFor="sessionTimeout" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
-                    <div 
-                      className="w-6 h-6 rounded-lg flex items-center justify-center"
-                      style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(168, 85, 247, 0.1) 100%)' }}
-                    >
-                      <FiShield className="text-xs" style={{ color: '#c084fc' }} />
+                  <label htmlFor="sessionTimeout" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: 'var(--text-secondary)',
+                    marginBottom: '10px'
+                  }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(168, 85, 247, 0.1) 100%)'
+                    }}>
+                      <FiShield style={{ fontSize: '12px', color: '#c084fc' }} />
                     </div>
                     Session Timeout (minutes)
                   </label>
@@ -375,28 +481,48 @@ const SettingsPage = () => {
                     value={settings.security.sessionTimeout}
                     onChange={(e) => handleChange('security', 'sessionTimeout', parseInt(e.target.value))}
                     autoComplete="off"
-                    className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-purple-500/30"
-                    style={{ 
-                      background: 'var(--bg-input)', 
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: 'var(--bg-input)',
                       border: '1px solid var(--border-primary)',
-                      color: 'var(--text-primary)'
+                      color: 'var(--text-primary)',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease',
+                      boxSizing: 'border-box'
                     }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--border-focus)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-primary)'}
                   />
                 </motion.div>
 
                 {/* Min Password Length */}
-                <motion.div 
-                  className="space-y-2"
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}
                 >
-                  <label htmlFor="minPasswordLength" className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
-                    <div 
-                      className="w-6 h-6 rounded-lg flex items-center justify-center"
-                      style={{ background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(249, 115, 22, 0.1) 100%)' }}
-                    >
-                      <FiShield className="text-xs" style={{ color: '#fb923c' }} />
+                  <label htmlFor="minPasswordLength" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: 'var(--text-secondary)',
+                    marginBottom: '10px'
+                  }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(249, 115, 22, 0.1) 100%)'
+                    }}>
+                      <FiShield style={{ fontSize: '12px', color: '#fb923c' }} />
                     </div>
                     Min Password Length
                   </label>
@@ -407,12 +533,20 @@ const SettingsPage = () => {
                     value={settings.security.minPasswordLength}
                     onChange={(e) => handleChange('security', 'minPasswordLength', parseInt(e.target.value))}
                     autoComplete="off"
-                    className="w-full px-4 py-3.5 rounded-xl outline-none transition-all duration-300 font-medium focus:ring-2 focus:ring-orange-500/30"
-                    style={{ 
-                      background: 'var(--bg-input)', 
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: 'var(--bg-input)',
                       border: '1px solid var(--border-primary)',
-                      color: 'var(--text-primary)'
+                      color: 'var(--text-primary)',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease',
+                      boxSizing: 'border-box'
                     }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--border-focus)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-primary)'}
                   />
                 </motion.div>
               </div>
@@ -420,38 +554,52 @@ const SettingsPage = () => {
           )}
 
           {activeTab === 'account' && (
-            <div className="p-6 lg:p-8 relative">
+            <div style={{ padding: '32px' }}>
               {message.text && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
-                    message.type === 'success' 
-                      ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' 
-                      : 'bg-red-500/10 border border-red-500/20 text-red-400'
-                  }`}
+                  style={{
+                    marginBottom: '24px',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    background: message.type === 'success' 
+                      ? 'rgba(16, 185, 129, 0.1)' 
+                      : 'rgba(239, 68, 68, 0.1)',
+                    border: message.type === 'success' 
+                      ? '1px solid rgba(16, 185, 129, 0.2)' 
+                      : '1px solid rgba(239, 68, 68, 0.2)'
+                  }}
                 >
-                  <FiCheck />
-                  <span className="text-sm font-semibold">{message.text}</span>
+                  <FiCheck style={{ color: message.type === 'success' ? '#34d399' : '#f87171' }} />
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: message.type === 'success' ? '#34d399' : '#f87171' }}>
+                    {message.text}
+                  </span>
                 </motion.div>
               )}
               <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div 
-                    className="w-11 h-11 rounded-xl flex items-center justify-center"
-                    style={{ 
-                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0.1) 100%)',
-                      border: '1px solid rgba(16, 185, 129, 0.3)'
-                    }}
-                  >
-                    <FiShield className="text-lg" style={{ color: '#34d399' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                  <div style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0.1) 100%)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }}>
+                    <FiShield style={{ fontSize: '20px', color: '#34d399' }} />
                   </div>
                   <div>
-                    <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>Two-Factor Authentication</h3>
-                    <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Add an extra layer of security</p>
+                    <h3 style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)', margin: 0 }}>Two-Factor Authentication</h3>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>Add an extra layer of security</p>
                   </div>
                 </div>
-                <TwoFactorSetup 
+                <TwoFactorSetup
                   currentSettings={twoFASettings}
                   onUpdate={handle2FAUpdate}
                 />
@@ -461,50 +609,68 @@ const SettingsPage = () => {
 
           {/* Action Buttons */}
           {activeTab !== 'account' && (
-            <div 
-              className="px-6 lg:px-8 py-5 flex justify-end gap-4 relative"
-              style={{ 
-                borderTop: '1px solid var(--border-secondary)',
-                background: 'var(--bg-button)'
-              }}
-            >
-              <motion.button 
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-                className="px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all relative overflow-hidden group"
-                style={{ 
-                  background: 'var(--bg-button)', 
-                  border: '1px solid var(--border-primary)', 
-                  color: 'var(--text-muted)'
+            <div style={{
+              padding: '20px 32px',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '16px',
+              borderTop: '1px solid var(--border-primary)',
+              background: 'var(--bg-card)'
+            }}>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: 'var(--bg-button)',
+                  border: '1px solid var(--border-primary)',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
                 }}
               >
-                <div 
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{ background: 'radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.1) 0%, transparent 70%)' }}
-                />
-                <FiRefreshCw className={`relative z-10 ${saving ? 'animate-spin' : ''}`} />
-                <span className="relative z-10">Reset</span>
+                <FiRefreshCw style={{ animation: saving ? 'spin 1s linear infinite' : 'none' }} />
+                <span>Reset</span>
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleSave}
                 disabled={saving}
-                className="px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all relative overflow-hidden"
-                style={{ 
+                style={{
+                  padding: '12px 28px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
                   background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                  border: 'none',
                   color: '#ffffff',
-                  boxShadow: '0 8px 24px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  opacity: saving ? 0.7 : 1,
+                  boxShadow: '0 8px 24px rgba(16, 185, 129, 0.35)'
                 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-                {saving ? <FiRefreshCw className="animate-spin relative z-10" /> : <FiSave className="relative z-10" />}
-                <span className="relative z-10">{saving ? 'Saving...' : 'Save Changes'}</span>
+                {saving ? <FiRefreshCw style={{ animation: 'spin 1s linear infinite' }} /> : <FiSave />}
+                <span>{saving ? 'Saving...' : 'Save Changes'}</span>
               </motion.button>
             </div>
           )}
+          </motion.div>
         </motion.div>
-      </div>
+
+      {/* CSS Animations */}
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

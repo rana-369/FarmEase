@@ -114,7 +114,6 @@ const Login = () => {
       display: 'flex',
       backgroundColor: '#0a0a0a'
     }}>
-      {/* Left Side - Dark Green Panel with FarmEase Branding */}
       <div style={{
         display: 'none',
         width: '50%',
@@ -122,7 +121,6 @@ const Login = () => {
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #0d2818 0%, #1a4d3a 50%, #0d2818 100%)'
       }} className="lg:block">
-        {/* Radial gradient overlays */}
         <div style={{
           position: 'absolute',
           inset: 0,
@@ -134,7 +132,6 @@ const Login = () => {
           background: 'radial-gradient(ellipse at bottom right, rgba(5,150,105,0.1) 0%, transparent 50%)'
         }} />
 
-        {/* Content */}
         <div style={{
           position: 'relative',
           zIndex: 10,
@@ -247,7 +244,6 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Right Side - Login Form */}
       <div style={{
         width: '100%',
         display: 'flex',
@@ -262,7 +258,6 @@ const Login = () => {
           transition={{ duration: 0.5 }}
           style={{ width: '100%', maxWidth: '400px' }}
         >
-          {/* Back to Home Link */}
           <motion.button
             onClick={() => navigate('/')}
             initial={{ opacity: 0 }}
@@ -288,7 +283,6 @@ const Login = () => {
             Back to Home
           </motion.button>
 
-          {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <h2 style={{
               fontSize: '24px',

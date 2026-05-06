@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiShield, FiCheck, FiX, FiAlertCircle, FiSmartphone, FiMail, FiLock, FiRefreshCw } from 'react-icons/fi';
+import { FiShield, FiCheck, FiX, FiAlertCircle, FiSmartphone, FiMail, FiLock } from 'react-icons/fi';
 
 const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
   const [method, setMethod] = useState(currentSettings?.method || 'email');
@@ -91,42 +91,49 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="p-5 rounded-2xl"
-      style={{ 
+      style={{
+        padding: '24px',
+        borderRadius: '16px',
         background: 'var(--bg-card)',
         border: '1px solid var(--border-primary)'
       }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div 
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ 
-              background: isEnabled ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' : 'var(--bg-button)',
-              boxShadow: isEnabled ? '0 4px 12px rgba(34, 197, 94, 0.3)' : 'none'
-            }}
-          >
-            <FiShield className="text-lg" style={{ color: isEnabled ? '#ffffff' : 'var(--text-muted)' }} />
+      {/* Status Badge */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: isEnabled 
+              ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' 
+              : 'var(--bg-button)',
+            boxShadow: isEnabled ? '0 4px 12px rgba(34, 197, 94, 0.3)' : 'none'
+          }}>
+            <FiShield style={{ fontSize: '18px', color: isEnabled ? '#ffffff' : 'var(--text-muted)' }} />
           </div>
           <div>
-            <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Two-Factor Authentication
-            </h3>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
               {isEnabled ? 'Enabled' : 'Disabled'}
+            </p>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+              {isEnabled ? 'Your account is protected' : 'Enable for extra security'}
             </p>
           </div>
         </div>
         
         {isEnabled && (
-          <span 
-            className="px-2.5 py-1 rounded-lg text-xs font-medium"
-            style={{ 
-              backgroundColor: 'rgba(34, 197, 94, 0.15)',
-              color: '#22c55e'
-            }}
-          >
+          <span style={{
+            padding: '6px 12px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: 600,
+            background: 'rgba(34, 197, 94, 0.15)',
+            color: '#22c55e'
+          }}>
             Active
           </span>
         )}
@@ -137,14 +144,19 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 p-3 rounded-xl flex items-center gap-2"
-          style={{ 
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          style={{
+            marginBottom: '16px',
+            padding: '12px 16px',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            background: 'rgba(239, 68, 68, 0.1)',
             border: '1px solid rgba(239, 68, 68, 0.2)'
           }}
         >
-          <FiAlertCircle className="flex-shrink-0" style={{ color: '#ef4444' }} />
-          <span className="text-sm" style={{ color: '#ef4444' }}>{error}</span>
+          <FiAlertCircle style={{ color: '#f87171', flexShrink: 0 }} />
+          <span style={{ fontSize: '13px', color: '#f87171' }}>{error}</span>
         </motion.div>
       )}
 
@@ -152,73 +164,100 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 p-3 rounded-xl flex items-center gap-2"
-          style={{ 
-            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          style={{
+            marginBottom: '16px',
+            padding: '12px 16px',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            background: 'rgba(34, 197, 94, 0.1)',
             border: '1px solid rgba(34, 197, 94, 0.2)'
           }}
         >
-          <FiCheck className="flex-shrink-0" style={{ color: '#22c55e' }} />
-          <span className="text-sm" style={{ color: '#22c55e' }}>{success}</span>
+          <FiCheck style={{ color: '#34d399', flexShrink: 0 }} />
+          <span style={{ fontSize: '13px', color: '#34d399' }}>{success}</span>
         </motion.div>
       )}
 
       {/* Method Selection */}
-      <div className="mb-5">
-        <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-primary)' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{
+          display: 'block',
+          fontSize: '13px',
+          fontWeight: 600,
+          color: 'var(--text-secondary)',
+          marginBottom: '12px'
+        }}>
           Verification Method
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => handleMethodChange('email')}
             disabled={isEnabled}
-            className="p-4 rounded-xl transition-all text-center"
             style={{
-              backgroundColor: method === 'email' ? 'rgba(34, 197, 94, 0.1)' : 'var(--bg-button)',
+              padding: '16px',
+              borderRadius: '12px',
               border: method === 'email' ? '2px solid #22c55e' : '1px solid var(--border-primary)',
+              background: method === 'email' ? 'rgba(34, 197, 94, 0.1)' : 'var(--bg-button)',
               cursor: isEnabled ? 'not-allowed' : 'pointer',
-              opacity: isEnabled && method !== 'email' ? 0.5 : 1
+              opacity: isEnabled && method !== 'email' ? 0.5 : 1,
+              transition: 'all 0.2s ease'
             }}
           >
-            <div 
-              className="w-9 h-9 rounded-lg flex items-center justify-center mx-auto mb-2"
-              style={{ backgroundColor: method === 'email' ? 'rgba(34, 197, 94, 0.2)' : 'var(--bg-button)' }}
-            >
-              <FiMail className="text-lg" style={{ color: method === 'email' ? '#22c55e' : 'var(--text-muted)' }} />
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 8px',
+              background: method === 'email' ? 'rgba(34, 197, 94, 0.2)' : 'var(--bg-input)'
+            }}>
+              <FiMail style={{ fontSize: '16px', color: method === 'email' ? '#22c55e' : 'var(--text-muted)' }} />
             </div>
-            <p className="text-sm font-medium" style={{ color: method === 'email' ? '#22c55e' : 'var(--text-primary)' }}>
+            <p style={{ fontSize: '13px', fontWeight: 600, color: method === 'email' ? '#22c55e' : 'var(--text-primary)', margin: 0 }}>
               Email OTP
             </p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
               Receive code via email
             </p>
           </motion.button>
 
           <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => handleMethodChange('authenticator')}
             disabled={isEnabled}
-            className="p-4 rounded-xl transition-all text-center"
             style={{
-              backgroundColor: method === 'authenticator' ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-button)',
+              padding: '16px',
+              borderRadius: '12px',
               border: method === 'authenticator' ? '2px solid #3b82f6' : '1px solid var(--border-primary)',
+              background: method === 'authenticator' ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-button)',
               cursor: isEnabled ? 'not-allowed' : 'pointer',
-              opacity: isEnabled && method !== 'authenticator' ? 0.5 : 1
+              opacity: isEnabled && method !== 'authenticator' ? 0.5 : 1,
+              transition: 'all 0.2s ease'
             }}
           >
-            <div 
-              className="w-9 h-9 rounded-lg flex items-center justify-center mx-auto mb-2"
-              style={{ backgroundColor: method === 'authenticator' ? 'rgba(59, 130, 246, 0.2)' : 'var(--bg-button)' }}
-            >
-              <FiSmartphone className="text-lg" style={{ color: method === 'authenticator' ? '#3b82f6' : 'var(--text-muted)' }} />
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 8px',
+              background: method === 'authenticator' ? 'rgba(59, 130, 246, 0.2)' : 'var(--bg-input)'
+            }}>
+              <FiSmartphone style={{ fontSize: '16px', color: method === 'authenticator' ? '#3b82f6' : 'var(--text-muted)' }} />
             </div>
-            <p className="text-sm font-medium" style={{ color: method === 'authenticator' ? '#3b82f6' : 'var(--text-primary)' }}>
+            <p style={{ fontSize: '13px', fontWeight: 600, color: method === 'authenticator' ? '#3b82f6' : 'var(--text-primary)', margin: 0 }}>
               Authenticator App
             </p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
               Google/Microsoft Auth
             </p>
           </motion.button>
@@ -227,17 +266,23 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
 
       {/* QR Code Display */}
       {showQRCode && qrCodeUrl && (
-        <div className="mb-5 p-4 rounded-xl text-center" style={{ backgroundColor: 'var(--bg-button)' }}>
-          <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>
+        <div style={{
+          marginBottom: '20px',
+          padding: '16px',
+          borderRadius: '12px',
+          textAlign: 'center',
+          background: 'var(--bg-button)'
+        }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '12px' }}>
             Scan this QR code with your authenticator app
           </p>
-          <img src={qrCodeUrl} alt="2FA QR Code" className="mx-auto mb-3" />
+          <img src={qrCodeUrl} alt="2FA QR Code" style={{ margin: '0 auto 12px', display: 'block' }} />
           {backupCodes.length > 0 && (
             <div>
-              <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>
                 Save these backup codes:
               </p>
-              <div className="grid grid-cols-2 gap-1 text-xs font-mono" style={{ color: '#22c55e' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '11px', fontFamily: 'monospace', color: '#22c55e' }}>
                 {backupCodes.map((code, i) => (
                   <span key={i}>{code}</span>
                 ))}
@@ -248,14 +293,20 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
       )}
 
       {/* Info Box */}
-      <div className="mb-5 p-4 rounded-xl" style={{ backgroundColor: 'rgba(34, 197, 94, 0.05)', border: '1px solid rgba(34, 197, 94, 0.1)' }}>
-        <div className="flex items-start gap-3">
-          <FiLock className="text-base mt-0.5" style={{ color: '#22c55e' }} />
+      <div style={{
+        marginBottom: '20px',
+        padding: '16px',
+        borderRadius: '12px',
+        background: 'rgba(34, 197, 94, 0.05)',
+        border: '1px solid rgba(34, 197, 94, 0.1)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+          <FiLock style={{ fontSize: '16px', color: '#22c55e', marginTop: '2px' }} />
           <div>
-            <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+            <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
               Enhanced Security
             </p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)', lineHeight: '1.5' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0', lineHeight: '1.5' }}>
               Two-factor authentication adds an extra layer of security. Even if someone knows your password, they won't be able to access your account.
             </p>
           </div>
@@ -267,38 +318,51 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mb-5 p-4 rounded-xl"
-          style={{ 
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          style={{
+            marginBottom: '20px',
+            padding: '16px',
+            borderRadius: '12px',
+            background: 'rgba(239, 68, 68, 0.1)',
             border: '1px solid rgba(239, 68, 68, 0.2)'
           }}
         >
-          <p className="text-sm mb-4" style={{ color: 'var(--text-primary)' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '16px' }}>
             Are you sure you want to disable two-factor authentication? This will make your account less secure.
           </p>
-          <div className="flex gap-3">
+          <div style={{ display: 'flex', gap: '12px' }}>
             <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleDisable}
               disabled={loading}
-              className="flex-1 py-2.5 rounded-xl font-medium text-sm transition-all"
-              style={{ 
-                backgroundColor: '#ef4444',
-                color: '#ffffff'
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                borderRadius: '10px',
+                fontWeight: 600,
+                fontSize: '13px',
+                border: 'none',
+                background: '#ef4444',
+                color: '#ffffff',
+                cursor: 'pointer'
               }}
             >
               {loading ? 'Disabling...' : 'Yes, Disable 2FA'}
             </motion.button>
             <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setShowConfirmDisable(false)}
-              className="flex-1 py-2.5 rounded-xl font-medium text-sm transition-all"
-              style={{ 
-                backgroundColor: 'var(--bg-button)',
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                borderRadius: '10px',
+                fontWeight: 600,
+                fontSize: '13px',
+                border: '1px solid var(--border-primary)',
+                background: 'var(--bg-button)',
                 color: 'var(--text-muted)',
-                border: '1px solid var(--border-primary)'
+                cursor: 'pointer'
               }}
             >
               Cancel
@@ -309,18 +373,27 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
 
       {/* Action Buttons */}
       {!showConfirmDisable && (
-        <div className="flex gap-3">
+        <div style={{ display: 'flex', gap: '12px' }}>
           {isEnabled ? (
             <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setShowConfirmDisable(true)}
               disabled={loading}
-              className="flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
-              style={{ 
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                color: '#ef4444',
-                border: '1px solid rgba(239, 68, 68, 0.2)'
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                borderRadius: '10px',
+                fontWeight: 600,
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                background: 'rgba(239, 68, 68, 0.1)',
+                color: '#f87171',
+                cursor: 'pointer'
               }}
             >
               <FiX />
@@ -328,20 +401,38 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
             </motion.button>
           ) : (
             <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleEnable}
               disabled={loading}
-              className="flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
-              style={{ 
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                borderRadius: '10px',
+                fontWeight: 600,
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                border: 'none',
                 background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
                 color: '#ffffff',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1,
                 boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
               }}
             >
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div style={{
+                    width: '14px',
+                    height: '14px',
+                    border: '2px solid #ffffff',
+                    borderTopColor: 'transparent',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }} />
                   Enabling...
                 </>
               ) : (
@@ -355,15 +446,19 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
           
           {onClose && (
             <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={onClose}
               disabled={loading}
-              className="px-5 py-3 rounded-xl font-medium transition-all"
-              style={{ 
-                backgroundColor: 'var(--bg-button)',
+              style={{
+                padding: '12px 20px',
+                borderRadius: '10px',
+                fontWeight: 600,
+                fontSize: '13px',
+                border: '1px solid var(--border-primary)',
+                background: 'var(--bg-button)',
                 color: 'var(--text-muted)',
-                border: '1px solid var(--border-primary)'
+                cursor: 'pointer'
               }}
             >
               Close
@@ -371,6 +466,13 @@ const TwoFactorSetup = ({ currentSettings, onUpdate, onClose }) => {
           )}
         </div>
       )}
+
+      {/* CSS Animation */}
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </motion.div>
   );
 };

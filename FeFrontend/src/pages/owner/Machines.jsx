@@ -15,6 +15,8 @@ const OwnerMachines = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [detailModal, setDetailModal] = useState({ open: false, machine: null });
+  const [deleteModal, setDeleteModal] = useState({ open: false, machine: null });
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchMachines();
@@ -33,15 +35,24 @@ const OwnerMachines = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this machine?')) return;
+  const handleDelete = async () => {
+    if (!deleteModal.machine) return;
+    
+    setDeleteLoading(true);
     try {
-      await api.delete(`/machines/${id}`);
-      setMachines(machines.filter(m => m.id !== id));
+      await api.delete(`/equipment/${deleteModal.machine.id}`);
+      setMachines(machines.filter(m => m.id !== deleteModal.machine.id));
+      setDeleteModal({ open: false, machine: null });
     } catch (error) {
       console.error('Error deleting machine:', error);
-      alert('Failed to delete machine');
+      alert('Failed to delete machine. Please try again.');
+    } finally {
+      setDeleteLoading(false);
     }
+  };
+
+  const handleEdit = (machine) => {
+    navigate(`/owner/edit-machine/${machine.id}`);
   };
 
   const filteredMachines = machines.filter(machine => {
@@ -227,7 +238,7 @@ const OwnerMachines = () => {
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={(e) => { e.stopPropagation(); navigate('/owner/add-machine'); }}
+                      onClick={(e) => { e.stopPropagation(); handleEdit(machine); }}
                       className="icon-button"
                     >
                       <FiEdit2 className="w-4 h-4" />
@@ -235,7 +246,7 @@ const OwnerMachines = () => {
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={(e) => { e.stopPropagation(); handleDelete(machine.id); }}
+                      onClick={(e) => { e.stopPropagation(); setDeleteModal({ open: true, machine }); }}
                       className="icon-button"
                       style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171' }}
                     >
@@ -318,6 +329,100 @@ const OwnerMachines = () => {
               Customer Reviews
             </h4>
             <ReviewList machineId={detailModal.machine?.id} />
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={deleteModal.open} onClose={() => setDeleteModal({ open: false, machine: null })}>
+        <div style={{ textAlign: 'center', padding: '24px' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 20px',
+            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.1) 100%)',
+            border: '1px solid rgba(239, 68, 68, 0.3)'
+          }}>
+            <FiTrash2 style={{ fontSize: '32px', color: '#f87171' }} />
+          </div>
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: 700,
+            marginBottom: '8px',
+            color: 'var(--text-primary)'
+          }}>Delete Equipment?</h3>
+          <p style={{
+            fontSize: '14px',
+            color: 'var(--text-secondary)',
+            marginBottom: '8px'
+          }}>
+            Are you sure you want to permanently delete
+          </p>
+          <p style={{
+            fontSize: '16px',
+            fontWeight: 600,
+            color: 'var(--text-primary)',
+            marginBottom: '24px'
+          }}>
+            "{deleteModal.machine?.name}"?
+          </p>
+          <div style={{
+            padding: '16px',
+            borderRadius: '12px',
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            marginBottom: '24px'
+          }}>
+            <p style={{
+              fontSize: '13px',
+              color: '#f87171',
+              fontWeight: 500
+            }}>
+              ⚠️ This action cannot be undone. The equipment will be permanently removed from the system including all associated data.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setDeleteModal({ open: false, machine: null })}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                fontSize: '14px',
+                border: '1px solid var(--border-primary)',
+                background: 'var(--bg-button)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleDelete}
+              disabled={deleteLoading}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                fontSize: '14px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                color: '#ffffff',
+                cursor: deleteLoading ? 'not-allowed' : 'pointer',
+                opacity: deleteLoading ? 0.7 : 1,
+                boxShadow: '0 4px 16px rgba(239, 68, 68, 0.35)'
+              }}
+            >
+              {deleteLoading ? 'Deleting...' : 'Delete Permanently'}
+            </motion.button>
           </div>
         </div>
       </Modal>

@@ -41,6 +41,7 @@ const TestimonialsSection = () => {
 
   return (
     <section 
+      id="testimonials"
       className="py-16 sm:py-20 px-4 sm:px-6 transition-colors duration-500"
       style={{ backgroundColor: isDark ? '#0f0f0f' : '#f9fafb' }}
     >

@@ -38,13 +38,20 @@ namespace FarmEase.Controllers
                 })
                 .FirstOrDefaultAsync();
 
+            // Get machine counts by type
+            var machineCountsByType = await _unitOfWork.Machines.Query()
+                .Where(m => m.Status == "Active" || m.Status == "Verified")
+                .GroupBy(m => m.Type)
+                .Select(g => new { Type = g.Key ?? "Other", Count = g.Count() })
+                .ToListAsync();
+
             // Single query for booking count and average rating
             var bookingStats = await _unitOfWork.Bookings.Query()
                 .GroupBy(_ => 1)
                 .Select(g => new
                 {
                     TotalBookings = g.Count(),
-                    CompletedBookings = g.Count(b => b.Status == "Completed"),
+                    CompletedBookings = g.Count(b => b.Status == "Completed" || b.Status == "Paid"),
                     RejectedBookings = g.Count(b => b.Status == "Rejected"),
                     CancelledBookings = g.Count(b => b.Status == "Cancelled")
                 })
@@ -69,7 +76,9 @@ namespace FarmEase.Controllers
                     bookingStats?.CompletedBookings ?? 0,
                     bookingStats?.RejectedBookings ?? 0,
                     bookingStats?.CancelledBookings ?? 0
-                )
+                ),
+                // Machine counts by type
+                MachineCategories = machineCountsByType.ToDictionary(x => x.Type, x => x.Count)
             });
         }
 

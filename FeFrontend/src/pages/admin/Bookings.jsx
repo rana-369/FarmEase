@@ -271,7 +271,7 @@ const BookingsManagement = () => {
                       </td>
                       <td>
                         <span className="badge" style={{ background: config.bg, color: config.color, border: `1px solid ${config.color}25` }}>
-                          <Icon className="w-3 h-3" />
+                          <Icon style={{ width: '0.75rem', height: '0.75rem', flexShrink: 0 }} />
                           {booking.status || 'Unknown'}
                         </span>
                       </td>

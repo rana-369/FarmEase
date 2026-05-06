@@ -1,7 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { ThemeProvider } from './context/ThemeContext';
 import ErrorBoundary, { ChunkErrorBoundary } from './components/ErrorBoundary';
 
 // Loading fallback component
@@ -33,6 +33,7 @@ const FarmerProfile = lazy(() => import('./pages/farmer/Profile'));
 // Lazy load owner pages
 const OwnerDashboard = lazy(() => import('./pages/owner/Dashboard'));
 const AddMachine = lazy(() => import('./pages/owner/AddMachine'));
+const EditMachine = lazy(() => import('./pages/owner/EditMachine'));
 const OwnerMachines = lazy(() => import('./pages/owner/Machines'));
 const OwnerRequests = lazy(() => import('./pages/owner/Requests'));
 const OwnerEarnings = lazy(() => import('./pages/owner/Earnings'));
@@ -137,6 +138,7 @@ const AppRoutes = () => {
                 <Route index element={<OwnerDashboard />} />
                 <Route path="machines" element={<OwnerMachines />} />
                 <Route path="add-machine" element={<AddMachine />} />
+                <Route path="edit-machine/:id" element={<EditMachine />} />
                 <Route path="requests" element={<OwnerRequests />} />
                 <Route path="earnings" element={<OwnerEarnings />} />
                 <Route path="notifications" element={<OwnerNotifications />} />
@@ -185,10 +187,9 @@ function App() {
   );
 }
 
-// Separate component to use theme context
+// Separate component for app content
 const AppContent = () => {
-  const { theme } = useTheme();
-  
+  // Theme handled via CSS variables - prevents re-renders on theme change
   return (
     <div className="App" style={{ backgroundColor: 'var(--bg-primary)', minHeight: '100vh', transition: 'background-color 0.3s ease' }}>
       <AppRoutes />

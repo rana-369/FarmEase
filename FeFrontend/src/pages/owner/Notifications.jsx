@@ -52,104 +52,198 @@ const OwnerNotifications = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
-        <div className="relative">
-          <div className="w-14 h-14 border-2 rounded-2xl animate-spin" style={{ borderColor: 'rgba(59, 130, 246, 0.2)', borderTopColor: '#3b82f6' }} />
-          <div className="absolute inset-0 w-14 h-14 rounded-2xl animate-pulse" style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)' }} />
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        backgroundColor: 'var(--bg-primary)'
+      }}>
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            border: '2px solid rgba(59, 130, 246, 0.2)',
+            borderTopColor: '#3b82f6',
+            borderRadius: '16px',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            width: '56px',
+            height: '56px',
+            borderRadius: '16px',
+            animation: 'pulse 2s ease-in-out infinite',
+            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)'
+          }} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      <div className="max-w-4xl mx-auto">
+    <div style={{
+      minHeight: '100vh',
+      padding: '24px',
+      backgroundColor: 'var(--bg-primary)'
+    }}>
+      <div style={{ maxWidth: '896px', margin: '0 auto' }}>
         {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }} 
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '32px'
+          }}
         >
-          <div className="flex items-center gap-4">
-            <motion.div 
-              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <motion.div
               whileHover={{ scale: 1.05 }}
-              style={{ 
+              style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                overflow: 'hidden',
                 background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)',
                 boxShadow: '0 8px 32px rgba(59, 130, 246, 0.35), inset 0 1px 0 rgba(255,255,255,0.6)'
               }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-              <FiBell className="text-xl text-white relative z-10" />
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%)'
+              }} />
+              <FiBell style={{ fontSize: '20px', color: '#ffffff', position: 'relative', zIndex: 10 }} />
             </motion.div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Notifications</h1>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Fleet alerts and rental updates</p>
+              <h1 style={{
+                fontSize: '24px',
+                fontWeight: 700,
+                letterSpacing: '-0.025em',
+                color: 'var(--text-primary)'
+              }}>Notifications</h1>
+              <p style={{
+                fontSize: '14px',
+                fontWeight: 500,
+                color: 'var(--text-secondary)'
+              }}>Fleet alerts and rental updates</p>
             </div>
           </div>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={fetchNotifications}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm"
-            style={{ 
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 20px',
+              borderRadius: '12px',
+              fontWeight: 600,
+              fontSize: '14px',
               background: 'var(--bg-button)',
               border: '1px solid var(--border-primary)',
-              color: 'var(--text-primary)'
+              color: 'var(--text-primary)',
+              cursor: 'pointer'
             }}
           >
-            <FiRefreshCw className="text-sm" />
+            <FiRefreshCw style={{ fontSize: '14px' }} />
             Refresh
           </motion.button>
         </motion.div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '16px',
+          marginBottom: '32px'
+        }}>
           {[
-            { label: 'Total', value: notifications.length, color: '#3b82f6' },
-            { label: 'Unread', value: notifications.filter(n => !n.isRead).length, color: '#10b981' },
-            { label: 'Read', value: notifications.filter(n => n.isRead).length, color: 'var(--text-secondary)' }
+            { label: 'Total', value: notifications.length, color: '#3b82f6', bgGradient: 'rgba(59, 130, 246, 0.12)', borderColor: 'rgba(59, 130, 246, 0.3)' },
+            { label: 'Unread', value: notifications.filter(n => !n.isRead).length, color: '#10b981', bgGradient: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.3)' },
+            { label: 'Read', value: notifications.filter(n => n.isRead).length, color: '#8b5cf6', bgGradient: 'rgba(139, 92, 246, 0.12)', borderColor: 'rgba(139, 92, 246, 0.3)' }
           ].map((stat, index) => (
-            <motion.div 
+            <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ scale: 1.02, y: -4 }}
-              className="p-5 rounded-2xl text-center relative overflow-hidden group"
-              style={{ 
-                background: `linear-gradient(135deg, ${stat.color}10 0%, ${stat.color}05 100%)`,
-                border: `1px solid ${stat.color}20`
+              style={{
+                padding: '20px',
+                borderRadius: '16px',
+                textAlign: 'center',
+                position: 'relative',
+                overflow: 'hidden',
+                background: `linear-gradient(135deg, ${stat.bgGradient} 0%, rgba(255,255,255,0.03) 100%)`,
+                border: `1px solid ${stat.borderColor}`,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
               }}
             >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}15 0%, transparent 60%)` }} />
-              <p className="text-2xl font-bold relative" style={{ color: stat.color }}>{stat.value}</p>
-              <p className="text-xs font-medium relative" style={{ color: 'var(--text-secondary)' }}>{stat.label}</p>
+              <p style={{
+                fontSize: '24px',
+                fontWeight: 700,
+                position: 'relative',
+                color: stat.color
+              }}>{stat.value}</p>
+              <p style={{
+                fontSize: '12px',
+                fontWeight: 500,
+                position: 'relative',
+                color: 'var(--text-secondary)'
+              }}>{stat.label}</p>
             </motion.div>
           ))}
         </div>
 
         {/* Notifications List */}
-        <div className="space-y-3">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {notifications.length === 0 ? (
-            <div 
-              className="flex flex-col items-center justify-center min-h-[300px] rounded-3xl relative overflow-hidden"
-              style={{ 
-                background: 'var(--bg-card)',
-                border: '1px dashed var(--border-primary)'
-              }}
-            >
-              <div 
-                className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden"
-                style={{ 
-                  background: 'var(--bg-button)',
-                  border: '1px solid var(--border-secondary)'
-                }}
-              >
-                <FiBell className="text-3xl" style={{ color: 'var(--text-muted)' }} />
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '300px',
+              borderRadius: '24px',
+              position: 'relative',
+              overflow: 'hidden',
+              background: 'var(--bg-card)',
+              border: '1px dashed var(--border-primary)'
+            }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                background: 'var(--bg-button)',
+                border: '1px solid var(--border-secondary)'
+              }}>
+                <FiBell style={{ fontSize: '32px', color: 'var(--text-muted)' }} />
               </div>
-              <p className="text-sm mb-1 font-semibold" style={{ color: 'var(--text-primary)' }}>All caught up!</p>
-              <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>No new notifications for your fleet</p>
+              <p style={{
+                fontSize: '14px',
+                marginBottom: '4px',
+                fontWeight: 600,
+                color: 'var(--text-primary)'
+              }}>All caught up!</p>
+              <p style={{
+                fontSize: '12px',
+                fontWeight: 500,
+                color: 'var(--text-secondary)'
+              }}>No new notifications for your fleet</p>
             </div>
           ) : (
             notifications.map((notification, index) => {
@@ -162,52 +256,86 @@ const OwnerNotifications = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.03 }}
                   whileHover={{ scale: 1.01, x: 4 }}
-                  className="p-5 rounded-2xl transition-all relative overflow-hidden group"
-                  style={{ 
-                    background: notification.isRead 
-                      ? 'var(--bg-button)' 
-                      : 'var(--bg-card)',
-                    border: notification.isRead 
-                      ? '1px solid var(--border-tertiary)' 
-                      : `1px solid ${config.border}`,
+                  style={{
+                    padding: '20px',
+                    borderRadius: '16px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: notification.isRead ? 'var(--bg-button)' : 'var(--bg-card)',
+                    border: notification.isRead ? '1px solid var(--border-tertiary)' : `1px solid ${config.border}`,
                     opacity: notification.isRead ? 0.6 : 1
                   }}
                 >
                   {!notification.isRead && (
-                    <div className="absolute inset-0 opacity-20" style={{ background: `radial-gradient(circle at 0% 50%, ${config.color}10 0%, transparent 60%)` }} />
+                    <div style={{
+                      position: 'absolute',
+                      inset: 0,
+                      opacity: 0.2,
+                      background: `radial-gradient(circle at 0% 50%, ${config.color}10 0%, transparent 60%)`
+                    }} />
                   )}
-                  <div className="flex items-start gap-4 relative">
-                    <div 
-                      className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-105"
-                      style={{ 
-                        background: `linear-gradient(135deg, ${config.bg} 0%, ${config.bg} 100%)`,
-                        border: `1px solid ${config.border}`
-                      }}
-                    >
-                      <Icon className="text-lg" style={{ color: config.color }} />
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', position: 'relative' }}>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      background: `linear-gradient(135deg, ${config.bg} 0%, ${config.bg} 100%)`,
+                      border: `1px solid ${config.border}`
+                    }}>
+                      <Icon style={{ fontSize: '18px', color: config.color }} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: '4px'
+                      }}>
+                        <h3 style={{
+                          fontWeight: 600,
+                          fontSize: '14px',
+                          color: 'var(--text-primary)'
+                        }}>
                           {notification.title}
                         </h3>
-                        <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                          <FiClock />
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          color: 'var(--text-secondary)'
+                        }}>
+                          <FiClock style={{ fontSize: '12px' }} />
                           <span>{new Date(notification.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
-                      <p className="text-sm mb-3 font-medium" style={{ color: 'var(--text-muted)' }}>
+                      <p style={{
+                        fontSize: '14px',
+                        marginBottom: '12px',
+                        fontWeight: 500,
+                        color: 'var(--text-muted)'
+                      }}>
                         {notification.message}
                       </p>
-                      <div className="flex items-center gap-3">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         {!notification.isRead && (
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => markAsRead(notification.id)}
-                            className="text-xs font-semibold px-4 py-2 rounded-xl"
-                            style={{ 
-                              color: '#10b981', 
+                            style={{
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              padding: '8px 16px',
+                              borderRadius: '12px',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: '#10b981',
                               background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)',
                               border: '1px solid rgba(16, 185, 129, 0.25)'
                             }}
@@ -219,14 +347,22 @@ const OwnerNotifications = () => {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => deleteNotification(notification.id)}
-                          className="text-xs font-semibold flex items-center gap-1.5 px-4 py-2 rounded-xl"
-                          style={{ 
-                            color: '#f87171', 
+                          style={{
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '8px 16px',
+                            borderRadius: '12px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#f87171',
                             background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%)',
                             border: '1px solid rgba(239, 68, 68, 0.25)'
                           }}
                         >
-                          <FiTrash2 className="text-sm" />
+                          <FiTrash2 style={{ fontSize: '12px' }} />
                           Delete
                         </motion.button>
                       </div>
