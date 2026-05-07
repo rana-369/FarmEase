@@ -10,6 +10,7 @@ using FECommon.Enums;
 using FECommon.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,7 @@ namespace FEServices.Service
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
         private readonly INotificationService _notificationService;
+        private readonly ILogger<BookingService> _logger;
         private readonly decimal _commissionRate;
 
         public BookingService(
@@ -32,13 +34,15 @@ namespace FEServices.Service
             IPaymentService paymentService,
             IConfiguration configuration,
             IMapper mapper,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            ILogger<BookingService> logger)
         {
             _unitOfWork = unitOfWork;
             _paymentService = paymentService;
             _configuration = configuration;
             _mapper = mapper;
             _notificationService = notificationService;
+            _logger = logger;
 
             // Platform commission rate (default 10%)
             _commissionRate =
@@ -86,6 +90,7 @@ namespace FEServices.Service
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to retrieve all bookings");
                 throw new AppException("Failed to retrieve bookings", ex);
             }
         }

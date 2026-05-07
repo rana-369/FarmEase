@@ -10,6 +10,13 @@ using FEDomain.Interfaces;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
+using Serilog;
+using Serilog.Events;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
+using Asp.Versioning;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 // --- ARCHITECTURE NAMESPACES ---
 using FEDomain;
 using FEDomain.Data;
@@ -21,7 +28,75 @@ using FEServices.Mapping;
 using FECommon.Security;
 using FECommon.Patterns;
 
-var builder = WebApplication.CreateBuilder(args);
+// Configure Serilog early - before building the host
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .Enrich.WithEnvironmentName()
+    .Enrich.WithMachineName()
+    .Enrich.WithThreadId()
+    .WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}")
+    .WriteTo.File(
+        path: "logs/farmease-.log",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+    // Seq sink for centralized logging (optional - configure SEQ_URL in environment)
+    .WriteTo.Conditional(
+        le => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SEQ_URL")),
+        wt => wt.Seq(Environment.GetEnvironmentVariable("SEQ_URL") ?? "http://localhost:5341"))
+    .CreateLogger();
+
+try
+{
+    Log.Information("Starting FarmEase API...");
+    
+    var builder = WebApplication.CreateBuilder(args);
+    
+    // Use Serilog for logging
+    builder.Services.AddSerilog();
+
+    // --- 0.1. SENTRY ERROR TRACKING ---
+    var sentryDsn = Environment.GetEnvironmentVariable("SENTRY_DSN") ?? builder.Configuration["Sentry:Dsn"];
+    if (!string.IsNullOrEmpty(sentryDsn))
+    {
+        builder.WebHost.UseSentry(options =>
+        {
+            options.Dsn = "https://8565c6f602a96307a2f2b101b5ac80e7@o4511347029770240.ingest.de.sentry.io/4511347031998544";
+            options.Environment = builder.Environment.EnvironmentName;
+            options.AttachStacktrace = true;
+            options.SendDefaultPii = true;
+            options.Debug = builder.Environment.IsDevelopment(); // Enable debug in development
+        });
+        Log.Information("Sentry error tracking configured");
+    }
+
+    // --- 0.2. OPENTELEMETRY (Metrics, Tracing, Application Insights) ---
+    var appInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING") 
+        ?? builder.Configuration["ApplicationInsights:ConnectionString"];
+    
+    builder.Services.AddOpenTelemetry()
+        .ConfigureResource(resource => resource
+            .AddService(serviceName: "FarmEase.API", serviceVersion: "1.0.0")
+            .AddEnvironmentVariableDetector())
+        .WithTracing(tracing => tracing
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddEntityFrameworkCoreInstrumentation()
+            .AddSource("FarmEase.*")
+            .AddConsoleExporter())
+        .WithMetrics(metrics => metrics
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddProcessInstrumentation()
+            .AddPrometheusExporter());
+
+    Log.Information("OpenTelemetry configured with tracing and metrics");
 
 // --- 1. DATABASE CONTEXT ---
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -36,6 +111,29 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // --- 1.1. RESPONSE & OUTPUT CACHING ---
 builder.Services.AddResponseCaching();
 builder.Services.AddMemoryCache();
+
+// --- 1.1.1. REDIS DISTRIBUTED CACHE ---
+var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING") 
+    ?? builder.Configuration.GetConnectionString("Redis") 
+    ?? builder.Configuration["Redis:ConnectionString"];
+
+if (!string.IsNullOrEmpty(redisConnectionString))
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnectionString;
+        options.InstanceName = builder.Configuration["Redis:InstanceName"] ?? "FarmEase:";
+    });
+    
+    builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+    Log.Information("Redis distributed cache configured");
+}
+else
+{
+    // Fallback to in-memory cache for development
+    builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
+    Log.Information("Using in-memory cache (Redis not configured)");
+}
 
 // Output caching for public endpoints (30 seconds for stats, 60 seconds for featured)
 builder.Services.AddOutputCache(options =>
@@ -78,11 +176,39 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ITestimonialService, TestimonialService>();
+builder.Services.AddScoped<IDatabaseBackupService, DatabaseBackupService>();
+builder.Services.AddScoped<ISmsService, SmsService>();
+builder.Services.AddScoped<ICdnService, CdnService>();
+builder.Services.AddHttpClient<SmsService>();
+
+// --- 1.6.1. BACKGROUND SERVICES ---
+builder.Services.AddHostedService<BackupSchedulerService>();
 
 // --- 1.7. RATE LIMITING ---
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning("Rate limit exceeded for {IpAddress}", context.HttpContext.Connection.RemoteIpAddress);
+        
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        
+        // Get retry after from metadata if available
+        var retryAfterSeconds = 60;
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfterMetadata))
+        {
+            retryAfterSeconds = (int)retryAfterMetadata.TotalSeconds;
+            context.HttpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString();
+        }
+        
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            error = "Too many requests. Please try again later.",
+            retryAfter = retryAfterSeconds
+        }, cancellationToken);
+    };
     
     // Auth endpoints - strict rate limiting (5 requests per minute)
     options.AddPolicy("AuthPolicy", httpContext =>
@@ -91,6 +217,28 @@ builder.Services.AddRateLimiter(options =>
             factory: _ => new SlidingWindowRateLimiterOptions
             {
                 PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 2
+            }));
+    
+    // Booking endpoints - moderate rate limiting (20 requests per minute)
+    options.AddPolicy("BookingPolicy", httpContext =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 4
+            }));
+    
+    // Payment endpoints - strict rate limiting (10 requests per minute)
+    options.AddPolicy("PaymentPolicy", httpContext =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
                 Window = TimeSpan.FromMinutes(1),
                 SegmentsPerWindow = 2
             }));
@@ -105,7 +253,37 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromMinutes(1),
                 SegmentsPerWindow = 4
             }));
+    
+    // Public endpoints - higher limit (200 requests per minute)
+    options.AddPolicy("PublicPolicy", httpContext =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 200,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 4
+            }));
 });
+
+// --- 1.8. API VERSIONING ---
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = Asp.Versioning.ApiVersionReader.Combine(
+        new Asp.Versioning.UrlSegmentApiVersionReader(),
+        new Asp.Versioning.HeaderApiVersionReader("X-Api-Version"),
+        new Asp.Versioning.QueryStringApiVersionReader("api-version")
+    );
+}).AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+Log.Information("API versioning configured with URL segment, header, and query string support");
 
 // --- 2. IDENTITY SETUP ---
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -199,17 +377,35 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase; // Revert to default camelCase naming policy
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "FarmEase API",
+        Title = "FarmEase API v1",
         Version = "v1",
-        Description = "Agriculture Equipment Rental Platform"
+        Description = "Agriculture Equipment Rental Platform - Initial Release",
+        Contact = new OpenApiContact
+        {
+            Name = "FarmEase Support",
+            Email = "support@farmease.com"
+        }
     });
+    
+    c.SwaggerDoc("v2", new OpenApiInfo
+    {
+        Title = "FarmEase API v2",
+        Version = "v2",
+        Description = "Agriculture Equipment Rental Platform - Enhanced Features",
+        Contact = new OpenApiContact
+        {
+            Name = "FarmEase Support",
+            Email = "support@farmease.com"
+        }
+    });
+    
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -227,6 +423,23 @@ builder.Services.AddSwaggerGen(c =>
             },
             []
         }
+    });
+    
+    // Include API version in operation tags
+    c.DocInclusionPredicate((docName, apiDesc) =>
+    {
+        var actionDescriptor = apiDesc.ActionDescriptor;
+        if (actionDescriptor == null) return false;
+        
+        var endpointMetadata = actionDescriptor.EndpointMetadata;
+        if (endpointMetadata == null) return docName == "v1";
+        
+        var versions = endpointMetadata
+            .OfType<Asp.Versioning.ApiVersionAttribute>()
+            .SelectMany(attr => attr.Versions)
+            .ToList();
+        
+        return versions.Any(v => $"v{v}" == docName) || docName == "v1";
     });
 });
 
@@ -248,9 +461,9 @@ var services = scope.ServiceProvider;
 try
 {
     var context = services.GetRequiredService<ApplicationDbContext>();
-    Console.WriteLine("[Startup] Applying database migrations...");
+    Log.Information("Applying database migrations...");
     context.Database.Migrate();
-    Console.WriteLine("[Startup] Database migrations applied successfully!");
+    Log.Information("Database migrations applied successfully");
     
     // Ensure MachineName and FarmerName columns exist in Bookings table
     var connection = context.Database.GetDbConnection();
@@ -293,7 +506,7 @@ try
         WHERE b.FarmerName IS NULL";
     await command.ExecuteNonQueryAsync();
     
-    Console.WriteLine("[Startup] Booking columns verified/populated.");
+    Log.Information("Booking columns verified/populated");
     
     // Ensure Payments table exists
     command.CommandText = @"
@@ -319,7 +532,7 @@ try
             PRINT 'Payments table created';
         END";
     await command.ExecuteNonQueryAsync();
-    Console.WriteLine("[Startup] Payments table verified/created.");
+    Log.Information("Payments table verified/created");
     
     // Ensure Reviews table exists
     command.CommandText = @"
@@ -345,19 +558,19 @@ try
             PRINT 'Reviews table created';
         END";
     await command.ExecuteNonQueryAsync();
-    Console.WriteLine("[Startup] Reviews table verified/created.");
+    Log.Information("Reviews table verified/created");
     
     await connection.CloseAsync();
 
     // Fix all booking statuses based on payment existence
-    Console.WriteLine("[Startup] Fixing booking statuses based on payments...");
+    Log.Information("Fixing booking statuses based on payments");
     var bookingService = services.GetRequiredService<IBookingService>();
     var (fixedCount, fixMessage) = await bookingService.FixAllBookingStatusesAsync();
-    Console.WriteLine($"[Startup] {fixMessage}");
+    Log.Information("{FixMessage}", fixMessage);
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"[Startup] Migration ERROR: {ex.Message}");
+    Log.Error(ex, "Migration error occurred");
 }
 
 // --- 9. MIDDLEWARE PIPELINE ---
@@ -370,7 +583,13 @@ app.UseExceptionHandling();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "FarmEase API v1");
+        options.SwaggerEndpoint("/swagger/v2/swagger.json", "FarmEase API v2");
+        options.RoutePrefix = "swagger";
+        options.DocumentTitle = "FarmEase API Documentation";
+    });
 }
 
 // Serve static files (uploaded images) with proper CORS and content types
@@ -411,6 +630,9 @@ app.UseOutputCache();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// --- 9.1. PROMETHEUS METRICS ENDPOINT ---
+app.MapPrometheusScrapingEndpoint(); // Exposes /metrics for Prometheus scraping
+
 // --- 10. HEALTH CHECK ENDPOINTS ---
 app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
@@ -430,4 +652,14 @@ app.MapHealthChecksUI(options => options.UIPath = "/health-ui");
 
 app.MapControllers();
 
+Log.Information("FarmEase API started successfully");
 app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "FarmEase API terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

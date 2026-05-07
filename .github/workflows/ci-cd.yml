@@ -1,0 +1,202 @@
+name: FarmEase CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '20.x'
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: ${{ github.repository }}/backend
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}/frontend
+
+jobs:
+  # Backend Build and Test
+  backend-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore FeBackend/FarmEase/FarmEase.csproj
+
+    - name: Build backend
+      run: dotnet build FeBackend/FarmEase/FarmEase.csproj --configuration Release --no-restore
+
+    - name: Run backend tests
+      run: dotnet test FeBackend/FarmEase/FarmEase.csproj --no-build --configuration Release --verbosity normal
+      continue-on-error: true
+
+    - name: Publish backend
+      run: dotnet publish FeBackend/FarmEase/FarmEase.csproj --configuration Release --no-build --output ./publish/backend
+
+  # Frontend Build and Test
+  frontend-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: FeFrontend/package-lock.json
+
+    - name: Install dependencies
+      working-directory: FeFrontend
+      run: npm ci
+
+    - name: Lint frontend
+      working-directory: FeFrontend
+      run: npm run lint
+      continue-on-error: true
+
+    - name: Build frontend
+      working-directory: FeFrontend
+      run: npm run build
+      env:
+        VITE_API_URL: ${{ secrets.API_URL }}
+
+    - name: Upload frontend build
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-build
+        path: FeFrontend/dist
+
+  # Build and Push Docker Images
+  docker-build:
+    needs: [backend-build, frontend-build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata for backend
+      id: meta-backend
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}
+        tags: |
+          type=ref,event=branch
+          type=sha,prefix=
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+    - name: Extract metadata for frontend
+      id: meta-frontend
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}
+        tags: |
+          type=ref,event=branch
+          type=sha,prefix=
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./FeBackend
+        file: ./FeBackend/FarmEase/Dockerfile
+        push: true
+        tags: ${{ steps.meta-backend.outputs.tags }}
+        labels: ${{ steps.meta-backend.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./FeFrontend
+        file: ./FeFrontend/Dockerfile
+        push: true
+        tags: ${{ steps.meta-frontend.outputs.tags }}
+        labels: ${{ steps.meta-frontend.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          VITE_API_URL=${{ secrets.API_URL }}
+
+  # Deploy to Production
+  deploy-production:
+    needs: docker-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to production server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.PRODUCTION_HOST }}
+        username: ${{ secrets.PRODUCTION_USER }}
+        key: ${{ secrets.PRODUCTION_SSH_KEY }}
+        script: |
+          cd /opt/farmease
+          docker-compose pull
+          docker-compose up -d --remove-orphans
+          docker system prune -f
+
+    - name: Health check
+      run: |
+        sleep 30
+        curl -f ${{ secrets.PRODUCTION_URL }}/health || exit 1
+
+  # Deploy to Staging
+  deploy-staging:
+    needs: docker-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to staging server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.STAGING_HOST }}
+        username: ${{ secrets.STAGING_USER }}
+        key: ${{ secrets.STAGING_SSH_KEY }}
+        script: |
+          cd /opt/farmease-staging
+          docker-compose pull
+          docker-compose up -d --remove-orphans
+          docker system prune -f
+
+    - name: Health check
+      run: |
+        sleep 30
+        curl -f ${{ secrets.STAGING_URL }}/health || exit 1

@@ -8,13 +8,15 @@ using Microsoft.AspNetCore.Http;
 using FECommon.DTO;
 using FECommon.Security;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FEServices.Service
 {
-    public class MachineService(IUnitOfWork unitOfWork, IMapper mapper) : IMachineService
+    public class MachineService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<MachineService> logger) : IMachineService
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly IMapper _mapper = mapper;
+        private readonly ILogger<MachineService> _logger = logger;
 
         public async Task<IEnumerable<Machine>> GetAllMachinesAsync()
         {
@@ -163,17 +165,7 @@ namespace FEServices.Service
         {
             try
             {
-                Console.WriteLine($"\n=== MachineService.AddEquipmentAsync ===");
-                Console.WriteLine($"Name: {name}");
-                Console.WriteLine($"Category: {category}");
-                Console.WriteLine($"PricePerHour: {pricePerHour}");
-                Console.WriteLine($"OwnerId: {ownerId}");
-                Console.WriteLine($"Location: {location}");
-                Console.WriteLine($"Description: {description}");
-                Console.WriteLine($"Latitude: {latitude}");
-                Console.WriteLine($"Longitude: {longitude}");
-                Console.WriteLine($"City: {city}");
-                Console.WriteLine($"State: {state}");
+                _logger.LogInformation("Adding equipment: {Name}, Category: {Category}, Owner: {OwnerId}", name, category, ownerId);
                 
                 string imageUrl = string.Empty;
 
@@ -189,7 +181,7 @@ namespace FEServices.Service
                     using var stream = new FileStream(exactFilePath, FileMode.Create);
                     await image.CopyToAsync(stream);
                     imageUrl = $"/uploads/equipment/{uniqueFileName}";
-                    Console.WriteLine($"Image saved: {imageUrl}");
+                    _logger.LogDebug("Image saved: {ImageUrl}", imageUrl);
                 }
 
                 var newMachine = new Machine
@@ -203,7 +195,6 @@ namespace FEServices.Service
                     Description = description,
                     Status = "Active",
                     CreatedAt = DateTime.UtcNow,
-                    // Location-based search fields
                     Latitude = latitude,
                     Longitude = longitude,
                     City = city,
@@ -211,25 +202,16 @@ namespace FEServices.Service
                     Pincode = pincode
                 };
 
-                Console.WriteLine($"Creating machine: {newMachine.Name}, {newMachine.Type}, {newMachine.Rate}");
-                
                 await _unitOfWork.Machines.AddAsync(newMachine);
                 await _unitOfWork.SaveChangesAsync();
                 
-                Console.WriteLine($"Machine Id after save: {newMachine.Id}");
-                Console.WriteLine($"==========================================\n");
+                _logger.LogInformation("Equipment created successfully with ID: {MachineId}", newMachine.Id);
 
                 return (true, "Equipment added successfully!");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"\n!!! ERROR in AddEquipmentAsync: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                }
-                Console.WriteLine("==========================================\n");
+                _logger.LogError(ex, "Error adding equipment: {Name}", name);
                 return (false, $"Error: {ex.Message}");
             }
         }
@@ -347,7 +329,7 @@ namespace FEServices.Service
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in DeleteEquipmentAsync: {ex.Message}");
+                _logger.LogError(ex, "Error deleting equipment: {MachineId}", id);
                 return (false, $"Error: {ex.Message}");
             }
         }
