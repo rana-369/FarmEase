@@ -36,12 +36,13 @@ namespace FarmEase.Controllers
             // Check if 2FA is required
             if (requires2FA)
             {
-                return Ok(new { 
-                    Requires2FA = true, 
+                return Ok(new
+                {
+                    Requires2FA = true,
                     TwoFAMethod = twoFAMethod,
                     Role = role,
                     Email = model.Email,
-                    Message = message 
+                    Message = message
                 });
             }
 
@@ -116,10 +117,11 @@ namespace FarmEase.Controllers
             if (!success)
                 return BadRequest(new { Message = message });
 
-            return Ok(new { 
-                Message = message, 
-                QrCodeUrl = qrCodeUrl, 
-                BackupCodes = backupCodes 
+            return Ok(new
+            {
+                Message = message,
+                QrCodeUrl = qrCodeUrl,
+                BackupCodes = backupCodes
             });
         }
 
@@ -150,10 +152,11 @@ namespace FarmEase.Controllers
             if (!success)
                 return BadRequest(new { Message = message });
 
-            return Ok(new { 
-                Message = message, 
-                QrCodeUrl = qrCodeUrl, 
-                BackupCodes = backupCodes 
+            return Ok(new
+            {
+                Message = message,
+                QrCodeUrl = qrCodeUrl,
+                BackupCodes = backupCodes
             });
         }
 
