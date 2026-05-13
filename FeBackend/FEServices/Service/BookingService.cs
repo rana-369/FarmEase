@@ -1481,7 +1481,33 @@ namespace FEServices.Service
 
             var avgBookingValue = stats.TotalBookings > 0 ? stats.TotalRevenue / stats.TotalBookings : 0;
             var lastAvgBookingValue = stats.LastMonthBookings > 0 ? stats.LastMonthRevenue / stats.LastMonthBookings : 0;
-            var utilizationRate = machineIds.Count > 0 ? (stats.ActiveBookings * 100.0 / machineIds.Count) : (stats.ActiveBookings > 0 ? 100 : 0);
+            // Calculate proper fleet usage rate based on time utilization
+            var totalPossibleHours = 0m;
+            var totalUsedHours = 0m;
+            
+            if (machineIds.Count > 0)
+            {
+                // Get all bookings for utilization calculation
+                var utilizationBookings = await query
+                    .Where(b => b.Status == "Active" || b.Status == "InProgress" || b.Status == "Accepted" || b.Status == "Arrived")
+                    .Select(b => new 
+                    { 
+                        b.ScheduledDate, 
+                        b.Hours,
+                        b.CreatedAt
+                    })
+                    .ToListAsync();
+
+                // Calculate total possible hours (last 30 days for each machine)
+                var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+                totalPossibleHours = machineIds.Count * 24m * 30m; // 24 hours * 30 days * machine count
+
+                // Calculate total used hours from active bookings
+                totalUsedHours = utilizationBookings.Sum(b => 
+                    b.ScheduledDate.HasValue ? b.Hours : 0m);
+            }
+
+            var utilizationRate = totalPossibleHours > 0 ? (totalUsedHours * 100m / totalPossibleHours) : 0m;
 
             // Calculate real percentage changes
             var revenueChange = stats.LastMonthRevenue > 0
