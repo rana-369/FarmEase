@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import API from '../api/axios';
- 
+
 const AuthContext = createContext();
- 
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -10,173 +10,162 @@ export const useAuth = () => {
   }
   return context;
 };
- 
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [requires2FA, setRequires2FA] = useState(false);
   const [pending2FAEmail, setPending2FAEmail] = useState(null);
   const [pending2FARole, setPending2FARole] = useState(null);
- 
-  // Enhanced session management
-  const [activeSessions, setActiveSessions] = useState(() => {
-    const sessions = localStorage.getItem('activeSessions');
-    return sessions ? JSON.parse(sessions) : {};
-  });
- 
-  const saveSession = useCallback((userData, sessionKey) => {
-    const sessions = { ...activeSessions };
-    sessions[sessionKey] = userData;
-    localStorage.setItem('activeSessions', JSON.stringify(sessions));
-    setActiveSessions(sessions);
-  }, [activeSessions]);
- 
-  const removeSession = useCallback((sessionKey) => {
-    const sessions = { ...activeSessions };
-    delete sessions[sessionKey];
-    localStorage.setItem('activeSessions', JSON.stringify(sessions));
-    setActiveSessions(sessions);
-  }, [activeSessions]);
- 
-  const getCurrentSession = useCallback(() => {
-    const currentSessionKey = localStorage.getItem('currentSessionKey');
-    return currentSessionKey ? activeSessions[currentSessionKey] : null;
-  }, [activeSessions]);
- 
-  const switchSession = useCallback((sessionKey) => {
-    const session = activeSessions[sessionKey];
-    if (session) {
-      localStorage.setItem('currentSessionKey', sessionKey);
-      setUser(session);
-      // Update API headers with new session token
-      API.defaults.headers.common['Authorization'] = `Bearer ${session.token}`;
-    }
-  }, [activeSessions]);
- 
+
+  // Initialize auth state on app load
   useEffect(() => {
-    // Initialize with current session
-    const currentSessionKey = localStorage.getItem('currentSessionKey');
-    if (currentSessionKey && activeSessions[currentSessionKey]) {
-      setUser(activeSessions[currentSessionKey]);
-    }
-    setLoading(false);
-  }, [activeSessions]);
- 
+    const initializeAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        const userId = localStorage.getItem('userId');
+
+        if (token && role && userId) {
+          // Validate token is still valid by making a test request
+          try {
+            // Make request with the token - API interceptor will use it automatically
+            await API.get('/profile');
+            // Token is valid, restore user session
+            setUser({ token, role, userId });
+          } catch (error) {
+            // Token is invalid (likely expired), clear localStorage
+            if (error.response?.status === 401) {
+              console.warn('Token expired, clearing session');
+            } else {
+              console.warn('Failed to validate token:', error.message);
+            }
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            localStorage.removeItem('userId');
+            setUser(null);
+          }
+        }
+      } catch (error) {
+        console.error('Error during auth initialization:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('userId');
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, []);
+
   const login = useCallback(async (email, password) => {
     try {
       const response = await API.post('/auth/login', { email, password });
+
       const { token, role, userId, requires2FA, twoFAMethod, email: responseEmail } = response.data;
- 
+
       if (requires2FA === true) {
         setRequires2FA(true);
         setPending2FAEmail(responseEmail || email);
         setPending2FARole(role);
         return { success: true, requires2FA: true, twoFAMethod, email: responseEmail || email, role };
       }
- 
-      // Create session key
-      const sessionKey = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const sessionData = { token, role, userId, email, loginTime: new Date().toISOString() };
- 
-      // Save session
-      saveSession(sessionData, sessionKey);
- 
-      // Set as current session
-      switchSession(sessionKey);
- 
-      return { success: true, role, sessionKey };
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('role', role);
+      localStorage.setItem('userId', userId);
+
+      setUser({ token, role, userId });
+      return { success: true, role };
     } catch (error) {
-      return { success: false, error: error.response?.data?.message || 'Login failed' };
+      return { success: false, error: error.response?.data?.message || error.response?.data?.Message || 'Login failed' };
     }
-  }, [saveSession, switchSession]);
- 
+  }, []);
+
   const verify2FA = useCallback(async (email, code) => {
     try {
       const response = await API.post('/auth/2fa/verify', { email, code });
       const { token, role, userId } = response.data;
- 
-      // Create session key
-      const sessionKey = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const sessionData = { token, role, userId, email, loginTime: new Date().toISOString() };
- 
-      // Save session
-      saveSession(sessionData, sessionKey);
- 
-      // Set as current session
-      switchSession(sessionKey);
- 
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('role', role);
+      localStorage.setItem('userId', userId);
+
+      setUser({ token, role, userId });
       setRequires2FA(false);
       setPending2FAEmail(null);
       setPending2FARole(null);
- 
-      return { success: true, role, sessionKey };
+
+      return { success: true, role };
     } catch (error) {
       return { success: false, error: error.response?.data?.message || 'Invalid verification code' };
     }
-  }, [saveSession, switchSession]);
- 
-  const logout = useCallback((sessionKey = null) => {
-    if (sessionKey) {
-      // Logout specific session
-      removeSession(sessionKey);
- 
-      // If logging out current session, switch to another or clear all
-      const currentSessionKey = localStorage.getItem('currentSessionKey');
-      if (currentSessionKey === sessionKey) {
-        const remainingSessions = Object.keys(activeSessions).filter(key => key !== sessionKey);
-        if (remainingSessions.length > 0) {
-          switchSession(remainingSessions[0]);
-        } else {
-          localStorage.removeItem('currentSessionKey');
-          setUser(null);
-          delete API.defaults.headers.common['Authorization'];
-        }
-      }
-    } else {
-      // Logout current session
-      const currentSessionKey = localStorage.getItem('currentSessionKey');
-      if (currentSessionKey) {
-        removeSession(currentSessionKey);
- 
-        // Switch to another session if available
-        const remainingSessions = Object.keys(activeSessions);
-        if (remainingSessions.length > 0) {
-          switchSession(remainingSessions[0]);
-        } else {
-          localStorage.removeItem('currentSessionKey');
-          setUser(null);
-          delete API.defaults.headers.common['Authorization'];
-        }
-      }
+  }, []);
+
+  const resend2FACode = useCallback(async (email) => {
+    try {
+      await API.post('/auth/2fa/resend', { email });
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || 'Failed to resend code' };
     }
- 
-    setRequires2FA(false);
-    setPending2FAEmail(null);
-    setPending2FARole(null);
-  }, [removeSession, switchSession, activeSessions]);
- 
-  const logoutAll = useCallback(() => {
-    // Clear all sessions
-    localStorage.removeItem('activeSessions');
-    localStorage.removeItem('currentSessionKey');
-    setActiveSessions({});
-    setUser(null);
-    delete API.defaults.headers.common['Authorization'];
+  }, []);
+
+  const cancel2FA = useCallback(() => {
     setRequires2FA(false);
     setPending2FAEmail(null);
     setPending2FARole(null);
   }, []);
- 
+
+  const get2FASettings = useCallback(async () => {
+    try {
+      const response = await API.get('/auth/2fa/settings');
+      return { success: true, settings: response.data };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || 'Failed to get 2FA settings' };
+    }
+  }, []);
+
+  const update2FASettings = useCallback(async (settings) => {
+    try {
+      if (settings.enabled) {
+        const response = await API.post('/auth/2fa/enable', { method: settings.method });
+        return { success: true, data: response.data };
+      } else {
+        await API.post('/auth/2fa/disable');
+        return { success: true };
+      }
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || 'Failed to update 2FA settings' };
+    }
+  }, []);
+
+  const register = useCallback(async (userData) => {
+    try {
+      const response = await API.post('/auth/register', userData);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || 'Registration failed' };
+    }
+  }, []);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('userId');
+    setUser(null);
+    setRequires2FA(false);
+    setPending2FAEmail(null);
+    setPending2FARole(null);
+  }, []);
+
   const value = useMemo(() => ({
     user,
-    activeSessions,
-    currentSessionKey: localStorage.getItem('currentSessionKey'),
-    getCurrentSession,
-    switchSession,
     login,
-    logout,
-    logoutAll,
     register,
+    logout,
     verify2FA,
     resend2FACode,
     cancel2FA,
@@ -189,8 +178,8 @@ export const AuthProvider = ({ children }) => {
     isAdmin: user?.role?.toLowerCase() === 'admin',
     isFarmer: user?.role?.toLowerCase() === 'farmer',
     isOwner: user?.role?.toLowerCase() === 'owner',
-  }), [user, activeSessions, getCurrentSession, switchSession, login, logout, logoutAll, verify2FA, requires2FA, pending2FAEmail, pending2FARole]);
- 
+  }), [user, login, register, logout, verify2FA, resend2FACode, cancel2FA, get2FASettings, update2FASettings, requires2FA, pending2FAEmail, pending2FARole]);
+
   return (
     <AuthContext.Provider value={value}>
       {!loading && children}
