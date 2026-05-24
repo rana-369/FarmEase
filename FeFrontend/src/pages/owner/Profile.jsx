@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FiUser, FiMail, FiPhone, FiMapPin, FiCamera, FiSave, FiRefreshCw, FiBriefcase, FiCheck, FiEdit2, FiX, FiUpload, FiStar, FiMessageSquare } from 'react-icons/fi';
 import api from '../../services/api';
+import Modal from '../../components/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import TwoFactorSetup from '../../components/TwoFactorSetup';
@@ -176,12 +177,24 @@ const OwnerProfile = () => {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      padding: '24px',
-      backgroundColor: 'var(--bg-primary)'
-    }}>
-      <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+    <>
+      {/* Review Modal Popup */}
+      <Modal isOpen={showTestimonial} onClose={() => setShowTestimonial(false)}>
+        <SubmitTestimonial
+          onClose={() => setShowTestimonial(false)}
+          onSubmitSuccess={() => {
+            setShowTestimonial(false);
+            setMessage({ type: 'success', text: 'Thank you for your review!' });
+          }}
+        />
+      </Modal>
+
+      <div style={{
+        minHeight: '100vh',
+        padding: '24px',
+        backgroundColor: 'var(--bg-primary)'
+      }}>
+        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -824,8 +837,7 @@ const OwnerProfile = () => {
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '16px'
+                    justifyContent: 'space-between'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{
@@ -848,46 +860,35 @@ const OwnerProfile = () => {
                         </p>
                       </div>
                     </div>
-                    {!showTestimonial && (
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setShowTestimonial(true)}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: '12px',
-                          fontWeight: 500,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                          color: '#ffffff',
-                          border: 'none',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <FiMessageSquare style={{ width: '16px', height: '16px' }} />
-                        Write a Review
-                      </motion.button>
-                    )}
-                  </div>
-
-                  {showTestimonial && (
-                    <SubmitTestimonial
-                      onClose={() => setShowTestimonial(false)}
-                      onSubmitSuccess={() => {
-                        setShowTestimonial(false);
-                        setMessage({ type: 'success', text: 'Thank you for your review!' });
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setShowTestimonial(true)}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '12px',
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        cursor: 'pointer'
                       }}
-                    />
-                  )}
+                    >
+                      <FiMessageSquare style={{ width: '16px', height: '16px' }} />
+                      Write a Review
+                    </motion.button>
+                  </div>
                 </div>
               </div>
             </div>
           </motion.div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
